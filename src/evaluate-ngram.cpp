@@ -51,9 +51,9 @@ const char *version = "0.1";
 const char *progDesc =
 "Usage: evaluate-ngram [Options]\n"
 "\n"
-"evaluates performance of an n-gram language model.  It also supports various\n"
-"n-gram language model conversions, including changes in order, vocabulary,\n"
-"and file format.\n"
+"Evaluates the performance of an n-gram language model.  It also supports\n"
+"various n-gram language model conversions, including changes in order,\n"
+"vocabulary, and file format.\n"
 "\n"
 "Filename argument can be an ASCII file, a compressed file (ending in .Z or .gz),\n"
 "or '-' to indicate stdin/stdout.\n";

@@ -50,7 +50,7 @@ namespace cls = boost::program_options::command_line_style;
 
 const char *version = "0.1";
 const char *progDesc =
-"Usage: interpolate-ngram [Options]\n"
+"Usage: interpolate-ngram [Options] [lmfile1 lmfile2 ...]\n"
 "\n"
 "Takes multiple n-gram language models, computes appropriate interpolation\n"
 "weights from optional features, and constructs a statically interpolated\n"
