@@ -23,6 +23,8 @@ SOURCES      = $(UTIL_SOURCES) src/Vocab.cpp src/NgramVector.cpp \
 UTIL_OBJECTS = $(UTIL_SOURCES:.cpp=.o)
 OBJECTS      = $(SOURCES:.cpp=.o) src/optimize/lbfgsb.o src/optimize/lbfgs.o
 
+all: mitlm TestMITLM VectorTest VectorTimeTest
+
 estimate-ngram: $(OBJECTS) src/estimate-ngram.o
 	$(CXX) $(LDFLAGS) $(OBJECTS) src/estimate-ngram.o -o $@ 
 
@@ -68,12 +70,10 @@ test: TestMITLM VectorTest VectorTimeTest
 
 time: time-estimate time-interpolate time-interpolate-gli time-evaluate
 
-all: mitlm TestMITLM VectorTest VectorTimeTest
-
 clean:
 	rm -f $(OBJECTS) src/*.o test/*.o mitlm.tgz 
 	rm -f VectorTest VectorTimeTest TestMITLM 
 	rm -f estimate-ngram interpolate-ngram evaluate-ngram
 
 dist: clean
-	cd ..; tar czvf mitlm.tgz mitlm/; cd mitlm; mv ../mitlm.tgz .  
+	cd ..; tar czvf mitlm.tgz --exclude=".*" mitlm/; cd mitlm; mv ../mitlm.tgz .  
