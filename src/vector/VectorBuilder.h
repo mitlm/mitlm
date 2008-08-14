@@ -49,7 +49,7 @@ public:
     typedef const T * ConstIterator;
 
     VectorBuilder(size_t capacity=16) : _length(0) {
-        _vector.resize(std::max(capacity, 16ul));
+        _vector.resize(std::max(capacity, (size_t)16));
     }
 
     void append(typename Ref<T>::Type value, size_t count=1) {

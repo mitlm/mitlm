@@ -90,7 +90,7 @@ Vocab::Add(const char *word, size_t len) {
     if (*pIndex == Invalid && !_readOnly) {
         // Increase index table size as needed.
         if (size() >= _offsetLens.length()) {
-            Reserve(std::max(1ul<<16, _offsetLens.length()*2));
+            Reserve(std::max((size_t)1<<16, _offsetLens.length()*2));
             pIndex = _FindIndex(word, len);
         }
         *pIndex = _length;

@@ -245,13 +245,14 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
     if (lmFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Read ARPA LM header.
-    char line[MAXLINE];
-    size_t              o, len, i;
+    char           line[MAXLINE];
+    size_t         o, len;
     vector<size_t> ngramLengths(1);
     while (getline(lmFile, line, MAXLINE) && strcmp(line, "\\data\\") != 0)
         /* NOP */;
     while (getline(lmFile, line, MAXLINE)) {
-        if (sscanf(line, "ngram %lu=%lu", &o, &len) != 2)
+        unsigned int o, len;
+        if (sscanf(line, "ngram %u=%u", &o, &len) != 2)
             break;
         assert(o == ngramLengths.size());
         ngramLengths.push_back(len);
@@ -274,7 +275,8 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
         if (hasBow) bows.reset(ngramLengths[o]);
 
         getline(lmFile, line, MAXLINE);
-        if (sscanf(line, "\\%lu-ngrams:", &i) != 1 || i != o) {
+        unsigned int i;
+        if (sscanf(line, "\\%u-ngrams:", &i) != 1 || i != o) {
             throw std::invalid_argument("Unexpected file format.");
         }
         while (true) {
@@ -339,14 +341,15 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
     // Write ARPA backoff LM header.
     fputs("\n\\data\\\n", lmFile);
     for (size_t o = 1; o < size(); o++)
-        fprintf(lmFile, "ngram %lu=%lu\n", o, _vectors[o].size());
+        fprintf(lmFile, "ngram %lu=%lu\n",
+                (unsigned long)o, (unsigned long)_vectors[o].size());
 
     // Write lower order n-grams with probabilities and backoff weights.
     StrVector   ngramWords(size() - 1);
     std::string lineBuffer;
     lineBuffer.resize(size() * 32); // 32 chars/word.
     for (size_t o = 1; o < size() - 1; o++) {
-        fprintf(lmFile, "\n\\%lu-grams:\n", o);
+        fprintf(lmFile, "\n\\%lu-grams:\n", (unsigned long)o);
         const ProbVector &probs = probVectors[o];
         const ProbVector &bows  = bowVectors[o];
         assert(probs.length() == _vectors[o].size());
@@ -378,7 +381,7 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
     // Write highest order n-grams without backoff weights.
     {
         size_t o = size() - 1;
-        fprintf(lmFile, "\n\\%lu-grams:\n", o);
+        fprintf(lmFile, "\n\\%lu-grams:\n", (unsigned long)o);
         const ProbVector &probs = probVectors[o];
         for (NgramIndex i = 0; i < (NgramIndex)_vectors[o].size(); ++i) {
             // Allocate spaces for Prob, words, spaces, \n\0.
