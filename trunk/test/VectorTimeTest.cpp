@@ -79,7 +79,7 @@ TEST(VectorTimeTest, VectorScalar) {
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               N, timeC, timeCIter, timeVector, timeVector2);
+               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
 
     }
     printf("Done\n");
@@ -113,7 +113,7 @@ TEST(VectorTimeTest, VectorVector) {
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               N, timeC, timeCIter, timeVector, timeVector2);
+               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
 
     }
     printf("Done\n");
@@ -149,7 +149,7 @@ TEST(VectorTimeTest, IndirectVector) {
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               N, timeC, timeCIter, timeVector, timeVector2);
+               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
 
     }
     printf("Done\n");
@@ -183,7 +183,7 @@ TEST(VectorTimeTest, AdvancedOperators) {
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               N, timeC, timeCIter, timeVector, timeVector2);
+               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
 
     }
     printf("Done\n");
@@ -222,7 +222,7 @@ TEST(VectorTimeTest, ComplexExpression1) {
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               N, timeC, timeCIter, timeVector, timeVector2);
+               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
 
     }
     printf("Done\n");
@@ -252,7 +252,7 @@ TEST(VectorTimeTest, ComplexExpression2) {
                   *pu = u.begin(), *pv = v.begin(), *pzEnd = z.end();
             while (pz != pzEnd) {
                 *pz++ = (*px)*(*py) + (*pu)/2 - log(*pv);
-                py++; px++; px++; pv++;
+                py++; px++; pu++; pv++;
             }
         } END_TIME(timeCIter)
 
@@ -261,7 +261,7 @@ TEST(VectorTimeTest, ComplexExpression2) {
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               N, timeC, timeCIter, timeVector, timeVector2);
+               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
 
     }
     printf("Done\n");
@@ -299,7 +299,7 @@ TEST(VectorTimeTest, IndexAssign) {
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               N, timeC, timeCIter, timeVector, timeVector2);
+               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
 
     }
     printf("Done\n");
@@ -340,7 +340,7 @@ TEST(VectorTimeTest, CondAssign1) {
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               N, timeC, timeCIter, timeVector, timeVector2);
+               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
 
     }
     printf("Done\n");
@@ -385,7 +385,7 @@ TEST(VectorTimeTest, CondAssign2) {
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               N, timeC, timeCIter, timeVector, timeVector2);
+               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
 
     }
     printf("Done\n");

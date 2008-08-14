@@ -96,7 +96,7 @@ NgramVector::Add(NgramIndex hist, VocabIndex word) {
     if (*pIndex == Invalid) {
         // Increase index table size as needed.
         if (size() >= _words.length()) {
-            Reserve(std::max(1ul<<16, _words.length()*2));  // Double capacity.
+            Reserve(std::max((size_t)1<<16, _words.length()*2));  // Double capacity.
             pIndex = _FindIndex(hist, word);  // Update iterator for new index.
         }
         *pIndex = _length;
@@ -114,7 +114,7 @@ NgramVector::Add(NgramIndex hist, VocabIndex word, bool *outNew) {
     if (*outNew) {
         // Increase index table size as needed.
         if (size() >= _words.length()) {
-            Reserve(std::max(1ul<<16, _words.length()*2));  // Double capacity.
+            Reserve(std::max((size_t)1<<16, _words.length()*2));  // Double capacity.
             pIndex = _FindIndex(hist, word);  // Update iterator for new index.
         }
         *pIndex = _length;

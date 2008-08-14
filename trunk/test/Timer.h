@@ -35,19 +35,25 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-typedef unsigned long long int uint64;
 extern "C" {
-   inline uint64_t rdtsc() {
-       uint32_t lo, hi;
-       // cpuid will serialize the following rdtsc with respect to all other
-       // instructions the processor may be handling.
-       __asm__ __volatile__ (
-         "xorl %%eax, %%eax\n"
-         "cpuid\n"
-         "rdtsc\n"
-         : "=a" (lo), "=d" (hi) : : "%ebx", "%ecx");
-     return (uint64_t)hi << 32 | lo;
-   }
+#if defined(__i386__)
+    static inline uint64_t rdtsc(void)
+    {
+        uint64_t x;
+        __asm__ volatile (".byte 0x0f, 0x31" : "=A" (x));
+        return x;
+    }
+#elif defined(__x86_64__)
+    static inline uint64_t rdtsc() {
+        uint32_t lo, hi;
+        __asm__ __volatile__ (
+            "xorl %%eax, %%eax\n"
+            "cpuid\n"
+            "rdtsc\n"
+            : "=a" (lo), "=d" (hi) : : "%ebx", "%ecx");
+        return (uint64_t)hi << 32 | lo;
+    }
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,9 +80,9 @@ extern "C" {
     } \
     float var = __bestTime;
 
-uint64 __startCycle, __minCycle;
-size_t __totN;
-float __bestTime;
+uint64_t __startCycle, __minCycle;
+size_t   __totN;
+float    __bestTime;
 
 
 #endif // TIMER_H

@@ -178,7 +178,7 @@ TEST(NgramModel, LoadCorpus) {
     } END_TIME(timeSave)
 
     printf("Load = %.2fs,\tSave = %.2fs\n",
-           timeLoad / 2660000000, timeSave / 2660000000);
+           timeLoad / 2660000000.0, timeSave / 2660000000.0);
 }
 
 TEST(NgramModel, LoadCounts) {
@@ -197,7 +197,7 @@ TEST(NgramModel, LoadCounts) {
     } END_TIME(timeSave)
 
     printf("Load = %.2fs,\tSave = %.2fs\n",
-           timeLoad / 2660000000, timeSave / 2660000000);
+           timeLoad / 2660000000.0, timeSave / 2660000000.0);
 }
 
 TEST(NgramModel, LoadLM) {
@@ -216,7 +216,7 @@ TEST(NgramModel, LoadLM) {
     } END_TIME(timeSave)
 
     printf("Load = %.2fs,\tSave = %.2fs\n",
-           timeLoad / 2660000000, timeSave / 2660000000);
+           timeLoad / 2660000000.0, timeSave / 2660000000.0);
 }
 
 struct Rosenbrock {
