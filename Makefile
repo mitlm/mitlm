@@ -13,6 +13,7 @@ ifdef DEBUG
 else
 	CXXFLAGS += -O3 -DNDEBUG -funroll-loops
 	FFLAGS   += -O3 -DNDEBUG -funroll-loops
+	LDFLAGS  += -O3 -funroll-loops
 endif
 
 UTIL_SOURCES = src/util/RefCounter.cpp src/util/Logger.cpp  
@@ -46,6 +47,11 @@ VectorTimeTest: $(UTIL_OBJECTS) test/VectorTimeTest.o
 time-estimate: estimate-ngram
 	time ./estimate-ngram -d data/6.001-dev.txt -s ModKN \
 	  data/switchboard.txt data/switchboard.lm.out 
+
+time-estimate-weight: estimate-ngram
+	time ./estimate-ngram -d data/6.001-dev.txt -s ModKN \
+	  -w freq:../data/lectures/6.001-book.txt \
+	  ../data/lectures/6.001-book.txt 
 
 time-interpolate: interpolate-ngram
 	time interpolate-ngram -d data/6.001-dev.txt -L data/test.lm -i CM \

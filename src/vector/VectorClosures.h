@@ -55,8 +55,7 @@ public:
           : _v(v), _i(i) { }
         ConstIterator & operator++()      { ++_i; return *this; }
         ElementType     operator*() const { return _v[*_i]; }
-        bool operator==(const ConstIterator &i) const
-                                          { return i._v==_v && i._i==_i; }
+        bool operator==(const ConstIterator &i) const { return i._i == _i; }
         bool operator!=(const ConstIterator &i) const { return !operator==(i); }
 
     private:
@@ -191,7 +190,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename L, typename R>
+template <typename L, typename R>
 struct VPromotion {
     typedef typename Promotion<typename Vector<L>::ElementType,
                                typename Vector<R>::ElementType>::Type Type;
@@ -204,5 +203,76 @@ struct TypeInfo<VectorClosure<Op, L, R> > {
     typedef VectorClosure<Op, L, R>         Impl;
     typedef typename VPromotion<L, R>::Type ElementType;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename C, typename T, typename F>
+class CondVectorClosure : public Vector<CondVectorClosure<C, T, F> > {
+    typedef CondVectorClosure<C, T, F> SelfT;
+
+public:
+    typedef typename TypeInfo<SelfT>::ElementType ElementType;
+
+    class ConstIterator {
+    public:
+        ConstIterator(typename C::ConstIterator c, typename T::ConstIterator t,
+                      typename F::ConstIterator f)
+            : _c(c), _t(t), _f(f) { }
+        ConstIterator & operator++()      { ++_c; ++_t; ++_f; return *this; }
+        ElementType     operator*() const { return *_c ? *_t : *_f; }
+        bool operator==(const ConstIterator &i) const
+                                          { return i._c == _c; }
+        bool operator!=(const ConstIterator &i) const { return !operator==(i); }
+
+    private:
+        typename C::ConstIterator _c;
+        typename T::ConstIterator _t;
+        typename F::ConstIterator _f;
+    };
+
+    CondVectorClosure(typename Ref<C>::Type c, typename Ref<T>::Type t,
+                      typename Ref<F>::Type f) : _c(c), _t(t), _f(f) { }
+    size_t        length() const { return _c.length(); }
+    ConstIterator begin() const
+      { return ConstIterator(_c.begin(), _t.begin(), _f.begin()); }
+    ConstIterator end() const
+      { return ConstIterator(_c.end(), _t.end(), _f.end()); }
+    ElementType   operator[](size_t i) const { return _c[i] ? _t[i] : _f[i]; }
+
+private:
+    typename Ref<typename C::Impl>::Type _c;
+    typename Ref<typename T::Impl>::Type _t;
+    typename Ref<typename F::Impl>::Type _f;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename C, typename T, typename F>
+struct TypeInfo<CondVectorClosure<C, T, F> > {
+    typedef CondVectorClosure<C, T, F>      Impl;
+    typedef typename VPromotion<T, F>::Type ElementType;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename V, typename M>
+class MaskedVectorClosure {
+public:
+    MaskedVectorClosure(V &v, typename Ref<M>::Type m)
+      : _v(v.impl()), _m(m.impl()) { }
+    size_t                               length() const { return _v.length(); }
+    typename V::Impl &                   vector()       { return _v; }
+    typename Ref<typename M::Impl>::Type mask() const   { return _m; }
+
+    template <typename RHS>
+    void operator=(const Vector<RHS> &rhs) { MaskAssign(_m, rhs.impl(), _v); }
+    void set(typename V::ElementType value)
+      { for (size_t i = 0; i < _v.length(); i++) if (_m[i]) _v[i] = 0; }
+
+private:
+    typename V::Impl &                   _v;
+    typename Ref<typename M::Impl>::Type _m;
+};
+
 
 #endif // VECTORCLOSURES_H

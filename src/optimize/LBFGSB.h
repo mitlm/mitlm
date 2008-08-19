@@ -46,7 +46,7 @@ extern "C" {
                  char *csave, int *lsave, int *isave, double *dsave);
 }
 
-template<class Function>
+template <class Function>
 double
 MinimizeLBFGSB(Function &func, DoubleVector &x, int &numIter, double step=1e-8,
                double factr=1e7, double pgtol=1e-5, int maxIter=0) {

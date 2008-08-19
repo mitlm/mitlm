@@ -71,7 +71,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename T>
+template <typename T>
 struct Ref<Scalar<T> > {
     typedef Scalar<T> Type;
 };

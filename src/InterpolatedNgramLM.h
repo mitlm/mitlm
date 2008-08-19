@@ -55,8 +55,6 @@ enum Interpolation {
     GLI = GeneralizedLinearInterpolation
 };
 
-typedef vector<DoubleVector> FeatureVectors;
-
 class InterpolatedNgramLM : public NgramLMBase {
 protected:
     vector<SharedPtr<NgramLMBase> > _lms;
@@ -80,9 +78,11 @@ public:
     virtual bool  Estimate(const ParamVector &params, Mask *pMask=NULL);
 
 private:
-    void _EstimateProbs(const ParamVector &params,
-                        InterpolatedNgramLMMask *pMask);
-    void _EstimateBows(InterpolatedNgramLMMask *pMask);
+    void _EstimateProbs(const ParamVector &params);
+    void _EstimateBows();
+    void _EstimateProbsMasked(const ParamVector &params,
+                              InterpolatedNgramLMMask *pMask);
+    void _EstimateBowsMasked(InterpolatedNgramLMMask *pMask);
 };
 
 #endif // INTERPOLATEDNGRAMLM_H

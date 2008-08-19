@@ -98,9 +98,10 @@ public:
 
 class NgramLM : public NgramLMBase {
 protected:
-    vector<SharedPtr<Smoothing> > _smoothings;
-    vector<CountVector>           _countVectors;
-    IntVector                     _paramStarts;
+    vector<SharedPtr<Smoothing> >  _smoothings;
+    vector<CountVector>            _countVectors;
+    vector<FeatureVectors>         _featureList;
+    IntVector                      _paramStarts;
 
 public:
     NgramLM(size_t order = 3) : NgramLMBase(order), _countVectors(order) { }
@@ -108,17 +109,18 @@ public:
     void LoadCounts(const ZFile &countsFile);
     void SaveCounts(const ZFile &countsFile, bool asBinary=false) const;
     void SetSmoothingAlgs(const vector<SharedPtr<Smoothing> > &smoothings);
-    void SetFeatures();
+    void SetWeighting(const vector<FeatureVectors> &featureList);
 
     virtual void  SetOrder(size_t order);
     virtual Mask *GetMask(vector<BitVector> &probMaskVectors,
                           vector<BitVector> &bowMaskVectors) const;
     virtual bool  Estimate(const ParamVector &params, Mask *pMask=NULL);
     virtual void  SetModel(const SharedPtr<NgramModel> &m,
-                             const VocabVector &vocabMap,
-                             const vector<IndexVector> &ngramMap);
+                           const VocabVector &vocabMap,
+                           const vector<IndexVector> &ngramMap);
 
-    const CountVector &counts(size_t o) const { return _countVectors[o]; }
+    const CountVector    &counts(size_t o) const   { return _countVectors[o]; }
+    const FeatureVectors &features(size_t o) const { return _featureList[o]; }
 };
 
 #endif // NGRAMLM_H

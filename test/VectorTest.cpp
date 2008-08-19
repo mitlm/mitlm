@@ -36,6 +36,7 @@
 #include "vector/DenseVector.h"
 #include "vector/VectorOps.h"
 
+typedef DenseVector<char>   BitVector;
 typedef DenseVector<int>    IntVector;
 typedef DenseVector<float>  FloatVector;
 typedef DenseVector<double> DoubleVector;
@@ -378,6 +379,19 @@ TEST(VectorEvalTest, IndirectVector) {
         EXPECT_EQ(y[i], z[i]);
 }
 
+TEST(VectorEvalTest, MaskedVector) {
+    IntVector x(Range(5)), y(5, 0);
+    BitVector m(5, 0);
+    m[0] = m[1] = m[3] = true;
+    y.masked(m) = x;
+    ASSERT_EQ(5u, y.length());
+    EXPECT_EQ(y[0], x[0]);
+    EXPECT_EQ(y[1], x[1]);
+    EXPECT_EQ(y[2], 0);
+    EXPECT_EQ(y[3], x[3]);
+    EXPECT_EQ(y[4], 0);
+}
+
 TEST(VectorEvalTest, InlineOperators) {
     IntVector x(3), y(3), z(3, 1);
     x[0] = 1; x[1] = 2; x[2] = 3;
@@ -548,19 +562,13 @@ TEST(VectorEvalTest, Typecast) {
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(VectorAssignTest, IndexAssign) {
-    IntVector x(Range(3)), y(3, -1), m(2);
-    m[0] = 0; m[1] = 2;
+    IntVector x(Range(3)), y(3, -1), i(2);
+    i[0] = 0; i[1] = 2;
 
-    IndexAssign(m, x, y);
+    IndexAssign(i, x, y);
     ASSERT_EQ(3u, y.length());
     EXPECT_EQ(0,  y[0]);
     EXPECT_EQ(-1, y[1]);
-    EXPECT_EQ(2,  y[2]);
-
-    IndexAssign(m, x, y, false);
-    ASSERT_EQ(3u, y.length());
-    EXPECT_EQ(0,  y[0]);
-    EXPECT_EQ(1,  y[1]);
     EXPECT_EQ(2,  y[2]);
 }
 
@@ -575,18 +583,6 @@ TEST(VectorAssignTest, MaskAssign) {
     ASSERT_EQ(3u, y.length());
     EXPECT_EQ(0,  y[0]);
     EXPECT_EQ(-1, y[1]);
-    EXPECT_EQ(2,  y[2]);
-
-    MaskAssign(f, x, y, false);
-    ASSERT_EQ(3u, y.length());
-    EXPECT_EQ(0,  y[0]);
-    EXPECT_EQ(1,  y[1]);
-    EXPECT_EQ(2,  y[2]);
-
-    MaskAssign(f, x, z, y);
-    ASSERT_EQ(3u, y.length());
-    EXPECT_EQ(0,  y[0]);
-    EXPECT_EQ(5,  y[1]);
     EXPECT_EQ(2,  y[2]);
 }
 

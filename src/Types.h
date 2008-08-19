@@ -35,6 +35,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <vector>
 #include "vector/DenseVector.h"
 #include "vector/VectorBuilder.h"
 #include "vector/VectorOps.h"
@@ -66,5 +67,8 @@ typedef DenseVector<Count>        CountVector;
 typedef DenseVector<NgramIndex>   IndexVector;
 typedef DenseVector<Prob>         ProbVector;
 typedef DenseVector<Param>        ParamVector;
+
+typedef std::vector<DoubleVector> FeatureVectors;
+
 
 #endif // TYPES_H

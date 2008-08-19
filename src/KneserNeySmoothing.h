@@ -49,6 +49,7 @@ protected:
     size_t       _discOrder;
     bool         _tuneParams;
     CountVector  _effCounts;
+    ProbVector   _ngramWeights;
     ProbVector   _invHistCounts;
     ParamVector  _discParams;
     IntVector    _paramIndices;
@@ -60,6 +61,15 @@ public:
     virtual void UpdateMask(NgramLMMask &lmMask) const;
     virtual bool Estimate(const ParamVector &params, const NgramLMMask *pMask,
                           ProbVector &probs, ProbVector &bows);
+
+protected:
+    void _ComputeWeights(const ParamVector &featParams);
+    void _Estimate(ProbVector &probs, ProbVector &bows);
+    void _EstimateMasked(const NgramLMMask *pMask,
+                         ProbVector &probs, ProbVector &bows);
+    void _EstimateWeighted(ProbVector &probs, ProbVector &bows);
+    void _EstimateWeightedMasked(const NgramLMMask *pMask,
+                                 ProbVector &probs, ProbVector &bows);
 };
 
 #endif // KNESERNEYSMOOTHING_H

@@ -97,7 +97,7 @@ DenseVector<T>::DenseVector(const DenseVector<T> &rhs, bool clone)
 }
 
 template <typename T>
-template<typename RHS>
+template <typename RHS>
 DenseVector<T>::DenseVector(const Vector<RHS> &rhs)
     : _length(rhs.impl().length()), _data(0), _storage(0)
 {
@@ -279,6 +279,23 @@ DenseVector<T>::operator[](const Vector<RHS> &rhs) const
 }
 
 template <typename T>
+template <typename RHS>
+IndirectVectorClosure<DenseVector<T>, typename RHS::Impl>
+DenseVector<T>::operator[](const Vector<RHS> &rhs)
+{
+    typedef IndirectVectorClosure<DenseVector<T>, typename RHS::Impl> VC;
+    return VC(*this, rhs.impl());
+}
+
+template <typename T>
+template <typename M>
+MaskedVectorClosure<DenseVector<T>, typename M::Impl>
+DenseVector<T>::masked(const Vector<M> &mask) {
+    typedef MaskedVectorClosure<DenseVector<T>, typename M::Impl> VC;
+    return VC(*this, mask.impl());
+}
+
+template <typename T>
 void
 DenseVector<T>::reset(size_t length)
 {
@@ -383,7 +400,7 @@ DenseVector<T>::_release()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename T>
+template <typename T>
 std::ostream &
 operator<<(std::ostream &o, const DenseVector<T> &x) {
     o.precision(5);
@@ -395,7 +412,7 @@ operator<<(std::ostream &o, const DenseVector<T> &x) {
     return o;
 }
 
-template<>
+template <>
 inline std::ostream &
 operator<<(std::ostream &o, const DenseVector<unsigned char> &x) {
     o << "[ ";
@@ -405,7 +422,7 @@ operator<<(std::ostream &o, const DenseVector<unsigned char> &x) {
     return o;
 }
 
-template<typename T>
+template <typename T>
 void
 WriteVector(FILE *out, const DenseVector<T> &x) {
     WriteUInt64(out, (uint64_t)x.length());
@@ -414,7 +431,7 @@ WriteVector(FILE *out, const DenseVector<T> &x) {
     WriteAlignPad(out, x.length() * sizeof(T));
 }
 
-template<typename T>
+template <typename T>
 void
 ReadVector(FILE *in, DenseVector<T> x) {
     x.reset(ReadUInt64(in));

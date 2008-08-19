@@ -129,6 +129,10 @@ struct OpPow {
     }
 };
 
+struct OpIsNan {
+    template <typename T> static T Eval(T v) { return isnan(v); }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Type Casting Operations
 
