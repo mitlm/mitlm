@@ -37,7 +37,7 @@
 
 #include "RefCounter.h"
 
-template<typename T>
+template <typename T>
 class SharedPtr {
 protected:
     T *_p;

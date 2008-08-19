@@ -305,7 +305,7 @@ TEST(VectorTimeTest, IndexAssign) {
     printf("Done\n");
 }
 
-TEST(VectorTimeTest, CondAssign1) {
+TEST(VectorTimeTest, CondAssign) {
     printf("         N\t      C\t  CIter\t\tCVector\n");
     for (size_t N = MINITER; N <= MAXITER; N *= 10) {
         Range r(N);
@@ -337,51 +337,6 @@ TEST(VectorTimeTest, CondAssign1) {
 
         START_TIME_N(N) {
             MaskAssign(m, x*x + 2, z);
-        } END_TIME(timeVector2)
-
-        printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",
-               (unsigned long)N, timeC, timeCIter, timeVector, timeVector2);
-
-    }
-    printf("Done\n");
-}
-
-TEST(VectorTimeTest, CondAssign2) {
-    printf("         N\t      C\t  CIter\t\tCVector\n");
-    for (size_t N = MINITER; N <= MAXITER; N *= 10) {
-        Range r(N);
-        TYPEVector x(r), y(N, 0), z(N);
-        IntVector m(N);
-        for (size_t i = 0; i < N; i++)
-            m[i] = (i % 2 == 0);
-
-
-        START_TIME_N(N) {
-            for (size_t i = 0; i < N; i++)
-                if (m[i])
-                    z[i] = x[i]*x[i] + 2;
-                else
-                    z[i] = y[i]*y[i] + 2;
-        } END_TIME(timeC)
-
-        START_TIME_N(N) {
-            MaskAssign(m, x*x + 2, y*y + 2, z);
-        } END_TIME(timeVector)
-
-        START_TIME_N(N) {
-            TYPE *px = x.begin(), *py = y.begin(), *pz = z.begin();
-            int *pc = m.begin(), *pcEnd = m.end();
-            while (pc != pcEnd) {
-                if (*pc)
-                    *pz = *px * *px + 2;
-                else
-                    *pz = *py * *py + 2;;
-                ++px; ++py; ++pz; ++pc;
-            }
-        } END_TIME(timeCIter)
-
-        START_TIME_N(N) {
-            MaskAssign(m, x*x + 2, y*y + 2, z);
         } END_TIME(timeVector2)
 
         printf("%10lu\t%7.2f\t%7.2f\t%7.2f\t%7.2f\n",

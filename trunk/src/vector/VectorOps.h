@@ -219,6 +219,9 @@ template <typename V, typename T> const VectorClosure<OpPow, V, Scalar<T> >
 pow(const Vector<V> &x, T c)
 { return VectorClosure<OpPow, V, Scalar<T> >(x.impl(), c); }
 
+template <typename V> const UnaryVectorClosure<OpIsNan, V>
+isnan(const Vector<V> &x) { return UnaryVectorClosure<OpIsNan, V>(x.impl()); }
+
 ////////////////////////////////////////////////////////////////////////////////
 // Type Casting Operations
 
@@ -275,6 +278,23 @@ void BinWeight(const Vector<I> &i, const Vector<W> &w, DenseVector<T> &result) {
     }
 }
 
+template <typename I, typename W, typename V, typename M>
+void BinWeight(const Vector<I> &i, const Vector<W> &w,
+               MaskedVectorClosure<V, M> &result) {
+    assert(i.impl().length() == w.impl().length());
+    assert(result.mask().impl().length() == result.vector().impl().length());
+    typename I::ConstIterator iBegin = i.impl().begin();
+    typename I::ConstIterator iEnd = i.impl().end();
+    typename W::ConstIterator wBegin = w.impl().begin();
+    while (iBegin != iEnd) {
+        size_t index = *iBegin;
+        assert(index < result.length());
+        if (result.mask()[index])
+            result.vector()[index] += *wBegin;
+        ++iBegin; ++wBegin;
+    }
+}
+
 template <typename I, typename T, typename R>
 void BinLookup(const Vector<I> &i, const DenseVector<T> &t, DenseVector<R> &r,
                T def=T()) {
@@ -289,60 +309,41 @@ void BinLookup(const Vector<I> &i, const DenseVector<T> &t, DenseVector<R> &r,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+template <typename C, typename T, typename F> CondVectorClosure<C, T, F>
+CondExpr(const Vector<C> &cond, const Vector<T> &t, const Vector<F> &f)
+{ return CondVectorClosure<C, T, F>(cond.impl(), t.impl(), f.impl()); }
+
+template <typename C, typename T, typename F> CondVectorClosure<C, Scalar<T>, F>
+CondExpr(const Vector<C> &c, T t, const Vector<F> &f)
+{ return CondVectorClosure<C, Scalar<T>, F>(c.impl(), t, f.impl()); }
+
+////////////////////////////////////////////////////////////////////////////////
 // Filtered Operations
 
 template <typename M, typename I, typename O>
 void IndexAssign(const Vector<M> &index, const Vector<I> &input,
-                Vector<O> &output, bool applyMask=true) {
+                Vector<O> &output) {
     output.impl().reset(input.impl().length());
-    if (applyMask) {
-        typename M::ConstIterator begin = index.impl().begin();
-        typename M::ConstIterator end = index.impl().end();
-        while (begin != end) {
-            size_t index = *begin;
-            assert(index < input.impl().length());
-            output.impl()[index] = input.impl()[index];
-            ++begin;
-        }
-    } else
-        Copy(input.impl().begin(), output.impl().begin(), output.impl().end());
+    typename M::ConstIterator begin = index.impl().begin();
+    typename M::ConstIterator end = index.impl().end();
+    while (begin != end) {
+        size_t index = *begin;
+        assert(index < input.impl().length());
+        output.impl()[index] = input.impl()[index];
+        ++begin;
+    }
 }
 
 template <typename M, typename I, typename O>
 void MaskAssign(const Vector<M> &mask, const Vector<I> &input,
-                Vector<O> &output, bool applyCond=true) {
-    output.impl().reset(input.impl().length());
-    if (applyCond) {
-        assert(mask.impl().length() == input.impl().length());
-        typename M::ConstIterator pM    = mask.impl().begin();
-        typename M::ConstIterator pMEnd = mask.impl().end();
-        for (size_t i = 0; pM != pMEnd; ++pM, ++i)
-            if (*pM) output.impl()[i] = input.impl()[i];
-    } else
-        Copy(input.impl().begin(), output.impl().begin(), output.impl().end());
+                Vector<O> &output) {
+    assert(input.impl().length() == output.impl().length());
+    assert(mask.impl().length() == input.impl().length());
+    typename M::ConstIterator pM    = mask.impl().begin();
+    typename M::ConstIterator pMEnd = mask.impl().end();
+    for (size_t i = 0; pM != pMEnd; ++pM, ++i)
+        if (*pM) output.impl()[i] = input.impl()[i];
 }
-
-template <typename M, typename T, typename F, typename O>
-void MaskAssign(const Vector<M> &mask,
-                const Vector<T> &inputTrue, const Vector<F> &inputFalse,
-                Vector<O> &output, bool applyCond=true) {
-    assert(inputTrue.impl().length() == inputFalse.impl().length());
-    output.impl().reset(inputTrue.impl().length());
-    if (applyCond) {
-        assert(inputTrue.impl().length() == mask.impl().length());
-        typename M::ConstIterator pM    = mask.impl().begin();
-        typename M::ConstIterator pMEnd = mask.impl().end();
-        typename T::ConstIterator pT    = inputTrue.impl().begin();
-        typename F::ConstIterator pF    = inputFalse.impl().begin();
-        typename O::Iterator      pO    = output.impl().begin();
-        while (pM != pMEnd) {
-            *pO = *pM ? *pT : *pF;
-            ++pM; ++pT; ++pF; ++pO;
-        }
-    } else
-        Copy(inputTrue.impl().begin(),
-             output.impl().begin(), output.impl().end());
-}
-
 
 #endif // VECTOROPS_H

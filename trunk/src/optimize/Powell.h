@@ -41,7 +41,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation of Powell's Method modified from Numerical Recipes in C.
 
-template<class Function>
+template <class Function>
 class Function1D {
     Function &         _func;
     const DoubleVector &_x;
@@ -60,7 +60,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<class Function>
+template <class Function>
 double
 MinimizePowell(Function &func, DoubleVector &x, int &numIter,
                double xTol=1e-4, double fTol=1e-4, int maxIter=0) {
@@ -127,7 +127,7 @@ MinimizePowell(Function &func, DoubleVector &x, int &numIter,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<class Function>
+template <class Function>
 double
 LineSearch(Function &func, DoubleVector &x, DoubleVector &dir,
            double xTol=1e-3) {
@@ -147,7 +147,7 @@ LineSearch(Function &func, DoubleVector &x, DoubleVector &dir,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<class Function1D>
+template <class Function1D>
 double
 Brent(Function1D &func, double xa, double xb, double xc,
       double &xMin, int &numIter, double tol=1.48e-8, int maxIter=500) {
@@ -231,7 +231,7 @@ Brent(Function1D &func, double xa, double xb, double xc,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<class Function1D>
+template <class Function1D>
 inline void
 Bracket(Function1D &func, double &xa, double &xb, double &xc,
         double &fa, double &fb, double &fc, int &numIter,

@@ -197,14 +197,88 @@ InterpolatedNgramLM::Estimate(const ParamVector &params, Mask *pMask) {
     // TODO: Estimate component LMs.
 
     // Interpolate weighted probabilities and normalize backoff weights.
-    InterpolatedNgramLMMask *pLMMask = (InterpolatedNgramLMMask *)pMask;
-    _EstimateProbs(_paramDefaults, pLMMask);
-    _EstimateBows(pLMMask);
+    if (pMask != NULL) {
+        InterpolatedNgramLMMask *pLMMask = (InterpolatedNgramLMMask *)pMask;
+        _EstimateProbsMasked(_paramDefaults, pLMMask);
+        _EstimateBowsMasked(pLMMask);
+    } else {
+        _EstimateProbs(_paramDefaults);
+        _EstimateBows();
+    }
     return true;
 }
 
 void
-InterpolatedNgramLM::_EstimateProbs(const ParamVector &params,
+InterpolatedNgramLM::_EstimateProbs(const ParamVector &params) {
+    size_t numFeatures = _featureList.size();
+    for (size_t o = 1; o <= _order; o++) {
+        Range              r(sizes(o - 1));
+        ProbVector         weights(_weights[r]);
+        ProbVector         totWeights(_totWeights[r]);
+        ProbVector &       probs(_probVectors[o]);
+        const IndexVector &hists(this->hists(o));
+
+        totWeights.set(0);
+        probs.set(0);
+        for (size_t l = 0; l < _lms.size(); l++) {
+            // Initialize weights with bias.
+            weights.set((l == 0) ? 0 : params[l - 1]);
+
+            // Compute weights from log-linear combination of features.
+            size_t startIndex = _paramStarts[_paramStarts.length() - 1] +
+                                l * numFeatures;
+            assert(startIndex + numFeatures <= params.length());
+            ParamVector featParams = params[Range(startIndex,
+                                                  startIndex + numFeatures)];
+            for (size_t f = 0; f < numFeatures; f++) {
+                if (featParams[f] == 0) continue;
+                for (size_t i = 0; i < _probVectors[o-1].length(); ++i)
+                    weights[i] += _featureList[f][o-1][i] * featParams[f];
+            }
+
+            // Compute component weights and update total weights.
+            for (size_t i = 0; i < weights.length(); ++i) {
+                weights[i] = exp(weights[i]);
+                totWeights[i] += weights[i];
+            }
+
+            // Interpolate component LM probabilities.
+            const ProbVector &lmProbs(_lms[l]->probs(o));
+            for (size_t i = 0; i < probs.length(); ++i)
+                probs[i] += lmProbs[i] * weights[hists[i]];
+        }
+        // Normalize probabilities.
+        for (size_t i = 0; i < probs.length(); ++i)
+            probs[i] /= totWeights[hists[i]];
+    }
+}
+
+void
+InterpolatedNgramLM::_EstimateBows() {
+    for (size_t o = 1; o <= _order; o++) {
+        ProbVector &       bows(_bowVectors[o - 1]);
+        const ProbVector & probs(this->probs(o));
+        const ProbVector & boProbs(this->probs(o - 1));
+        const IndexVector &hists(this->hists(o));
+        const IndexVector &backoffs(this->backoffs(o));
+
+        Range      r(sizes(o - 1));
+        ProbVector numerator(_weights[r]);       // Reuse buffers.
+        ProbVector denominator(_totWeights[r]);  // Reuse buffers.
+        numerator.set(0);
+        denominator.set(0);
+
+        for (size_t i = 0; i < probs.length(); ++i) {
+            numerator[hists[i]] += probs[i];
+            denominator[hists[i]] += boProbs[backoffs[i]];
+        }
+        for (size_t i = 0; i < bows.length(); ++i)
+            bows[i] = (1 - numerator[i]) / (1 - denominator[i]);
+    }
+}
+
+void
+InterpolatedNgramLM::_EstimateProbsMasked(const ParamVector &params,
                                     InterpolatedNgramLMMask *pMask) {
     size_t numFeatures = _featureList.size();
     for (size_t o = 1; o <= _order; o++) {
@@ -239,19 +313,10 @@ InterpolatedNgramLM::_EstimateProbs(const ParamVector &params,
             }
 
             // Compute component weights and update total weights.
-            if (pMask) {
-                for (size_t i = 0; i < weights.length(); ++i) {
-//                    MaskAssign(pMask->WeightMaskVectors[o - 1],
-//                               exp(weights), weights);
-//                    MaskAssign(pMask->WeightMaskVectors[o - 1],
-//                               totWeights + weights, totWeights);
-                    if (pMask->WeightMaskVectors[o-1][i]) {
-                        weights[i] = exp(weights[i]);
-                        totWeights[i] += weights[i];
-                    }
-                }
-            } else {
-                for (size_t i = 0; i < weights.length(); ++i) {
+            //weights.mask(pMask->WeightMaskVectors[o - 1]) = exp(weights);
+            //totWeights.mask(pMask->WeightMaskVectors[o - 1]) += weights;
+            for (size_t i = 0; i < weights.length(); ++i) {
+                if (pMask->WeightMaskVectors[o-1][i]) {
                     weights[i] = exp(weights[i]);
                     totWeights[i] += weights[i];
                 }
@@ -259,31 +324,21 @@ InterpolatedNgramLM::_EstimateProbs(const ParamVector &params,
 
             // Interpolate component LM probabilities.
             const ProbVector &lmProbs(_lms[l]->probs(o));
-            if (pMask) {
-                for (size_t i = 0; i < probs.length(); ++i)
-//                    MaskAssign(pMask->ProbMaskVectors[o],
-//                               probs + lmProbs * weights[hists], probs);
-                    if (pMask->ProbMaskVectors[o][i])
-                        probs[i] += lmProbs[i] * weights[hists[i]];
-            } else {
-                for (size_t i = 0; i < probs.length(); ++i)
+            for (size_t i = 0; i < probs.length(); ++i)
+                //probs.mask(pMask->ProbMaskVectors[o]) += \
+                //    lmProbs * weights[hists];
+                if (pMask->ProbMaskVectors[o][i])
                     probs[i] += lmProbs[i] * weights[hists[i]];
-            }
         }
         // Normalize probabilities.
-        if (pMask) {
-            for (size_t i = 0; i < probs.length(); ++i)
-                if (pMask->ProbMaskVectors[o][i])
-                    probs[i] /= totWeights[hists[i]];
-        } else {
-            for (size_t i = 0; i < probs.length(); ++i)
+        for (size_t i = 0; i < probs.length(); ++i)
+            if (pMask->ProbMaskVectors[o][i])
                 probs[i] /= totWeights[hists[i]];
-        }
     }
 }
 
 void
-InterpolatedNgramLM::_EstimateBows(InterpolatedNgramLMMask *pMask) {
+InterpolatedNgramLM::_EstimateBowsMasked(InterpolatedNgramLMMask *pMask) {
     for (size_t o = 1; o <= _order; o++) {
         ProbVector &       bows(_bowVectors[o - 1]);
         const ProbVector & probs(this->probs(o));
@@ -297,28 +352,19 @@ InterpolatedNgramLM::_EstimateBows(InterpolatedNgramLMMask *pMask) {
         numerator.set(0);
         denominator.set(0);
 
-        if (pMask) {
-            // BitVector m = pMask->BowMaskVectors[o-1][hists];
-            // numerator[hists].masked(m) += probs;
-            // denominator[hists].masked(m) += boProbs[backoffs];
-            for (size_t i = 0; i < probs.length(); ++i) {
-                if (pMask->BowMaskVectors[o-1][hists[i]]) {
-                    numerator[hists[i]] += probs[i];
-                    denominator[hists[i]] += boProbs[backoffs[i]];
-                }
-            }
-            // bows.masked(pMask->BowMaskVectors[o-1]) = (1 - numerator) /
-            //                                           (1 - denominator);
-            for (size_t i = 0; i < bows.length(); ++i)
-                if (pMask->BowMaskVectors[o-1][i])
-                    bows[i] = (1 - numerator[i]) / (1 - denominator[i]);
-        } else {
-            for (size_t i = 0; i < probs.length(); ++i) {
+        // BitVector m = pMask->BowMaskVectors[o-1][hists];
+        // numerator[hists].masked(m) += probs;
+        // denominator[hists].masked(m) += boProbs[backoffs];
+        for (size_t i = 0; i < probs.length(); ++i) {
+            if (pMask->BowMaskVectors[o-1][hists[i]]) {
                 numerator[hists[i]] += probs[i];
                 denominator[hists[i]] += boProbs[backoffs[i]];
             }
-            for (size_t i = 0; i < bows.length(); ++i)
-                bows[i] = (1 - numerator[i]) / (1 - denominator[i]);
         }
+        //bows.masked(pMask->BowMaskVectors[o-1]) = (1 - numerator) /
+        //                                          (1 - denominator);
+        for (size_t i = 0; i < bows.length(); ++i)
+            if (pMask->BowMaskVectors[o-1][i])
+                bows[i] = (1 - numerator[i]) / (1 - denominator[i]);
     }
 }

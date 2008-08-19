@@ -43,7 +43,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename T>
+template <typename T>
 class DenseVector: public Vector<DenseVector<T> > {
 public:
     typedef T         ElementType;
@@ -55,17 +55,17 @@ public:
     DenseVector(const Range &r);
     DenseVector(const DenseVector<T> &rhs);
     DenseVector(const DenseVector<T> &rhs, bool clone);
-    template<typename RHS> DenseVector(const Vector<RHS> &rhs);
+    template <typename RHS> DenseVector(const Vector<RHS> &rhs);
     ~DenseVector();
 
     DenseVector<T> &                       operator=(T value);
     DenseVector<T> &                       operator=(const Range &r);
     DenseVector<T> &                       operator=(const DenseVector<T> &rhs);
-    template<typename RHS> DenseVector<T> &operator=(const Vector<RHS> &rhs);
-    template<typename RHS> DenseVector<T> &operator+=(const Vector<RHS> &rhs);
-    template<typename RHS> DenseVector<T> &operator-=(const Vector<RHS> &rhs);
-    template<typename RHS> DenseVector<T> &operator*=(const Vector<RHS> &rhs);
-    template<typename RHS> DenseVector<T> &operator/=(const Vector<RHS> &rhs);
+    template <typename RHS> DenseVector<T> &operator=(const Vector<RHS> &rhs);
+    template <typename RHS> DenseVector<T> &operator+=(const Vector<RHS> &rhs);
+    template <typename RHS> DenseVector<T> &operator-=(const Vector<RHS> &rhs);
+    template <typename RHS> DenseVector<T> &operator*=(const Vector<RHS> &rhs);
+    template <typename RHS> DenseVector<T> &operator/=(const Vector<RHS> &rhs);
     DenseVector<T> &                       operator+=(T alpha);
     DenseVector<T> &                       operator-=(T alpha);
     DenseVector<T> &                       operator*=(T alpha);
@@ -75,9 +75,17 @@ public:
     const DenseVector<T>                   operator[](const Range &r) const;
     DenseVector<T>                         operator[](const Range &r);
 
-    template<typename RHS>
+    template <typename RHS>
     const IndirectVectorClosure<DenseVector<T>, typename RHS::Impl>
     operator[](const Vector<RHS> &x) const;
+
+    template <typename RHS>
+    IndirectVectorClosure<DenseVector<T>, typename RHS::Impl>
+    operator[](const Vector<RHS> &x);
+
+    template <typename M>
+    MaskedVectorClosure<DenseVector<T>, typename M::Impl>
+    masked(const Vector<M> &mask);
 
     void reset(size_t length);
     void reset(size_t length, T value);
@@ -107,7 +115,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename T>
+template <typename T>
 struct TypeInfo<DenseVector<T> > {
     typedef DenseVector<T> Impl;
     typedef T              ElementType;
@@ -115,16 +123,16 @@ struct TypeInfo<DenseVector<T> > {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-template<typename T>
+template <typename T>
 std::ostream &operator<<(std::ostream &o, const DenseVector<T> &x);
 
-template<>
+template <>
 std::ostream &operator<<(std::ostream &o, const DenseVector<unsigned char> &x);
 
-template<typename T>
+template <typename T>
 void WriteVector(FILE *out, const DenseVector<T> &x);
 
-template<typename T>
+template <typename T>
 void ReadVector(FILE *in, DenseVector<T> x);
 
 ////////////////////////////////////////////////////////////////////////////////

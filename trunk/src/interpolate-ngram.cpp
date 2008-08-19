@@ -217,16 +217,20 @@ int main(int argc, char* argv[]) {
                 readFeatures[f] = "log:" + readLMs[f].substr(0, extIndex) +
                                   ".counts";
             }
+            const char *featFilename = readFeatures[f].c_str();
             Logger::Log(1, "Loading counts for %s from %s...\n",
-                       readLMs[f].c_str(), readFeatures[f].c_str());
-            LoadComputedFeatures(ilm.model(), featureList[f], readFeatures[f]);
+                       readLMs[f].c_str(), featFilename);
+            ilm.model().LoadComputedFeatures(featureList[f], featFilename,
+                                             ilm.order());
         }
         ilm.SetInterpolation(CM, featureList);
     } else if (interpolation == "GLI") {
         vector<vector<DoubleVector> > featureList(readFeatures.size());
         for (size_t f = 0; f < readFeatures.size(); ++f) {
-            Logger::Log(1, "Loading features %s...\n", readFeatures[f].c_str());
-            LoadComputedFeatures(ilm.model(), featureList[f], readFeatures[f]);
+            const char *featFilename = readFeatures[f].c_str();
+            Logger::Log(1, "Loading features %s...\n", featFilename);
+            ilm.model().LoadComputedFeatures(featureList[f], featFilename,
+                                             ilm.order());
         }
         ilm.SetInterpolation(GLI, featureList);
     }
@@ -304,47 +308,4 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
-}
-
-void LoadComputedFeatures(const NgramModel &model,
-                          vector<DoubleVector> &feature,
-                          string &featFilename) {
-    size_t colonIndex = featFilename.find(':');
-    const char *featFunc, *filename;
-    if (colonIndex == string::npos) {
-        featFunc = NULL;
-        filename = featFilename.c_str();
-    } else {
-        featFilename[colonIndex] = 0;
-        featFunc = featFilename.c_str();
-        filename = &featFilename[colonIndex + 1];
-    }
-
-    ZFile f(filename, "r");
-    model.LoadFeatures(feature, f, model.size() - 1);
-    if (featFunc != NULL) {
-        if (strcmp(featFunc, "log") == 0)
-            for (size_t o = 0; o < feature.size(); ++o)
-                feature[o] = log(feature[o] + 1e-99);
-        else if (strcmp(featFunc, "log1p") == 0)
-            for (size_t o = 0; o < feature.size(); ++o)
-                feature[o] = log(feature[o] + 1);
-        else if (strcmp(featFunc, "pow2") == 0)
-            for (size_t o = 0; o < feature.size(); ++o)
-                feature[o] *= feature[o];
-        else if (strcmp(featFunc, "pow3") == 0)
-            for (size_t o = 0; o < feature.size(); ++o)
-                feature[o] = pow(feature[o], 3);
-        else {
-            Logger::Error(1, "Unknown feature function: %s\n", featFunc);
-            exit(1);
-        }
-    }
-
-    for (size_t o = 0; o < feature.size(); ++o) {
-        if (anyTrue(feature[o] > 20.0)) {
-            Logger::Warn(1, "Feature value %s exceed 20.0.\n", filename);
-            break;
-        }
-    }
 }

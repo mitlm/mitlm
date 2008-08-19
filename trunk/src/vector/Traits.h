@@ -35,35 +35,35 @@
 #ifndef TRAITS_H
 #define TRAITS_H
 
-template<typename A> struct Ref { typedef const A &Type; };
-template<> struct Ref<void>     { typedef void Type; };
-template<> struct Ref<short>    { typedef short Type; };
-template<> struct Ref<int>      { typedef int Type; };
-template<> struct Ref<long>     { typedef long Type; };
-template<> struct Ref<float>    { typedef float Type; };
-template<> struct Ref<double>   { typedef double Type; };
+template <typename A> struct Ref { typedef const A &Type; };
+template <> struct Ref<void>     { typedef void Type; };
+template <> struct Ref<short>    { typedef short Type; };
+template <> struct Ref<int>      { typedef int Type; };
+template <> struct Ref<long>     { typedef long Type; };
+template <> struct Ref<float>    { typedef float Type; };
+template <> struct Ref<double>   { typedef double Type; };
 
 template <typename A, typename B> struct Promotion { };
 template <typename A> struct Promotion<A, A> { typedef A Type; };
-template<> struct Promotion<short,  int>     { typedef int Type; };
-template<> struct Promotion<int,    short>   { typedef int Type; };
-template<> struct Promotion<short,  long>    { typedef long Type; };
-template<> struct Promotion<long,   short>   { typedef long Type; };
-template<> struct Promotion<int,    long>    { typedef long Type; };
-template<> struct Promotion<long,   int>     { typedef long Type; };
-template<> struct Promotion<short,  float>   { typedef float Type; };
-template<> struct Promotion<float,  short>   { typedef float Type; };
-template<> struct Promotion<int,    float>   { typedef float Type; };
-template<> struct Promotion<float,  int>     { typedef float Type; };
-template<> struct Promotion<short,  double>  { typedef double Type; };
-template<> struct Promotion<double, short>   { typedef double Type; };
-template<> struct Promotion<int,    double>  { typedef double Type; };
-template<> struct Promotion<double, int>     { typedef double Type; };
-template<> struct Promotion<long,   double>  { typedef double Type; };
-template<> struct Promotion<double, long>    { typedef double Type; };
-template<> struct Promotion<float,  double>  { typedef double Type; };
-template<> struct Promotion<double, float>   { typedef double Type; };
-template<> struct Promotion<long,   float>   { typedef double Type; };
-template<> struct Promotion<float,  long>    { typedef double Type; };
+template <> struct Promotion<short,  int>     { typedef int Type; };
+template <> struct Promotion<int,    short>   { typedef int Type; };
+template <> struct Promotion<short,  long>    { typedef long Type; };
+template <> struct Promotion<long,   short>   { typedef long Type; };
+template <> struct Promotion<int,    long>    { typedef long Type; };
+template <> struct Promotion<long,   int>     { typedef long Type; };
+template <> struct Promotion<short,  float>   { typedef float Type; };
+template <> struct Promotion<float,  short>   { typedef float Type; };
+template <> struct Promotion<int,    float>   { typedef float Type; };
+template <> struct Promotion<float,  int>     { typedef float Type; };
+template <> struct Promotion<short,  double>  { typedef double Type; };
+template <> struct Promotion<double, short>   { typedef double Type; };
+template <> struct Promotion<int,    double>  { typedef double Type; };
+template <> struct Promotion<double, int>     { typedef double Type; };
+template <> struct Promotion<long,   double>  { typedef double Type; };
+template <> struct Promotion<double, long>    { typedef double Type; };
+template <> struct Promotion<float,  double>  { typedef double Type; };
+template <> struct Promotion<double, float>   { typedef double Type; };
+template <> struct Promotion<long,   float>   { typedef double Type; };
+template <> struct Promotion<float,  long>    { typedef double Type; };
 
 #endif // TRAITS_H

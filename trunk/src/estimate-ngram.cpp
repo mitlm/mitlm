@@ -129,6 +129,8 @@ int main(int argc, char* argv[]) {
         ("read-count,c", po::value<vector<string> >()->composing(),
          "Read n-gram counts from countsfile.  Using both -read-text and "
          "-read-count will combine the counts.")
+        ("read-wfeatures,w", po::value<vector<string> >()->composing(),
+         "Read n-gram weighting features from feature file.")
         ("read-parameters,p", po::value<string>(),
          "Read model parameters from paramfile.")
         ("smoothing,s", po::value<string>()->default_value("ModKN"),
@@ -208,6 +210,18 @@ int main(int argc, char* argv[]) {
             Logger::Log(1, "Loading counts %s...\n", countFiles[i].c_str());
             lm.LoadCounts(ZFile(countFiles[i].c_str()));
         }
+    }
+
+    // Process n-gram weighting features.
+    if (vm.count("read-wfeatures")) {
+        vector<string> readWFeats = vm["read-wfeatures"].as<vector<string> >();
+        vector<vector<DoubleVector> > featureList(readWFeats.size());
+        for (size_t f = 0; f < readWFeats.size(); ++f) {
+            const char *featFilename = readWFeats[f].c_str();
+            Logger::Log(1, "Loading weight features %s...\n", featFilename);
+            lm.model().LoadComputedFeatures(featureList[f], featFilename);
+        }
+        lm.SetWeighting(featureList);
     }
 
     // Set smoothing algorithms.

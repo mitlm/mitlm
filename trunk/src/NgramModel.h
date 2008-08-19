@@ -53,7 +53,7 @@ using std::vector;
 //
 class NgramModel {
 protected:
-    Vocab                    _vocab;
+    Vocab               _vocab;
     vector<NgramVector> _vectors;
     vector<IndexVector> _backoffVectors;
 
@@ -80,6 +80,8 @@ public:
                           size_t &outNumOOV, size_t &outNumWords) const;
     void   LoadFeatures(vector<DoubleVector> &featureVectors,
                         const ZFile &featureFile, size_t maxSize=0) const;
+    void   LoadComputedFeatures(vector<DoubleVector> &featureVectors,
+                                const char *featureFile, size_t maxSize=0) const;
     size_t GetNgramWords(size_t order, NgramIndex index, StrVector &wrds) const;
     void   ExtendModel(const NgramModel &m, VocabVector &vocabMap,
                        vector<IndexVector> &ngramMap);
@@ -87,7 +89,7 @@ public:
     void   Serialize(FILE *outFile) const;
     void   Deserialize(FILE *inFile);
 
-    template<class T>
+    template <class T>
     static void ApplySort(const IndexVector &ngramMap, DenseVector<T> &data,
                           size_t length = 0, T defValue = T());
 
@@ -102,6 +104,10 @@ public:
 protected:
     NgramIndex _Find(const VocabIndex *words, size_t wordsLen) const;
     void       _ComputeBackoffs();
+    void       _LoadFrequency(vector<DoubleVector> &freqVectors,
+                              const ZFile &corpusFile, size_t maxSize=0) const;
+    void       _LoadEntropy(vector<DoubleVector> &entropyVectors,
+                            const ZFile &corpusFile, size_t maxSize=0) const;
 };
 
 #endif // NGRAMMODEL_H

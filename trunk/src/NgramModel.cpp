@@ -36,6 +36,7 @@
 #include <vector>
 #include "util/BitOps.h"
 #include "util/FastIO.h"
+#include "util/Logger.h"
 #include "util/ZFile.h"
 #include "Types.h"
 #include "NgramModel.h"
@@ -501,7 +502,7 @@ NgramModel::LoadFeatures(vector<DoubleVector> &featureVectors,
                 for (size_t i = 1; i <= words.size(); i++)
                     index = _vectors[i].Find(index, words[i - 1]);
                 if (index == -1)
-                    printf("Feature skipped.");
+                    Logger::Warn(1, "Feature skipped.\n");
                 else
                     featureVectors[words.size()][index] = atof(token);
                 break;  // Move to next line.
@@ -512,6 +513,57 @@ NgramModel::LoadFeatures(vector<DoubleVector> &featureVectors,
             *p++ = 0;
             if (len > 0) words.push_back(_vocab.Find(token, len));
             if (words.size() >= maxSize) break;
+        }
+    }
+}
+
+void
+NgramModel::LoadComputedFeatures(vector<DoubleVector> &featureVectors,
+                                 const char *featureFile,
+                                 size_t maxSize) const {
+    std::string strFilename(featureFile);
+    size_t colonIndex = strFilename.find(':');
+    const char *featFunc, *filename;
+    if (colonIndex == std::string::npos) {
+        featFunc = NULL;
+        filename = strFilename.c_str();
+    } else {
+        strFilename[colonIndex] = 0;
+        featFunc = strFilename.c_str();
+        filename = &strFilename[colonIndex + 1];
+    }
+
+    ZFile f(filename, "r");
+    if (featFunc == NULL)
+        LoadFeatures(featureVectors, f, maxSize);
+    else if (strcmp(featFunc, "freq") == 0)
+        _LoadFrequency(featureVectors, f, maxSize);
+    else if (strcmp(featFunc, "entropy") == 0)
+        _LoadEntropy(featureVectors, f, maxSize);
+    else {
+        LoadFeatures(featureVectors, f, maxSize);
+        if (strcmp(featFunc, "log") == 0)
+            for (size_t o = 0; o < featureVectors.size(); ++o)
+                featureVectors[o] = log(featureVectors[o] + 1e-99);
+        else if (strcmp(featFunc, "log1p") == 0)
+            for (size_t o = 0; o < featureVectors.size(); ++o)
+                featureVectors[o] = log(featureVectors[o] + 1);
+        else if (strcmp(featFunc, "pow2") == 0)
+            for (size_t o = 0; o < featureVectors.size(); ++o)
+                featureVectors[o] *= featureVectors[o];
+        else if (strcmp(featFunc, "pow3") == 0)
+            for (size_t o = 0; o < featureVectors.size(); ++o)
+                featureVectors[o] = pow(featureVectors[o], 3);
+        else {
+            Logger::Error(1, "Unknown feature function: %s\n", featFunc);
+            exit(1);
+        }
+    }
+
+    for (size_t o = 0; o < featureVectors.size(); ++o) {
+        if (anyTrue(featureVectors[o] > 20.0)) {
+            Logger::Warn(1, "Feature value %s exceed 20.0.\n", featureFile);
+            break;
         }
     }
 }
@@ -602,7 +654,7 @@ NgramModel::Deserialize(FILE *inFile) {
         _vectors[i].Deserialize(inFile);
 }
 
-template<class T>
+template <class T>
 void
 NgramModel::ApplySort(const IndexVector &ngramMap,
                      DenseVector<T> &data,
@@ -661,4 +713,166 @@ NgramModel::_ComputeBackoffs() {
             backoffs[i]    = _Find(&ngramVocabs[2], o - 1);
         }
     }
+}
+
+void
+NgramModel::_LoadFrequency(vector<DoubleVector> &freqVectors,
+                              const ZFile &corpusFile, size_t maxSize) const {
+    if (corpusFile == NULL) throw std::invalid_argument("Invalid file");
+
+    // Resize vectors and allocate counts.
+    if (maxSize == 0 || maxSize > size())
+        maxSize = size();
+    int numDocs = 0;
+    vector<CountVector> countVectors(maxSize);
+    freqVectors.resize(maxSize);
+    for (size_t o = 0; o < maxSize; ++o) {
+        countVectors[o].resize(sizes(o), 0);
+        freqVectors[o].resize(sizes(o), 0);
+    }
+
+    // Accumulate counts for each n-gram in corpus file.
+    char line[MAXLINE];
+    vector<VocabIndex> words(256);
+    vector<NgramIndex> hists(maxSize);
+    while (getline(corpusFile, line, MAXLINE)) {
+        if (strcmp(line, "</DOC>") == 0) {
+            // Accumulate frequency.
+            numDocs++;
+            for (size_t o = 1; o < countVectors.size(); ++o) {
+                for (size_t i = 0; i < countVectors[o].length(); ++i) {
+                    if (countVectors[o][i] > 0) {
+                        freqVectors[o][i] += 1;
+                        countVectors[o][i] = 0;
+                    }
+                }
+            }
+            continue;
+        } else if (strncmp(line, "<DOC ", 5) == 0)
+            continue;
+
+        // Lookup vocabulary indices for each word in the line.
+        words.clear();
+        words.push_back(Vocab::BeginOfSentence);
+        char *p = &line[0];
+        while (*p != '\0') {
+            while (isspace(*p)) ++p;  // Skip consecutive spaces.
+            const char *token = p;
+            while (*p != 0 && !isspace(*p))  ++p;
+            size_t len = p - token;
+            if (*p != 0) *p++ = 0;
+            words.push_back(_vocab.Find(token, len));
+        }
+        words.push_back(Vocab::EndOfSentence);
+
+        // Add each order n-gram.
+        countVectors[0][0] += words.size() - 1;
+        for (size_t i = 0; i < words.size(); ++i) {
+            VocabIndex word = words[i];
+            NgramIndex hist = 0;
+            for (size_t j = 1; j < std::min(i + 2, maxSize); ++j) {
+                if (word != Vocab::Invalid) {
+                    NgramIndex index = _vectors[j].Find(hist, word);
+                    if (index >= 0)
+                        countVectors[j][index]++;
+                    else
+                        Logger::Warn(1, "DocFreq feature skipped.\n");
+                    hist     = hists[j];
+                    hists[j] = index;
+                } else {
+                    hist     = hists[j];
+                    hists[j] = NgramVector::Invalid;
+                }
+            }
+        }
+    }
+
+    // Finalize frequency computation.
+    for (size_t o = 1; o < maxSize; o++)
+        freqVectors[o] /= numDocs;
+}
+
+void
+NgramModel::_LoadEntropy(vector<DoubleVector> &entropyVectors,
+                            const ZFile &corpusFile, size_t maxSize) const {
+    if (corpusFile == NULL) throw std::invalid_argument("Invalid file");
+
+    // Resize vectors and allocate counts.
+    if (maxSize == 0 || maxSize > size())
+        maxSize = size();
+    int numDocs = 0;
+    vector<CountVector> countVectors(maxSize);
+    vector<CountVector> totCountVectors(maxSize);
+    entropyVectors.resize(maxSize);
+    for (size_t o = 0; o < maxSize; ++o) {
+        countVectors[o].resize(sizes(o), 0);
+        totCountVectors[o].resize(sizes(o), 0);
+        entropyVectors[o].resize(sizes(o), 0);
+    }
+
+    // Accumulate counts for each n-gram in corpus file.
+    char line[MAXLINE];
+    vector<VocabIndex> words(256);
+    vector<NgramIndex> hists(maxSize);
+    while (getline(corpusFile, line, MAXLINE)) {
+        if (strcmp(line, "</DOC>") == 0) {
+            // Accumulate frequency.
+            numDocs++;
+            for (size_t o = 1; o < countVectors.size(); ++o) {
+                for (size_t i = 0; i < countVectors[o].length(); ++i) {
+                    int c = countVectors[o][i];
+                    if (c > 0) {
+                        totCountVectors[o][i] += c;
+                        entropyVectors[o][i] += c * log(c);
+                        countVectors[o][i] = 0;
+                    }
+                }
+            }
+            continue;
+        } else if (strncmp(line, "<DOC ", 5) == 0)
+            continue;
+
+        // Lookup vocabulary indices for each word in the line.
+        words.clear();
+        words.push_back(Vocab::BeginOfSentence);
+        char *p = &line[0];
+        while (*p != '\0') {
+            while (isspace(*p)) ++p;  // Skip consecutive spaces.
+            const char *token = p;
+            while (*p != 0 && !isspace(*p))  ++p;
+            size_t len = p - token;
+            if (*p != 0) *p++ = 0;
+            words.push_back(_vocab.Find(token, len));
+        }
+        words.push_back(Vocab::EndOfSentence);
+
+        // Add each order n-gram.
+        countVectors[0][0] += words.size() - 1;
+        for (size_t i = 0; i < words.size(); ++i) {
+            VocabIndex word = words[i];
+            NgramIndex hist = 0;
+            for (size_t j = 1; j < std::min(i + 2, maxSize); ++j) {
+                if (word != Vocab::Invalid) {
+                    NgramIndex index = _vectors[j].Find(hist, word);
+                    if (index >= 0)
+                        countVectors[j][index]++;
+                    else
+                        Logger::Warn(1, "DocFreq feature skipped.\n");
+                    hist     = hists[j];
+                    hists[j] = index;
+                } else {
+                    hist     = hists[j];
+                    hists[j] = NgramVector::Invalid;
+                }
+            }
+        }
+    }
+
+    // Finalize entropy computation.
+    double invLogNumDocs = 1.0 / log((double)numDocs);
+    for (size_t o = 1; o < maxSize; o++)
+        entropyVectors[o] = CondExpr(
+            totCountVectors[o] == 0, 0.0,
+            ((entropyVectors[o] / -totCountVectors[o])
+             + log(asDouble(totCountVectors[o]))) * invLogNumDocs);
 }

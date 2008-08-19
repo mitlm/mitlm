@@ -50,8 +50,8 @@ struct Mask {
 ////////////////////////////////////////////////////////////////////////////////
 
 struct NgramLMMask : public Mask {
-    vector<BitVector> ProbMaskVectors;
-    vector<BitVector> BowMaskVectors;
+    vector<BitVector>         ProbMaskVectors;
+    vector<BitVector>         BowMaskVectors;
     vector<SharedPtr<Mask> >  SmoothingMasks;
 };
 
@@ -64,9 +64,9 @@ struct KneserNeySmoothingMask : public Mask {
 ////////////////////////////////////////////////////////////////////////////////
 
 struct InterpolatedNgramLMMask : public Mask {
-    vector<BitVector> ProbMaskVectors;
-    vector<BitVector> BowMaskVectors;
-    vector<BitVector> WeightMaskVectors;
+    vector<BitVector>         ProbMaskVectors;
+    vector<BitVector>         BowMaskVectors;
+    vector<BitVector>         WeightMaskVectors;
     vector<SharedPtr<Mask> >  LMMasks;
 };
 

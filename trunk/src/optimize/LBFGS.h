@@ -45,7 +45,7 @@ extern "C" {
                 double *eps, double *xtol, double *w, int *iflag);
 }
 
-template<class Function>
+template <class Function>
 double
 MinimizeLBFGS(Function &func, DoubleVector &x, int &numIter, double step=1e-8,
               double eps=1e-5, double xtol=1e-16, int maxIter=0) {

@@ -208,14 +208,23 @@ NgramLM::SetSmoothingAlgs(const vector<SharedPtr<Smoothing> > &smoothings) {
 }
 
 void
-NgramLM::SetFeatures() {
-
+NgramLM::SetWeighting(const vector<FeatureVectors> &featureList) {
+    // NOTE: Remap featureList[f][o] to _featureList[o][f].
+    if (featureList.size() > 0) _featureList.resize(featureList[0].size());
+    for (size_t o = 0; o < _featureList.size(); ++o) {
+        _featureList[o].resize(featureList.size());
+        for (size_t f = 0; f < featureList.size(); ++f) {
+            assert(featureList[f].size() == _featureList.size());
+            _featureList[o][f].attach(featureList[f][o]);
+        }
+    }
 }
 
 void
 NgramLM::SetOrder(size_t order) {
     NgramLMBase::SetOrder(order);
     _countVectors.resize(order + 1);
+    _featureList.resize(order + 1);
 }
 
 Mask *
