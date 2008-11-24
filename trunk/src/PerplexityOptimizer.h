@@ -32,48 +32,49 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef PERPLEXITYOPTIMIZER_H
+#define PERPLEXITYOPTIMIZER_H
 
 #include <vector>
-#include "vector/DenseVector.h"
-#include "vector/VectorBuilder.h"
-#include "vector/VectorOps.h"
+#include "optimize/Optimization.h"
+#include "Types.h"
+#include "NgramLM.h"
+#include "Mask.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Type aliases.
-typedef unsigned char  byte;
-typedef unsigned short ushort;
-typedef unsigned int   uint;
+class PerplexityOptimizer {
+protected:
+    NgramLMBase &       _lm;
+    size_t              _order;
+    vector<CountVector> _probCountVectors;
+    vector<CountVector> _bowCountVectors;
+    size_t              _numOOV;
+    size_t              _numWords;
+    size_t              _numZeroProbs;
+    size_t              _numCalls;
+    double              _totLogProb;
+    SharedPtr<Mask>     _mask;
 
-// Defines the size of basic types.
-typedef int    VocabIndex;
-typedef int    NgramIndex;
-typedef int    Count;
-typedef float  LProb;
-typedef double Prob;
-typedef double Param;
-typedef uint   NodeIndex;
+    class ComputeEntropyFunc {
+        PerplexityOptimizer &_obj;
+    public:
+        ComputeEntropyFunc(PerplexityOptimizer &obj) : _obj(obj) { }
+        double operator()(const ParamVector &params)
+        { _obj._numCalls++; return _obj.ComputeEntropy(params); }
+    };
 
-// Vector aliases.
-typedef DenseVector<const char *> StrVector;
-typedef DenseVector<byte>         BitVector;
-typedef DenseVector<byte>         ByteVector;
-typedef DenseVector<short>        ShortVector;
-typedef DenseVector<int>          IntVector;
-typedef DenseVector<uint>         UIntVector;
-typedef DenseVector<size_t>       SizeVector;
-typedef DenseVector<float>        FloatVector;
-typedef DenseVector<double>       DoubleVector;
-typedef DenseVector<VocabIndex>   VocabVector;
-typedef DenseVector<Count>        CountVector;
-typedef DenseVector<NgramIndex>   IndexVector;
-typedef DenseVector<Prob>         ProbVector;
-typedef DenseVector<Param>        ParamVector;
-typedef DenseVector<uint>         NodeVector;
+public:
+    PerplexityOptimizer(NgramLMBase &lm, size_t order=3)
+        : _lm(lm), _order(order) { }
 
-typedef std::vector<DoubleVector> FeatureVectors;
+    void   SetOrder(size_t order) { _order = order; }
+    void   LoadCorpus(const ZFile &corpusFile);
+    double ComputeEntropy(const ParamVector &params);
+    double ComputePerplexity(const ParamVector &params)
+    { return exp(ComputeEntropy(params)); }
+    double Optimize(ParamVector &params,
+                    Optimization technique=PowellOptimization);
+};
 
-
-#endif // TYPES_H
+#endif // PERPLEXITYOPTIMIZER_H

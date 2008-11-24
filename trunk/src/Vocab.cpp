@@ -73,10 +73,10 @@ Vocab::SetReadOnly(bool readOnly) {
 VocabIndex
 Vocab::Find(const char *word, size_t len) const {
     size_t     skip = 0;
-    VocabIndex pos  = SRILMHash(word) & _hashMask;
+    VocabIndex pos  = StringHash(word, len) & _hashMask;
     VocabIndex index;
     while ((index = _indices[pos]) != Invalid &&
-           !(wordlen(index) == len && strcmp(operator[](index), word) == 0)) {
+           !(wordlen(index)==len && strncmp(operator[](index), word, len)==0)) {
         pos = (pos + ++skip) & _hashMask;
     }
     return index;
@@ -143,11 +143,11 @@ Vocab::Sort(VocabVector &sortMap) {
 // Loads vocabulary from file where each word appears on a non-# line.
 void
 Vocab::LoadVocab(const ZFile &vocabFile) {
-    char line[4096];
     if (ReadUInt64(vocabFile) == MITLMv1) {
         Deserialize(vocabFile);
     } else {
         fseek(vocabFile, 0, SEEK_SET);
+        char   line[4096];
         size_t len = 0;
         while (!feof(vocabFile)) {
             getline(vocabFile, line, 4096, &len);
@@ -200,10 +200,10 @@ Vocab::Deserialize(FILE *inFile) {
 VocabIndex *
 Vocab::_FindIndex(const char *word, size_t len) {
     size_t     skip = 0;
-    VocabIndex pos  = SRILMHash(word) & _hashMask;
+    VocabIndex pos  = StringHash(word, len) & _hashMask;
     VocabIndex index;
     while ((index = _indices[pos]) != Invalid &&
-           !(wordlen(index) == len && strcmp(operator[](index), word) == 0)) {
+           !(wordlen(index)==len && strncmp(operator[](index), word, len)==0)) {
         pos = (pos + ++skip) & _hashMask;
     }
     return &_indices[pos];
@@ -219,10 +219,9 @@ Vocab::_Reindex(size_t indexSize) {
     OffsetLen *p = _offsetLens.begin();
     for (VocabIndex i = 0; i < (VocabIndex)size(); ++i, ++p) {
         size_t     skip = 0;
-        VocabIndex pos  = SRILMHash(&_buffer[p->Offset]) & _hashMask;
+        VocabIndex pos  = StringHash(&_buffer[p->Offset], p->Len) & _hashMask;
         while (_indices[pos] != Invalid)
             pos = (pos + ++skip) & _hashMask;
         _indices[pos] = i;
     }
 }
-

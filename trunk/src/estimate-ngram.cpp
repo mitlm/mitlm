@@ -40,7 +40,8 @@
 #include "NgramLM.h"
 #include "MaxLikelihoodSmoothing.h"
 #include "KneserNeySmoothing.h"
-#include "NgramPerplexity.h"
+#include "PerplexityOptimizer.h"
+#include "WordErrorRateOptimizer.h"
 
 using std::vector;
 using std::string;
@@ -141,6 +142,10 @@ int main(int argc, char* argv[]) {
          "Ex. --smoothing1 KN -2 WB.  See SMOOTHING.")
         ("optimize-perplexity,d", po::value<string>(),
          "Tune the model parameters to minimize the perplexity of dev text.")
+        ("optimize-margin,m", po::value<string>(),
+         "Tune the model parameters to maximize the discriminative margin.")
+        ("optimize-wer,a", po::value<string>(),
+         "Tune the model parameters to minimize the word error rate.")
         ("evaluate-perplexity,e", po::value<vector<string> >()->composing(),
          "Compute the perplexity of textfile.  This option can be repeated.")
         ("write-vocab,V", po::value<string>(),
@@ -149,6 +154,8 @@ int main(int argc, char* argv[]) {
          "Write n-gram counts to countsfile.")
         ("write-binary-count,D", po::value<string>(),
          "Write n-gram counts to countsfile in MITLM binary format.")
+        ("write-eff-count", po::value<string>(),
+         "Write effective n-gram counts to countsfile.")
         ("write-lm,L", po::value<string>(),
          "Write n-gram language model to lmfile in ARPA backoff text format.")
         ("write-binary-lm,B", po::value<string>(),
@@ -188,8 +195,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Read language model input files.
-    NgramLM lm;
-    lm.SetOrder(order);
+    NgramLM lm(order);
     if (vm.count("read-vocab")) {
         const char *vocabFile = vm["read-vocab"].as<string>().c_str();
         Logger::Log(1, "Loading vocab %s...\n", vocabFile);
@@ -262,7 +268,7 @@ int main(int argc, char* argv[]) {
             const char *devFile=vm["optimize-perplexity"].as<string>().c_str();
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
-            NgramPerplexity dev(lm);
+            PerplexityOptimizer dev(lm, order);
             dev.LoadCorpus(ZFile(devFile));
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
@@ -270,8 +276,36 @@ int main(int argc, char* argv[]) {
             Logger::Log(2, " Best perplexity = %f\n", exp(optEntropy));
         }
     }
-    Logger::Log(1, "Estimating full n-gram model...\n");
-    lm.Estimate(params);
+    if (vm.count("optimize-margin")) {
+        if (params.length() == 0) {
+            Logger::Warn(1, "No parameters to optimize.\n");
+        } else {
+            const char *devFile=vm["optimize-margin"].as<string>().c_str();
+
+            Logger::Log(1, "Loading development set %s...\n", devFile);
+            WordErrorRateOptimizer dev(lm, order);
+            dev.LoadLattices(ZFile(devFile));
+
+            Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
+            double optMargin = dev.OptimizeMargin(params, PowellOptimization);
+            Logger::Log(2, " Best margin = %f\n", optMargin);
+        }
+    }
+    if (vm.count("optimize-wer")) {
+        if (params.length() == 0) {
+            Logger::Warn(1, "No parameters to optimize.\n");
+        } else {
+            const char *devFile=vm["optimize-wer"].as<string>().c_str();
+
+            Logger::Log(1, "Loading development set %s...\n", devFile);
+            WordErrorRateOptimizer dev(lm, order);
+            dev.LoadLattices(ZFile(devFile));
+
+            Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
+            double optWER = dev.OptimizeWER(params, PowellOptimization);
+            Logger::Log(2, " Best WER = %f%%\n", optWER);
+        }
+    }
 
     // Evaluate LM.
     if (vm.count("evaluate-perplexity")) {
@@ -281,13 +315,16 @@ int main(int argc, char* argv[]) {
         Logger::Log(0, "Perplexity Evaluations:\n");
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
-            NgramPerplexity eval(lm);
+            PerplexityOptimizer eval(lm, order);
             eval.LoadCorpus(ZFile(evalFiles[i].c_str()));
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                        eval.ComputePerplexity(params));
         }
     }
+
+    Logger::Log(1, "Estimating full n-gram model...\n");
+    lm.Estimate(params);
 
     // Save results.
     if (vm.count("write-vocab")) {
@@ -304,6 +341,11 @@ int main(int argc, char* argv[]) {
         const char *countFile = vm["write-binary-count"].as<string>().c_str();
         Logger::Log(1, "Saving binary counts to %s...\n", countFile);
         lm.SaveCounts(ZFile(countFile, "wb"), true);
+    }
+    if (vm.count("write-eff-count")) {
+        const char *countFile = vm["write-eff-count"].as<string>().c_str();
+        Logger::Log(1, "Saving effective counts to %s...\n", countFile);
+        lm.SaveEffCounts(ZFile(countFile, "w"));
     }
     if (vm.count("write-lm")) {
         const char *lmFile = vm["write-lm"].as<string>().c_str();

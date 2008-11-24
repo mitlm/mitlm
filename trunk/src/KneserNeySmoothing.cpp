@@ -82,7 +82,8 @@ void KneserNeySmoothing::Initialize(NgramLM *pLM, size_t order) {
         // Pre-compute inverse of sum of adjusted counts for each history.
         CountVector histCounts(_pLM->sizes(_order - 1), 0);
         BinWeight(_pLM->hists(_order), _effCounts, histCounts);
-        _invHistCounts = (Param)1 / asDouble(histCounts);
+        _invHistCounts = CondExpr(histCounts == 0,
+                                  0, (Param)1 / asDouble(histCounts));
     }
 
     // Estimate fixed Kneser-Ney discount factors from count stats.
@@ -93,7 +94,7 @@ void KneserNeySmoothing::Initialize(NgramLM *pLM, size_t order) {
     //Range r(1, _discParams.length());
     //_discParams = CondExpr(n == 0, r, r - (r+1) * Y * n[r+1] / n[r]);
     //_discParams = min(r, max(0, _discParams));
-    _discParams.resize(_discOrder + 1);
+    _discParams.resize(_discOrder + 1, 0);
     for (size_t i = 1; i < _discParams.length(); i++) {
         _discParams[i] = (n[i] == 0) ? i : (i - (i+1) * Y * n[i+1] / n[i]);
         if (_discParams[i] < 0) _discParams[i] = 0;
@@ -103,6 +104,8 @@ void KneserNeySmoothing::Initialize(NgramLM *pLM, size_t order) {
     // Set default parameters.
     if (_tuneParams)
         _defParams = _discParams[Range(1, _discParams.length())];
+    else
+        _defParams.reset(0);
 
     // Set n-gram weighting parameters.
     _defParams.resize(_defParams.length() + _pLM->features(order).size(), 0);
@@ -142,25 +145,32 @@ KneserNeySmoothing::Estimate(const ParamVector &params,
 
     // Unpack discount parameters.
     if (_tuneParams) {
-        // Check of out of bounds parameters.
-        for (size_t i = 0; i < min(params.length(), _discOrder); i++)
+        // Check of out-of-bounds discount parameters.
+        for (size_t i = 0; i < _discOrder; i++)
             if (params[i] < 0 || params[i] > i+1) {
                 Logger::Log(2, "Clipping\n");
                 return false;
             }
         _discParams[Range(1, _discParams.length())] = params[Range(_discOrder)];
     }
+    // Check of out-of-bounds n-gram weighting parameters.
+    size_t numDiscParams = _tuneParams ? _discOrder : 0;
+    for (size_t i = numDiscParams; i < params.length(); i++)
+        if (fabs(params[i] > 100)) {
+            Logger::Log(2, "Clipping\n");
+            return false;
+        }
 
     // Compute n-gram weights and inverse history counts, if necessary.
     size_t numFeatures = _pLM->features(_order).size();
     if (numFeatures > 0) {
-        size_t numDiscParams = _tuneParams ? _discOrder : 0;
         Range r(numDiscParams, numDiscParams + numFeatures);
         _ComputeWeights(ParamVector(params[r]));
         _invHistCounts.set(0);
         BinWeight(_pLM->hists(_order), _effCounts * _ngramWeights,
                   _invHistCounts);
-        _invHistCounts = (Param)1 / _invHistCounts;
+        _invHistCounts = CondExpr(_invHistCounts == 0,
+                                  0, (Param)1 / _invHistCounts);
     }
 
     // Estimate probs and bows using optimized methods.
@@ -200,7 +210,7 @@ KneserNeySmoothing::_Estimate(ProbVector &probs, ProbVector &bows) {
     // Compute backoff weights.
     bows.set(0);
     BinWeight(hists, discounts, bows);
-    bows = CondExpr(isnan(_invHistCounts), 1.0, bows * _invHistCounts);
+    bows = CondExpr(_invHistCounts == 0, 1.0, bows * _invHistCounts);
 
     // Compute interpolated probabilities.
     if (_order == 1)
@@ -238,7 +248,7 @@ KneserNeySmoothing::_EstimateMasked(const NgramLMMask *pMask,
 //    maskedBows = CondExpr(isnan(_invHistCounts), 1.0, bows * _invHistCounts);
     for (size_t i = 0; i < bows.length(); i++)
         if (bowMask[i]) {
-            if (isnan(_invHistCounts[i]))
+            if (_invHistCounts[i] == 0)
                 bows[i] = 1.0;
             else
                 bows[i] *= _invHistCounts[i];
@@ -271,7 +281,7 @@ KneserNeySmoothing::_EstimateWeighted(ProbVector &probs, ProbVector &bows) {
     // Compute backoff weights.
     bows.set(0);
     BinWeight(hists, _ngramWeights * discounts, bows);
-    bows = CondExpr(isnan(_invHistCounts), 1.0, bows * _invHistCounts);
+    bows = CondExpr(_invHistCounts == 0, 1.0, bows * _invHistCounts);
 
     // Compute interpolated probabilities.
     if (_order == 1)
@@ -312,7 +322,7 @@ KneserNeySmoothing::_EstimateWeightedMasked(const NgramLMMask *pMask,
 //    maskedBows = CondExpr(isnan(_invHistCounts), 1.0, bows * _invHistCounts);
     for (size_t i = 0; i < bows.length(); i++)
         if (bowMask[i]) {
-            if (isnan(_invHistCounts[i]))
+            if (_invHistCounts[i] == 0)
                 bows[i] = 1.0;
             else
                 bows[i] *= _invHistCounts[i];

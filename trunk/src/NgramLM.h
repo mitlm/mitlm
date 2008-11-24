@@ -48,7 +48,7 @@ using std::vector;
 ////////////////////////////////////////////////////////////////////////////////
 
 class NgramLMBase {
-    friend class NgramPerplexity;
+    friend class PerplexityOptimizer;
 
 protected:
     SharedPtr<NgramModel> _pModel;
@@ -105,9 +105,10 @@ protected:
 
 public:
     NgramLM(size_t order = 3) : NgramLMBase(order), _countVectors(order) { }
-    void LoadCorpus(const ZFile &corpusFile);
-    void LoadCounts(const ZFile &countsFile);
+    void LoadCorpus(const ZFile &corpusFile, bool reset=false);
+    void LoadCounts(const ZFile &countsFile, bool reset=false);
     void SaveCounts(const ZFile &countsFile, bool asBinary=false) const;
+    void SaveEffCounts(const ZFile &countsFile, bool asBinary=false) const;
     void SetSmoothingAlgs(const vector<SharedPtr<Smoothing> > &smoothings);
     void SetWeighting(const vector<FeatureVectors> &featureList);
 

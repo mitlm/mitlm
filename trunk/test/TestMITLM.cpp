@@ -40,6 +40,8 @@
 #include "Vocab.h"
 #include "NgramVector.h"
 #include "NgramModel.h"
+#include "NgramLM.h"
+#include "Lattice.h"
 #include "Timer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,7 +76,7 @@ TEST(Utilities, HashFunc) {
     int srilmTotal = 0;
     START_TIME_N(vocab.size()) {
         for (VocabIndex i = 0; i < (VocabIndex)vocab.size(); i++)
-            srilmTotal += SRILMHash(vocab[i]);
+            srilmTotal += StringHash(vocab[i], vocab.wordlen(i));
     } END_TIME(timeSRILM)
 
     printf("SuperFastHash = %.2f,\tSRILMHash = %.2f\n",
@@ -288,6 +290,98 @@ TEST(Optimization, RosenbrockLBFGSB) {
     EXPECT_EQ(75, ros.numCalls);
 }
 
+TEST(Lattice, Basic) {
+    ArpaNgramLM lm(1);
+    lm.LoadLM(ZFile("data/lattice.lm", "r"));
+
+    Lattice l(lm);
+    l.LoadLattice(ZFile("data/lattice.fst", "r"));
+    l.SaveLattice(ZFile("data/lattice.fst.out", "w"));
+
+//    VocabVector bestPath;
+//    float bestScore = l.FindBestPath(bestPath);
+//    EXPECT_FLOAT_EQ(5.0f, bestScore);
+//    ASSERT_EQ(3ul, bestPath.length());
+//    EXPECT_STREQ("b", lm.vocab()[bestPath[0]]);
+//    EXPECT_STREQ("h", lm.vocab()[bestPath[1]]);
+//    EXPECT_STREQ("n", lm.vocab()[bestPath[2]]);
+//
+//    vector<float> nbestScores;
+//    l.FindNBestPaths(10, nbestScores);
+//    ASSERT_EQ(7ul, nbestScores.size());
+//    EXPECT_FLOAT_EQ(5.0f, nbestScores[0]);
+//    EXPECT_FLOAT_EQ(6.0f, nbestScores[1]);
+//    EXPECT_FLOAT_EQ(7.0f, nbestScores[2]);
+//    EXPECT_FLOAT_EQ(7.0f, nbestScores[3]);
+//    EXPECT_FLOAT_EQ(8.0f, nbestScores[4]);
+//    EXPECT_FLOAT_EQ(8.0f, nbestScores[5]);
+//    EXPECT_FLOAT_EQ(10.0f, nbestScores[6]);
+//
+//    l.SetReferenceText("b h n");
+//    EXPECT_EQ(0, l.ComputeWER());
+//    EXPECT_FLOAT_EQ(5.0f, l.FindOraclePath());
+//    EXPECT_TRUE(l.IsOracleBestPath());
+//    EXPECT_FLOAT_EQ(1.0f, l.ComputeMargin());
+//
+//    l.SetReferenceText("");
+//    EXPECT_EQ(3, l.ComputeWER());
+//    EXPECT_FLOAT_EQ(5.0f, l.FindOraclePath());
+//    EXPECT_TRUE(l.IsOracleBestPath());
+//    EXPECT_FLOAT_EQ(1.0f, l.ComputeMargin());
+//
+//    l.SetReferenceText("b h a");
+//    EXPECT_EQ(1, l.ComputeWER());
+//    EXPECT_FLOAT_EQ(5.0f, l.FindOraclePath());
+//    EXPECT_TRUE(l.IsOracleBestPath());
+//    EXPECT_FLOAT_EQ(1.0f, l.ComputeMargin());
+//
+//    l.SetReferenceText("b h");
+//    EXPECT_EQ(1, l.ComputeWER());
+//    EXPECT_FLOAT_EQ(5.0f, l.FindOraclePath());
+//    EXPECT_TRUE(l.IsOracleBestPath());
+//    EXPECT_FLOAT_EQ(1.0f, l.ComputeMargin());
+//
+//    l.SetReferenceText("a b h");
+//    EXPECT_EQ(2, l.ComputeWER());
+//    EXPECT_FLOAT_EQ(5.0f, l.FindOraclePath());
+//    EXPECT_TRUE(l.IsOracleBestPath());
+//    EXPECT_FLOAT_EQ(1.0f, l.ComputeMargin());
+//
+//    l.SetReferenceText("a b h n");
+//    EXPECT_EQ(1, l.ComputeWER());
+//    EXPECT_FLOAT_EQ(5.0f, l.FindOraclePath());
+//    EXPECT_TRUE(l.IsOracleBestPath());
+//    EXPECT_FLOAT_EQ(1.0f, l.ComputeMargin());
+//
+//    l.SetReferenceText("b f l");
+//    EXPECT_EQ(2, l.ComputeWER());
+//    EXPECT_FLOAT_EQ(7.0f, l.FindOraclePath());
+//    EXPECT_FALSE(l.IsOracleBestPath());
+//    EXPECT_FLOAT_EQ(-2.0f, l.ComputeMargin());
+//
+//    l.SetReferenceText("b m");
+//    EXPECT_EQ(2, l.ComputeWER());
+//    EXPECT_FLOAT_EQ(5.0f, l.FindOraclePath());
+//    EXPECT_TRUE(l.IsOracleBestPath());
+//    EXPECT_FLOAT_EQ(1.0f, l.ComputeMargin());
+//
+//    l.SetReferenceText("b k m");
+//    EXPECT_EQ(2, l.ComputeWER());
+//    EXPECT_FLOAT_EQ(7.0f, l.FindOraclePath());
+//    EXPECT_FALSE(l.IsOracleBestPath());
+//    EXPECT_FLOAT_EQ(-2.0f, l.ComputeMargin());
+
+}
+
+TEST(Lattice, UpdateWeights) {
+    ArpaNgramLM lm;
+    lm.LoadLM(ZFile("data/lattice.lm", "r"));
+
+    Lattice l(lm);
+    l.LoadLattice(ZFile("data/lattice.wrd.fst", "r"));
+    l.UpdateWeights();
+    l.SaveLattice(ZFile("data/lattice.wrd.fst.out", "w"));
+}
 
 int main(int argc, char* argv[]) {
     testing::InitGoogleTest(&argc, argv);

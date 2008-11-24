@@ -36,6 +36,7 @@
 #define DENSEVECTOR_H
 
 #include <iostream>
+#include <vector>
 #include "Vector.h"
 #include "VectorClosures.h"
 #include "Range.h"
@@ -61,6 +62,7 @@ public:
     DenseVector<T> &                       operator=(T value);
     DenseVector<T> &                       operator=(const Range &r);
     DenseVector<T> &                       operator=(const DenseVector<T> &rhs);
+    DenseVector<T> &                       operator=(const std::vector<T> &rhs);
     template <typename RHS> DenseVector<T> &operator=(const Vector<RHS> &rhs);
     template <typename RHS> DenseVector<T> &operator+=(const Vector<RHS> &rhs);
     template <typename RHS> DenseVector<T> &operator-=(const Vector<RHS> &rhs);
@@ -133,7 +135,7 @@ template <typename T>
 void WriteVector(FILE *out, const DenseVector<T> &x);
 
 template <typename T>
-void ReadVector(FILE *in, DenseVector<T> x);
+void ReadVector(FILE *in, DenseVector<T> &x);
 
 ////////////////////////////////////////////////////////////////////////////////
 

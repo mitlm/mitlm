@@ -48,6 +48,7 @@ class NgramLM;
 class Smoothing {
 protected:
     ParamVector _defParams;
+    CountVector _effCounts;
     Smoothing() { }
 
 public:
@@ -58,6 +59,8 @@ public:
                           ProbVector &probs, ProbVector &bows) = 0;
 
     const ParamVector &defParams() const { return _defParams; }
+    const CountVector &effCounts() const { return _effCounts; }
+
 };
 
 #endif // SMOOTHING_H

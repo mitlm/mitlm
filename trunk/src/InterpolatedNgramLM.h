@@ -69,9 +69,11 @@ protected:
 public:
     InterpolatedNgramLM(size_t order = 3)
         : NgramLMBase(order), _interpolation(LI) { }
-    void LoadLMs(const vector<SharedPtr<NgramLMBase> > &lms);
-    void SetInterpolation(Interpolation interpolation,
-                          const vector<FeatureVectors> &featureList);
+    void  LoadLMs(const vector<SharedPtr<NgramLMBase> > &lms);
+    void  SetInterpolation(Interpolation interpolation,
+                           const vector<FeatureVectors> &featureList);
+    SharedPtr<NgramLMBase> &lms(int l) { return _lms[l]; }
+    size_t                  numLMs()   { return _lms.size(); }
 
     virtual Mask *GetMask(vector<BitVector> &probMaskVectors,
                           vector<BitVector> &bowMaskVectors) const;

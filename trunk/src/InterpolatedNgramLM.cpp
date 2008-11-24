@@ -183,6 +183,13 @@ InterpolatedNgramLM::GetMask(vector<BitVector> &probMaskVectors,
 
 bool
 InterpolatedNgramLM::Estimate(const ParamVector &params, Mask *pMask) {
+    // Check of out of bounds parameters.
+    for (size_t i = 0; i < params.length(); i++)
+        if (fabs(params[i] > 100)) {
+            Logger::Log(2, "Clipping\n");
+            return false;
+        }
+
     // Map parameters.
     if (_paramMask.length()) {
         const Param *p = params.begin();
@@ -194,11 +201,16 @@ InterpolatedNgramLM::Estimate(const ParamVector &params, Mask *pMask) {
         _paramDefaults = params;
     }
 
-    // TODO: Estimate component LMs.
+    // Estimate component LMs.
+    InterpolatedNgramLMMask *pLMMask = (InterpolatedNgramLMMask *)pMask;
+    for (size_t l = 0; l < _lms.size(); ++l) {
+        ParamVector lmParams(_paramDefaults[Range(_paramStarts[l],
+                                                  _paramStarts[l+1])]);
+        _lms[l]->Estimate(lmParams, pLMMask ? pLMMask->LMMasks[l].get() : NULL);
+    }
 
     // Interpolate weighted probabilities and normalize backoff weights.
-    if (pMask != NULL) {
-        InterpolatedNgramLMMask *pLMMask = (InterpolatedNgramLMMask *)pMask;
+    if (pLMMask != NULL) {
         _EstimateProbsMasked(_paramDefaults, pLMMask);
         _EstimateBowsMasked(pLMMask);
     } else {
@@ -325,7 +337,7 @@ InterpolatedNgramLM::_EstimateProbsMasked(const ParamVector &params,
             // Interpolate component LM probabilities.
             const ProbVector &lmProbs(_lms[l]->probs(o));
             for (size_t i = 0; i < probs.length(); ++i)
-                //probs.mask(pMask->ProbMaskVectors[o]) += \
+                //probs.mask(pMask->ProbMaskVectors[o]) +=
                 //    lmProbs * weights[hists];
                 if (pMask->ProbMaskVectors[o][i])
                     probs[i] += lmProbs[i] * weights[hists[i]];

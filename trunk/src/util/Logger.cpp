@@ -57,7 +57,9 @@ void Logger::Warn(int level, const char *fmt, ...) {
     if (_verbosity >= level) {
         va_list args;
         va_start(args, fmt);
+        fprintf(stderr, "\e[0;33m");
         vfprintf(stderr, fmt, args);
+        fprintf(stderr, "\e[m");
         va_end(args);
     }
 }
@@ -66,7 +68,9 @@ void Logger::Error(int level, const char *fmt, ...) {
     if (_verbosity >= level) {
         va_list args;
         va_start(args, fmt);
+        fprintf(stderr, "\e[1;31m");
         vfprintf(stderr, fmt, args);
+        fprintf(stderr, "\e[m");
         va_end(args);
     }
 }

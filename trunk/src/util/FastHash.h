@@ -97,7 +97,7 @@ inline uint32_t SuperFastHash(const char * data, int len) {
     return hash;
 }
 
-inline uint32_t SuperFastHash(uint key1, uint key2) {
+inline uint32_t SuperFastHash(uint32_t key1, uint32_t key2) {
     uint32_t hash = 0, tmp;
 
     hash  += (key1 >> 16);
@@ -123,7 +123,7 @@ inline uint32_t SuperFastHash(uint key1, uint key2) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline size_t SRILMHash(const char *s) {
+inline size_t StringHash(const char *s, size_t len) {
     // Approximate SRILM Hash Function
     unsigned long i = 0;
     for (; *s; s++)
