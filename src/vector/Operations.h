@@ -133,6 +133,14 @@ struct OpIsNan {
     template <typename T> static T Eval(T v) { return isnan(v); }
 };
 
+struct OpIsInf {
+    template <typename T> static T Eval(T v) { return isinf(v); }
+};
+
+struct OpIsFinite {
+    template <typename T> static T Eval(T v) { return std::isfinite(v); }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Type Casting Operations
 

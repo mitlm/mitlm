@@ -49,6 +49,7 @@ MaxLikelihoodSmoothing::Initialize(NgramLM *pLM, size_t order) {
     assert(order != 0);
     _pLM = pLM;
     _order = order;
+    _effCounts.attach(_pLM->counts(_order));
 }
 
 bool

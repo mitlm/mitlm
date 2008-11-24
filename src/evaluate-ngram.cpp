@@ -37,7 +37,9 @@
 #include "util/Logger.h"
 #include "util/ZFile.h"
 #include "Types.h"
-#include "NgramPerplexity.h"
+#include "Lattice.h"
+#include "PerplexityOptimizer.h"
+#include "WordErrorRateOptimizer.h"
 
 using std::vector;
 using std::string;
@@ -89,14 +91,20 @@ int main(int argc, char* argv[]) {
         ("read-lm,l", po::value<string>(),
          "Reads n-gram language model in either ARPA or binary format.")
         ("evaluate-perplexity,e", po::value<vector<string> >()->composing(),
-         "Compute the perplexity of textfile.  This option can be repeated.")
+         "Compute the perplexity of textfile.  Repeatable.")
+        ("evaluate-wer,w", po::value<vector<string> >()->composing(),
+         "Compute the wer of latticefile.  Repeatable.")
+        ("evaluate-margin,m", po::value<vector<string> >()->composing(),
+         "Compute the discriminative margin of latticefile.  Repeatable.")
+        ("compile-lattices,c", po::value<string>(),
+         "Compiles lattices into a binary file.")
         ("write-vocab,V", po::value<string>(),
          "Write the LM vocabulary to vocabfile.")
         ("write-lm,L", po::value<string>(),
          "Write the interpolated n-gram language model to lmfile in ARPA "
          "backoff text format.")
         ("write-binary-lm,B", po::value<string>(),
-         "Write  the interpolated n-gram language model to lmfile in MITLM "
+         "Write the interpolated n-gram language model to lmfile in MITLM "
          "binary format.")
         ;
 
@@ -149,12 +157,52 @@ int main(int argc, char* argv[]) {
         Logger::Log(0, "Perplexity Evaluations:\n");
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
-            NgramPerplexity eval(lm);
+            PerplexityOptimizer eval(lm);
             eval.LoadCorpus(ZFile(evalFiles[i].c_str()));
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                        eval.ComputePerplexity(lm.defParams()));
         }
+    }
+
+    if (vm.count("evaluate-wer")) {
+        const vector<string> &evalFiles = vm["evaluate-wer"]
+            .as<vector<string> >();
+
+        Logger::Log(0, "Word Error Rate Evaluations:\n");
+        for (size_t i = 0; i < evalFiles.size(); i++) {
+            Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
+            WordErrorRateOptimizer eval(lm);
+            eval.LoadLattices(ZFile(evalFiles[i].c_str()));
+            Logger::Log(1, "Computing word error rate...\n");
+            Logger::Log(0, "\t%s\t%.2f%%\n", evalFiles[i].c_str(),
+                       eval.ComputeWER(lm.defParams()));
+        }
+    }
+
+    if (vm.count("evaluate-margin")) {
+        const vector<string> &evalFiles = vm["evaluate-margin"]
+            .as<vector<string> >();
+
+        Logger::Log(0, "Discriminative Margin Evaluations:\n");
+        for (size_t i = 0; i < evalFiles.size(); i++) {
+            Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
+            WordErrorRateOptimizer eval(lm);
+            eval.LoadLattices(ZFile(evalFiles[i].c_str()));
+            Logger::Log(1, "Computing discriminative margin...\n");
+            Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
+                       eval.ComputeMargin(lm.defParams()));
+        }
+    }
+
+    if (vm.count("compile-lattices")) {
+        const char *latticesFile = vm["compile-lattices"].as<string>().c_str();
+        Logger::Log(0, "Compiling lattices %s:\n", latticesFile);
+        WordErrorRateOptimizer eval(lm);
+        eval.LoadLattices(ZFile(latticesFile));
+        string outFile(latticesFile);
+        outFile += ".bin";
+        eval.SaveLattices(ZFile(outFile.c_str(), "wb"));
     }
 
     // Save results.

@@ -71,7 +71,7 @@ NgramModel::SaveVocab(const ZFile &vocabFile, bool asBinary) const {
 
 void
 NgramModel::LoadCorpus(vector<CountVector> &countVectors,
-                       const ZFile &corpusFile) {
+                       const ZFile &corpusFile, bool reset) {
     if (corpusFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Resize vectors and allocate counts.
@@ -79,7 +79,10 @@ NgramModel::LoadCorpus(vector<CountVector> &countVectors,
     countVectors[0].resize(1, 0);
     for (size_t o = 1; o < size(); ++o) {
         size_t capacity = std::max(1ul<<16, nextPowerOf2(_vectors[o].size()));
-        countVectors[o].resize(capacity, 0);
+        if (reset)
+            countVectors[o].reset(capacity, 0);
+        else
+            countVectors[o].resize(capacity, 0);
     }
 
     // Accumulate counts for each n-gram in corpus file.
@@ -140,14 +143,19 @@ NgramModel::LoadCorpus(vector<CountVector> &countVectors,
 
 void
 NgramModel::LoadCounts(vector<CountVector> &countVectors,
-                       const ZFile &countsFile) {
+                       const ZFile &countsFile, bool reset) {
     if (countsFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Resize vectors and allocate counts.
     countVectors.resize(size());
     countVectors[0].resize(1, 0);
-    for (size_t o = 1; o < size(); ++o)
-        countVectors[o].resize(nextPowerOf2(_vectors[o].size()), 0);
+    for (size_t o = 1; o < size(); ++o) {
+        size_t capacity = std::max(1ul<<16, nextPowerOf2(_vectors[o].size()));
+        if (reset)
+            countVectors[o].reset(capacity, 0);
+        else
+            countVectors[o].resize(capacity, 0);
+    }
 
     // Accumulate counts for each n-gram in counts file.
     char                    line[MAXLINE];
@@ -217,9 +225,9 @@ NgramModel::SaveCounts(const vector<CountVector> &countVectors,
     fputs(&lineBuffer[0], countsFile);
 
     // Write higher order counts.
-    for (size_t o = 1; o < size(); ++o) {
+    for (size_t o = 1; o < countVectors.size(); ++o) {
         const CountVector &counts = countVectors[o];
-        for (NgramIndex i = 0; i < (NgramIndex)_vectors[o].size(); ++i) {
+        for (NgramIndex i = 0; i < (NgramIndex)countVectors[o].length(); ++i) {
             // Allocate spaces for words, spaces, UInt, \n\0.
             size_t len = GetNgramWords(o, i, ngramWords) + o + 12;
             if (lineBuffer.size() < len)

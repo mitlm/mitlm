@@ -148,6 +148,14 @@ DenseVector<T>::operator=(const DenseVector<T> &v) {
 }
 
 template <typename T>
+DenseVector<T> &
+DenseVector<T>::operator=(const std::vector<T> &v) {
+    reset(v.size());
+    Copy(v.begin(), begin(), end());
+    return *this;
+}
+
+template <typename T>
 template <typename RHS>
 DenseVector<T> &
 DenseVector<T>::operator=(const Vector<RHS> &rhs)
@@ -427,15 +435,15 @@ void
 WriteVector(FILE *out, const DenseVector<T> &x) {
     WriteUInt64(out, (uint64_t)x.length());
     if (fwrite(x.data(), sizeof(T), x.length(), out) != x.length())
-        throw "Write failed.";
+        throw std::runtime_error("Write failed.");
     WriteAlignPad(out, x.length() * sizeof(T));
 }
 
 template <typename T>
 void
-ReadVector(FILE *in, DenseVector<T> x) {
+ReadVector(FILE *in, DenseVector<T> &x) {
     x.reset(ReadUInt64(in));
     if (fread(x.data(), sizeof(T), x.length(), in) != x.length())
-        throw "Read failed.";
+        throw std::runtime_error("Read failed.");
     ReadAlignPad(in, x.length() * sizeof(T));
 }

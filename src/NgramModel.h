@@ -63,9 +63,9 @@ public:
     void   LoadVocab(const ZFile &vocabFile);
     void   SaveVocab(const ZFile &vocabFile, bool asBinary=false) const;
     void   LoadCorpus(vector<CountVector> &countVectors,
-                      const ZFile &corpusFile);
+                      const ZFile &corpusFile, bool reset=false);
     void   LoadCounts(vector<CountVector> &countVectors,
-                      const ZFile &countsFile);
+                      const ZFile &countsFile, bool reset=false);
     void   SaveCounts(const vector<CountVector> &countVectors,
                       const ZFile &countsFile) const;
     void   LoadLM(vector<ProbVector> &probVectors,

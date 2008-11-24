@@ -32,49 +32,63 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef NGRAMPERPLEXITY_H
-#define NGRAMPERPLEXITY_H
+#ifndef WORDERRORRATEOPTIMIZER_H
+#define WORDERRORRATEOPTIMIZER_H
 
 #include <vector>
 #include "optimize/Optimization.h"
 #include "Types.h"
 #include "NgramLM.h"
 #include "Mask.h"
+#include "Lattice.h"
+
+using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class NgramPerplexity {
+class WordErrorRateOptimizer {
 protected:
     NgramLMBase &       _lm;
     size_t              _order;
-    vector<CountVector> _probCountVectors;
-    vector<CountVector> _bowCountVectors;
-    size_t              _numOOV;
-    size_t              _numWords;
-    size_t              _numZeroProbs;
+    vector<Lattice *>   _lattices;
     size_t              _numCalls;
-    double              _totLogProb;
+    double              _worstMargin;
     SharedPtr<Mask>     _mask;
 
-    class ComputeEntropyFunc {
-        NgramPerplexity &_obj;
+    class ComputeMarginFunc {
+        WordErrorRateOptimizer &_obj;
     public:
-        ComputeEntropyFunc(NgramPerplexity &obj) : _obj(obj) { }
+        ComputeMarginFunc(WordErrorRateOptimizer &obj) : _obj(obj) { }
         double operator()(const ParamVector &params)
-        { _obj._numCalls++; return _obj.ComputeEntropy(params); }
+        { _obj._numCalls++; return -_obj.ComputeMargin(params); }
+    };
+
+    class ComputeWERFunc {
+        WordErrorRateOptimizer &_obj;
+    public:
+        ComputeWERFunc(WordErrorRateOptimizer &obj) : _obj(obj) { }
+        double operator()(const ParamVector &params)
+        { _obj._numCalls++; return _obj.ComputeWER(params); }
     };
 
 public:
-    NgramPerplexity(NgramLMBase &lm, size_t order=3)
-        : _lm(lm), _order(order) { }
+    WordErrorRateOptimizer(NgramLMBase &lm, size_t order=3)
+        : _lm(lm), _order(order), _worstMargin(-100) { }
+    ~WordErrorRateOptimizer();
 
     void   SetOrder(size_t order) { _order = order; }
-    void   LoadCorpus(const ZFile &corpusFile);
-    double ComputeEntropy(const ParamVector &params);
-    double ComputePerplexity(const ParamVector &params)
-    { return exp(ComputeEntropy(params)); }
-    double Optimize(ParamVector &params,
-                    Optimization technique=PowellOptimization);
+    void   LoadLattices(const ZFile &latticesFile);
+    void   SaveLattices(const ZFile &latticesFile);
+    void   SaveTranscript(const ZFile &transcriptFile);
+    void   SaveUttConfidence(const ZFile &confidenceFile);
+    void   SaveWER(const ZFile &werFile);
+    double ComputeMargin(const ParamVector &params);
+    double ComputeWER(const ParamVector &params);
+    double ComputeOracleWER() const;
+    double OptimizeMargin(ParamVector &params,
+                          Optimization technique=PowellOptimization);
+    double OptimizeWER(ParamVector &params,
+                       Optimization technique=PowellOptimization);
 };
 
-#endif // NGRAMPERPLEXITY_H
+#endif // WORDERRORRATEOPTIMIZER_H

@@ -38,7 +38,8 @@
 #include "util/ZFile.h"
 #include "Types.h"
 #include "InterpolatedNgramLM.h"
-#include "NgramPerplexity.h"
+#include "PerplexityOptimizer.h"
+#include "WordErrorRateOptimizer.h"
 
 using std::vector;
 using std::string;
@@ -125,6 +126,10 @@ int main(int argc, char* argv[]) {
          "See INTERPOLATION.")
         ("optimize-perplexity,d", po::value<string>(),
          "Tune the model parameters to minimize the perplexity of dev text.")
+        ("optimize-margin,m", po::value<string>(),
+         "Tune the model parameters to maximize the discriminative margin.")
+        ("optimize-wer,a", po::value<string>(),
+         "Tune the model parameters to minimize the word error rate.")
         ("evaluate-perplexity,e", po::value<vector<string> >()->composing(),
          "Compute the perplexity of textfile.  This option can be repeated.")
         ("write-vocab,V", po::value<string>(),
@@ -178,16 +183,14 @@ int main(int argc, char* argv[]) {
     vector<SharedPtr<NgramLMBase> > lms(readLMs.size());
     for (size_t l = 0; l < readLMs.size(); l++) {
         Logger::Log(1, "Loading component LM %s...\n", readLMs[l].c_str());
-        ArpaNgramLM *pLM = new ArpaNgramLM();
-        pLM->SetOrder(order);
+        ArpaNgramLM *pLM = new ArpaNgramLM(order);
         if (vocabFile)
             pLM->LoadVocab(ZFile(vocabFile));
         pLM->LoadLM(ZFile(readLMs[l].c_str(), "r"));
         lms[l] = pLM;
     }
     Logger::Log(1, "Interpolating component LMs...\n");
-    InterpolatedNgramLM ilm;
-    ilm.SetOrder(order);
+    InterpolatedNgramLM ilm(order);
     ilm.LoadLMs(lms);
 
     // Process interpolation & features.
@@ -195,6 +198,9 @@ int main(int argc, char* argv[]) {
     vector<string> readFeatures;
     if (vm.count("read-features"))
         readFeatures = vm["read-features"].as<vector<string> >();
+
+    Logger::Log(1, "Interpolation Method = %s\n", interpolation.c_str());
+
     if (interpolation == "LI") {
         // No features.
         if (readFeatures.size()) {
@@ -222,7 +228,12 @@ int main(int argc, char* argv[]) {
                        readLMs[f].c_str(), featFilename);
             ilm.model().LoadComputedFeatures(featureList[f], featFilename,
                                              ilm.order());
+            if (featureList[f][0][0] < 0) {
+                Logger::Warn(1, "0-th order should contain total count.\n");
+                printf("%f\n", sum(exp(featureList[f][1])));
+            }
         }
+
         ilm.SetInterpolation(CM, featureList);
     } else if (interpolation == "GLI") {
         vector<vector<DoubleVector> > featureList(readFeatures.size());
@@ -255,13 +266,43 @@ int main(int argc, char* argv[]) {
             const char *devFile=vm["optimize-perplexity"].as<string>().c_str();
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
-            NgramPerplexity dev(ilm);
+            PerplexityOptimizer dev(ilm);
             dev.LoadCorpus(ZFile(devFile));
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optEntropy = dev.Optimize(params, LBFGSBOptimization);
 //            double optEntropy = dev.Optimize(params, PowellOptimization);
             Logger::Log(2, " Best perplexity = %f\n", exp(optEntropy));
+        }
+    }
+    if (vm.count("optimize-margin")) {
+        if (params.length() == 0) {
+            Logger::Warn(1, "No parameters to optimize.\n");
+        } else {
+            const char *devFile=vm["optimize-margin"].as<string>().c_str();
+
+            Logger::Log(1, "Loading development set %s...\n", devFile);
+            WordErrorRateOptimizer dev(ilm);
+            dev.LoadLattices(ZFile(devFile));
+
+            Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
+            double optMargin = dev.OptimizeMargin(params, PowellOptimization);
+            Logger::Log(2, " Best margin = %f\n", optMargin);
+        }
+    }
+    if (vm.count("optimize-wer")) {
+        if (params.length() == 0) {
+            Logger::Warn(1, "No parameters to optimize.\n");
+        } else {
+            const char *devFile=vm["optimize-wer"].as<string>().c_str();
+
+            Logger::Log(1, "Loading development set %s...\n", devFile);
+            WordErrorRateOptimizer dev(ilm);
+            dev.LoadLattices(ZFile(devFile));
+
+            Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
+            double optWER = dev.OptimizeWER(params, PowellOptimization);
+            Logger::Log(2, " Best WER = %f%%\n", optWER);
         }
     }
     Logger::Log(1, "Estimating full n-gram model...\n");
@@ -275,7 +316,7 @@ int main(int argc, char* argv[]) {
         Logger::Log(0, "Perplexity Evaluations:\n");
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
-            NgramPerplexity eval(ilm);
+            PerplexityOptimizer eval(ilm);
             eval.LoadCorpus(ZFile(evalFiles[i].c_str()));
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),

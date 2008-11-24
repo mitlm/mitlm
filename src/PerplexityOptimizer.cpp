@@ -34,20 +34,20 @@
 
 #include <ctime>
 #include "util/Logger.h"
-#include "NgramPerplexity.h"
+#include "PerplexityOptimizer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-NgramPerplexity::LoadCorpus(const ZFile &corpusFile) {
+PerplexityOptimizer::LoadCorpus(const ZFile &corpusFile) {
     //const CountVector &counts(_lm.counts(1));
-    //BitVector vocabMask = (counts > 0);
-    BitVector vocabMask(_lm.sizes(1), 1);
+    //BitVector vocabMask = (_lm.counts > 0);
+    BitVector vocabMask(_lm.vocab().size(), 1);
     _lm._pModel->LoadEvalCorpus(_probCountVectors, _bowCountVectors,
                                 vocabMask, corpusFile, _numOOV, _numWords);
 
     vector<BitVector> probMaskVectors(_order + 1);
-    vector<BitVector> bowMaskVectors(_order + 1);
+    vector<BitVector> bowMaskVectors(_order);
     for (size_t o = 0; o <= _order; o++)
         probMaskVectors[o] = (_probCountVectors[o] > 0);
     for (size_t o = 0; o < _order; o++)
@@ -56,7 +56,7 @@ NgramPerplexity::LoadCorpus(const ZFile &corpusFile) {
 }
 
 double
-NgramPerplexity::ComputeEntropy(const ParamVector &params) {
+PerplexityOptimizer::ComputeEntropy(const ParamVector &params) {
     // Estimate model.
     if (!_lm.Estimate(params, _mask))
         return 7;  // Out of bounds.  Corresponds to perplexity = 1100.
@@ -72,6 +72,7 @@ NgramPerplexity::ComputeEntropy(const ParamVector &params) {
         const ProbVector & probs(_lm.probs(o));
         for (size_t i = 0; i < counts.length(); i++) {
             if (counts[i] > 0) {
+                assert(std::isfinite(probs[i]));
                 if (probs[i] == 0)
                     _numZeroProbs++;
                 else
@@ -86,6 +87,7 @@ NgramPerplexity::ComputeEntropy(const ParamVector &params) {
         const ProbVector & bows(_lm.bows(o));
         for (size_t i = 0; i < counts.length(); i++) {
             if (counts[i] > 0) {
+                assert(std::isfinite(bows[i]));
                 assert(bows[i] != 0);
                 if (bows[i] == 0)
                     Logger::Warn(1, "Invalid BOW %lu %lu %i\n", o,i,counts[i]);
@@ -103,7 +105,7 @@ NgramPerplexity::ComputeEntropy(const ParamVector &params) {
 }
 
 double
-NgramPerplexity::Optimize(ParamVector &params, Optimization technique) {
+PerplexityOptimizer::Optimize(ParamVector &params, Optimization technique) {
     _numCalls = 0;
     ComputeEntropyFunc func(*this);
     int     numIter;
@@ -120,7 +122,7 @@ NgramPerplexity::Optimize(ParamVector &params, Optimization technique) {
         minEntropy = MinimizeLBFGSB(func, params, numIter);
         break;
     default:
-        throw "Unsupported optimization technique.";
+        throw std::runtime_error("Unsupported optimization technique.");
     }
     clock_t endTime = clock();
 

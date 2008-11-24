@@ -66,7 +66,8 @@ NgramVector::NgramVector() : _length(0) {
 NgramVector::NgramVector(const NgramVector &v) {
     _length = v._length;
     if (_length != 0) {
-        throw "Copying NgramVector";
+        if (_length > 1)
+            throw std::runtime_error("Copying NgramVector");
         _words    = v._words;
         _hists    = v._hists;
         _indices  = v._indices;

@@ -222,6 +222,12 @@ pow(const Vector<V> &x, T c)
 template <typename V> const UnaryVectorClosure<OpIsNan, V>
 isnan(const Vector<V> &x) { return UnaryVectorClosure<OpIsNan, V>(x.impl()); }
 
+template <typename V> const UnaryVectorClosure<OpIsInf, V>
+isinf(const Vector<V> &x){return UnaryVectorClosure<OpIsInf,V>(x.impl());}
+
+template <typename V> const UnaryVectorClosure<OpIsFinite, V>
+isfinite(const Vector<V> &x){return UnaryVectorClosure<OpIsFinite,V>(x.impl());}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Type Casting Operations
 

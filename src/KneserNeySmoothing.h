@@ -48,7 +48,6 @@ protected:
     size_t       _order;
     size_t       _discOrder;
     bool         _tuneParams;
-    CountVector  _effCounts;
     ProbVector   _ngramWeights;
     ProbVector   _invHistCounts;
     ParamVector  _discParams;

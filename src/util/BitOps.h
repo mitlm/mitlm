@@ -41,7 +41,7 @@
 
 // Find the last (most-significant) bit set.
 // Note fls(0) = 0, fls(1) = 1, fls(0x80000000) = 32.
-static __inline__ unsigned long fls(unsigned long x) {
+static __inline__ unsigned long __fls(unsigned long x) {
 #ifndef ASM_GENERIC
     #if __WORDSIZE == 64
         if (!x) return 0;
@@ -78,6 +78,6 @@ static __inline__ bool isPowerOf2(unsigned long x)
 
 // Returns the smallest power of 2 larger than x.
 static __inline__ unsigned long nextPowerOf2(unsigned long x)
-{ return 1UL << fls(x); }
+{ return 1UL << __fls(x); }
 
 #endif // BITOPS_H

@@ -32,6 +32,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   //
 ////////////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
 #include "util/FastIO.h"
 #include "Types.h"
 #include "NgramModel.h"
@@ -144,13 +145,15 @@ ArpaNgramLM::LoadLM(const ZFile &lmFile) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-NgramLM::LoadCorpus(const ZFile &corpusFile) {
-    _pModel->LoadCorpus(_countVectors, corpusFile);
+NgramLM::LoadCorpus(const ZFile &corpusFile, bool reset) {
+    _pModel->LoadCorpus(_countVectors, corpusFile, reset);
 }
 
 void
-NgramLM::LoadCounts(const ZFile &countsFile) {
+NgramLM::LoadCounts(const ZFile &countsFile, bool reset) {
     if (ReadUInt64(countsFile) == MITLMv1) {
+        if (!reset)
+            throw std::runtime_error("Not implemented yet.");
         VerifyHeader(countsFile, "NgramCounts");
         _pModel->Deserialize(countsFile);
         SetOrder(_pModel->size() - 1);
@@ -158,7 +161,7 @@ NgramLM::LoadCounts(const ZFile &countsFile) {
             ReadVector(countsFile, _countVectors[o]);
     } else {
         fseek(countsFile, 0, SEEK_SET);
-        _pModel->LoadCounts(_countVectors, countsFile);
+        _pModel->LoadCounts(_countVectors, countsFile, reset);
     }
 }
 
@@ -172,6 +175,25 @@ NgramLM::SaveCounts(const ZFile &countsFile, bool asBinary) const {
             WriteVector(countsFile, _countVectors[o]);
     } else {
         _pModel->SaveCounts(_countVectors, countsFile);
+    }
+}
+
+void
+NgramLM::SaveEffCounts(const ZFile &countsFile, bool asBinary) const {
+    vector<CountVector> effCountVectors(_order + 1);
+    for (size_t o = 0; o < _order; ++o) {
+        effCountVectors[o].reset(sizes(o), 0);
+        const Smoothing *smoothing = (const Smoothing *)_smoothings[o + 1];
+        effCountVectors[o].attach(smoothing->effCounts());
+    }
+    if (asBinary) {
+        WriteUInt64(countsFile, MITLMv1);
+        WriteHeader(countsFile, "NgramCounts");
+        _pModel->Serialize(countsFile);
+        for (size_t o = 0; o <= order(); ++o)
+            WriteVector(countsFile, effCountVectors[o]);
+    } else {
+        _pModel->SaveCounts(effCountVectors, countsFile);
     }
 }
 
@@ -192,9 +214,12 @@ NgramLM::SetSmoothingAlgs(const vector<SharedPtr<Smoothing> > &smoothings) {
     }
     _probVectors[_order].reset(_pModel->sizes(_order));
 
-    // Compute 0th order probability.
-    // TODO: Remove zero-count n-grams.
-    _probVectors[0][0] = Prob(1.0) / (vocab().size() - 1);
+    // Explicitly set count of <s> to 0.
+    assert(words(1)[1] == Vocab::BeginOfSentence);
+    _countVectors[1][1] = 0;
+
+    // Compute 0th order probability (ignore 0 count unigrams).
+    _probVectors[0][0] = Prob(1.0) / sum(_countVectors[1] > 0);
 
     // Compute default parameters.
     _paramStarts.reset(_order + 2);
@@ -258,6 +283,12 @@ void
 NgramLM::SetModel(const SharedPtr<NgramModel> &m,
                   const VocabVector &vocabMap,
                   const vector<IndexVector> &ngramMap) {
-    NgramLMBase::SetModel(m, vocabMap, ngramMap);
-    throw "Not implemented yet.";
+    _pModel = m;
+    for (size_t o = 1; o <= _order; ++o) {
+        size_t len = m->sizes(o);
+        NgramModel::ApplySort(ngramMap[o], _countVectors[o], len, 0);
+        for (size_t f = 0; f < _featureList[o].size(); ++f)
+            NgramModel::ApplySort(ngramMap[o], _featureList[o][f], len, 0.0);
+    }
+    SetSmoothingAlgs(_smoothings);
 }
