@@ -416,7 +416,8 @@ Lattice::BuildConfusionNetwork() const {
     // Hack: If there are more than a million arcs, we must have low confidence.
     if (_arcStarts.length() > 1000000) {
         printf("#Arcs = %lu\t#RefWords = %lu\n",
-               _arcStarts.length(), _ref.length());
+               (unsigned long)_arcStarts.length(),
+               (unsigned long)_ref.length());
         return 0;
     }
 
@@ -445,11 +446,6 @@ Lattice::BuildConfusionNetwork() const {
         ComputeBackwardScores(backwardScores);
         ComputePosteriorProbs(forwardScores, backwardScores, arcProbs);
         EstimateArcPosition(forwardScores, backwardScores, nodePositions);
-//        std::cout << _arcWeights << std::endl;
-//        std::cout << forwardScores << std::endl;
-//        std::cout << backwardScores << std::endl;
-//        std::cout << arcProbs << std::endl;
-//        std::cout << nodePositions << std::endl;
     }
 
     // Build pivot baseline path.
@@ -474,16 +470,13 @@ Lattice::BuildConfusionNetwork() const {
         // Find pivot segment with the greatest overlap to arc.
         float    arcStartPos = nodePositions[_arcStarts[i]];
         float    arcEndPos   = nodePositions[_arcEnds[i]];
-        //float    prevPos     = 0;
         Segment *segment     = pivotPath;
         while (segment != NULL && segment->endPos < arcStartPos) {
-            //prevPos = segment->endPos;
             segment = segment->next;
         }
         if (segment->next != NULL &&
             (segment->endPos - arcStartPos <
             std::min(segment->next->endPos, arcEndPos) - segment->endPos)) {
-            //prevPos = segment->endPos;
             segment = segment->next;
         }
 
@@ -499,7 +492,6 @@ Lattice::BuildConfusionNetwork() const {
             // arcStartPos should be within existing segment.
             // Create a new segment with the old endPos set to the arcStartPos.
             segment->Insert(arcStartPos);
-            //segment->Insert((segment->endPos + prevPos) / 2);
             segment = segment->next;
         }
         // Assign arc i to segment.  Will cumulate posterior probs later.
@@ -556,10 +548,6 @@ Lattice::BuildConfusionNetwork() const {
             for (uint j = 0; j < segment->wordProbs.size(); ++j)
                 if (segment->wordProbs[j].word == word) {
                     totConfidence += segment->wordProbs[j].prob;
-//                    printf("%i [%i->%i] %f\n", numWords,
-//                           _arcStarts[segment->baseArc],
-//                           _arcEnds[segment->baseArc],
-//                           segment->wordProbs[j].prob);
                     numWords++;
                     break;
                 }

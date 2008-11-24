@@ -135,7 +135,8 @@ WordErrorRateOptimizer::SaveWER(const ZFile &werFile) {
     for (size_t l = 0; l < _lattices.size(); ++l) {
         Lattice *lattice = _lattices[l];
         fprintf(werFile, "%s\t%lu\t%i\n", lattice->tag(),
-                lattice->refWords().length(), lattice->ComputeWER());
+                (unsigned long)lattice->refWords().length(),
+                lattice->ComputeWER());
     }
 }
 
