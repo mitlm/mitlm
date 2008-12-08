@@ -64,13 +64,13 @@ const char *footerDesc =
 "Examples:\n"
 "\n"
 "Compute the perplexity of a n-gram LM on a text file.\n"
-"   evaluate-ngram -read-lm input.lm -evaluate-perplexity test.txt\n"
+"   evaluate-ngram --read-lm input.lm --evaluate-perplexity test.txt\n"
 "\n"
 "Convert a trigram model to a bigram LM.\n"
-"   evaluate-ngram -read-lm input.lm -order 2 -write-lm output.lm\n"
+"   evaluate-ngram --read-lm input.lm --order 2 --write-lm output.lm\n"
 "\n"
 "Convert a binary n-gram LM to ARPA text format.\n"
-"   evaluate-ngram -read-lm input.blm -write-lm output.lm\n";
+"   evaluate-ngram --read-lm input.blm --write-lm output.lm\n";
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -188,8 +188,11 @@ NgramVector::Deserialize(FILE *inFile) {
     ReadVector(inFile, _hists);
     ReadVector(inFile, _indices);
     _hashMask = _indices.length() - 1;
-    _wordsView.reset(0);
-    _histsView.reset(0);
+
+    // Build truncated view into words and hists.
+    Range r(_length);
+    _wordsView.attach(_words[r]);
+    _histsView.attach(_hists[r]);
 }
 
 // Return the iterator to the position of the value.
