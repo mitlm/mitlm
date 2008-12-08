@@ -177,6 +177,7 @@ Vocab::SaveVocab(const ZFile &vocabFile, bool asBinary) const {
 void
 Vocab::Serialize(FILE *outFile) const {
     WriteHeader(outFile, "Vocab");
+    WriteUInt64(outFile, _length);
     WriteVector(outFile, _offsetLens);
     WriteVector(outFile, _indices);
     WriteString(outFile, _buffer);
@@ -185,6 +186,7 @@ Vocab::Serialize(FILE *outFile) const {
 void
 Vocab::Deserialize(FILE *inFile) {
     VerifyHeader(inFile, "Vocab");
+    _length = (size_t)ReadUInt64(inFile);
     ReadVector(inFile, _offsetLens);
     ReadVector(inFile, _indices);
     ReadString(inFile, _buffer);
