@@ -104,7 +104,8 @@ protected:
     IntVector                      _paramStarts;
 
 public:
-    NgramLM(size_t order = 3) : NgramLMBase(order), _countVectors(order) { }
+    NgramLM(size_t order = 3) : NgramLMBase(order), _countVectors(order + 1), 
+                                _featureList(order + 1) { }
     void LoadCorpus(const ZFile &corpusFile, bool reset=false);
     void LoadCounts(const ZFile &countsFile, bool reset=false);
     void SaveCounts(const ZFile &countsFile, bool asBinary=false) const;
