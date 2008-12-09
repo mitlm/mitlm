@@ -59,19 +59,19 @@ NgramModel::SetOrder(size_t order) {
 }
 
 void
-NgramModel::LoadVocab(const ZFile &vocabFile) {
+NgramModel::LoadVocab(ZFile &vocabFile) {
     _vocab.LoadVocab(vocabFile);
     _vocab.SetReadOnly(true);
 }
 
 void
-NgramModel::SaveVocab(const ZFile &vocabFile, bool asBinary) const {
+NgramModel::SaveVocab(ZFile &vocabFile, bool asBinary) const {
     _vocab.SaveVocab(vocabFile, asBinary);
 }
 
 void
 NgramModel::LoadCorpus(vector<CountVector> &countVectors,
-                       const ZFile &corpusFile, bool reset) {
+                       ZFile &corpusFile, bool reset) {
     if (corpusFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Resize vectors and allocate counts.
@@ -143,7 +143,7 @@ NgramModel::LoadCorpus(vector<CountVector> &countVectors,
 
 void
 NgramModel::LoadCounts(vector<CountVector> &countVectors,
-                       const ZFile &countsFile, bool reset) {
+                       ZFile &countsFile, bool reset) {
     if (countsFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Resize vectors and allocate counts.
@@ -208,7 +208,7 @@ NgramModel::LoadCounts(vector<CountVector> &countVectors,
 
 void
 NgramModel::SaveCounts(const vector<CountVector> &countVectors,
-                       const ZFile &countsFile) const {
+                       ZFile &countsFile) const {
     if (countsFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Write counts.
@@ -250,7 +250,7 @@ NgramModel::SaveCounts(const vector<CountVector> &countVectors,
 void
 NgramModel::LoadLM(vector<ProbVector> &probVectors,
                    vector<ProbVector> &bowVectors,
-                   const ZFile &lmFile) {
+                   ZFile &lmFile) {
     if (lmFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Read ARPA LM header.
@@ -344,7 +344,7 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
 void
 NgramModel::SaveLM(const vector<ProbVector> &probVectors,
                    const vector<ProbVector> &bowVectors,
-                   const ZFile &lmFile) const {
+                   ZFile &lmFile) const {
     if (lmFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Write ARPA backoff LM header.
@@ -419,7 +419,7 @@ void
 NgramModel::LoadEvalCorpus(vector<CountVector> &probCountVectors,
                            vector<CountVector> &bowCountVectors,
                            BitVector &vocabMask,
-                           const ZFile &corpusFile,
+                           ZFile &corpusFile,
                            size_t &outNumOOV,
                            size_t &outNumWords) const {
     if (corpusFile == NULL) throw std::invalid_argument("Invalid file");
@@ -483,7 +483,7 @@ NgramModel::LoadEvalCorpus(vector<CountVector> &probCountVectors,
 
 void
 NgramModel::LoadFeatures(vector<DoubleVector> &featureVectors,
-                         const ZFile &featureFile, size_t maxSize) const {
+                         ZFile &featureFile, size_t maxSize) const {
     if (featureFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Allocate space for feature vectors.
@@ -725,7 +725,7 @@ NgramModel::_ComputeBackoffs() {
 
 void
 NgramModel::_LoadFrequency(vector<DoubleVector> &freqVectors,
-                              const ZFile &corpusFile, size_t maxSize) const {
+                              ZFile &corpusFile, size_t maxSize) const {
     if (corpusFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Resize vectors and allocate counts.
@@ -802,7 +802,7 @@ NgramModel::_LoadFrequency(vector<DoubleVector> &freqVectors,
 
 void
 NgramModel::_LoadEntropy(vector<DoubleVector> &entropyVectors,
-                            const ZFile &corpusFile, size_t maxSize) const {
+                            ZFile &corpusFile, size_t maxSize) const {
     if (corpusFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Resize vectors and allocate counts.

@@ -101,8 +101,8 @@ class Lattice {
 public:
     Lattice(const NgramLMBase &lm) : _lm(lm), _skipTags(true) { }
     void  SetTag(const char *tag) { _tag = tag; }
-    void  LoadLattice(const ZFile &latticeFile);
-    void  SaveLattice(const ZFile &latticeFile) const;
+    void  LoadLattice(ZFile &latticeFile);
+    void  SaveLattice(ZFile &latticeFile) const;
     void  UpdateWeights();
     void  SetReferenceText(const char *ref);
     float ComputeMargin() const;

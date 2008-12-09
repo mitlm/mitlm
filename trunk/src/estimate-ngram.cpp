@@ -199,14 +199,16 @@ int main(int argc, char* argv[]) {
     if (vm.count("read-vocab")) {
         const char *vocabFile = vm["read-vocab"].as<string>().c_str();
         Logger::Log(1, "Loading vocab %s...\n", vocabFile);
-        lm.LoadVocab(ZFile(vocabFile));
+        ZFile vocabZFile(vocabFile);
+        lm.LoadVocab(vocabZFile);
     }
     if (vm.count("read-text")) {
         const vector<string> &corpusFiles = vm["read-text"]
             .as<vector<string> >();
         for (size_t i = 0; i < corpusFiles.size(); i++) {
             Logger::Log(1, "Loading corpus %s...\n", corpusFiles[i].c_str());
-            lm.LoadCorpus(ZFile(corpusFiles[i].c_str()));
+            ZFile corpusZFile(ZFile(corpusFiles[i].c_str()));
+            lm.LoadCorpus(corpusZFile);
         }
     }
     if (vm.count("read-count")) {
@@ -214,7 +216,8 @@ int main(int argc, char* argv[]) {
             .as<vector<string> >();
         for (size_t i = 0; i < countFiles.size(); i++) {
             Logger::Log(1, "Loading counts %s...\n", countFiles[i].c_str());
-            lm.LoadCounts(ZFile(countFiles[i].c_str()));
+            ZFile countZFile(ZFile(countFiles[i].c_str()));
+            lm.LoadCounts(countZFile);
         }
     }
 
@@ -268,8 +271,9 @@ int main(int argc, char* argv[]) {
             const char *devFile=vm["optimize-perplexity"].as<string>().c_str();
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
+            ZFile devZFile(devFile);
             PerplexityOptimizer dev(lm, order);
-            dev.LoadCorpus(ZFile(devFile));
+            dev.LoadCorpus(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optEntropy = dev.Optimize(params, PowellOptimization);
@@ -283,8 +287,9 @@ int main(int argc, char* argv[]) {
             const char *devFile=vm["optimize-margin"].as<string>().c_str();
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
+            ZFile devZFile(devFile);
             WordErrorRateOptimizer dev(lm, order);
-            dev.LoadLattices(ZFile(devFile));
+            dev.LoadLattices(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optMargin = dev.OptimizeMargin(params, PowellOptimization);
@@ -298,8 +303,9 @@ int main(int argc, char* argv[]) {
             const char *devFile=vm["optimize-wer"].as<string>().c_str();
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
+            ZFile devZFile(devFile);
             WordErrorRateOptimizer dev(lm, order);
-            dev.LoadLattices(ZFile(devFile));
+            dev.LoadLattices(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optWER = dev.OptimizeWER(params, PowellOptimization);
@@ -315,8 +321,9 @@ int main(int argc, char* argv[]) {
         Logger::Log(0, "Perplexity Evaluations:\n");
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
+            ZFile evalZFile(evalFiles[i].c_str());
             PerplexityOptimizer eval(lm, order);
-            eval.LoadCorpus(ZFile(evalFiles[i].c_str()));
+            eval.LoadCorpus(evalZFile);
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                        eval.ComputePerplexity(params));
@@ -330,32 +337,38 @@ int main(int argc, char* argv[]) {
     if (vm.count("write-vocab")) {
         const char *vocabFile = vm["write-vocab"].as<string>().c_str();
         Logger::Log(1, "Saving vocabulary to %s...\n", vocabFile);
-        lm.SaveVocab(ZFile(vocabFile, "w"));
+        ZFile vocabZFile(vocabFile, "w");
+        lm.SaveVocab(vocabZFile);
     }
     if (vm.count("write-count")) {
         const char *countFile = vm["write-count"].as<string>().c_str();
         Logger::Log(1, "Saving counts to %s...\n", countFile);
-        lm.SaveCounts(ZFile(countFile, "w"));
+        ZFile countZFile(countFile, "w");
+        lm.SaveCounts(countZFile);
     }
     if (vm.count("write-binary-count")) {
         const char *countFile = vm["write-binary-count"].as<string>().c_str();
         Logger::Log(1, "Saving binary counts to %s...\n", countFile);
-        lm.SaveCounts(ZFile(countFile, "wb"), true);
+        ZFile countZFile(countFile, "wb");
+        lm.SaveCounts(countZFile, true);
     }
     if (vm.count("write-eff-count")) {
         const char *countFile = vm["write-eff-count"].as<string>().c_str();
         Logger::Log(1, "Saving effective counts to %s...\n", countFile);
-        lm.SaveEffCounts(ZFile(countFile, "w"));
+        ZFile countZFile(countFile, "w");
+        lm.SaveEffCounts(countZFile);
     }
     if (vm.count("write-lm")) {
         const char *lmFile = vm["write-lm"].as<string>().c_str();
         Logger::Log(1, "Saving LM to %s...\n", lmFile);
-        lm.SaveLM(ZFile(lmFile, "w"));
+        ZFile lmZFile(lmFile, "w");
+        lm.SaveLM(lmZFile);
     }
     if (vm.count("write-binary-lm")) {
         const char *lmFile = vm["write-binary-lm"].as<string>().c_str();
         Logger::Log(1, "Saving binary LM to %s...\n", lmFile);
-        lm.SaveLM(ZFile(lmFile, "wb"), true);
+        ZFile lmZFile(lmFile, "wb");
+        lm.SaveLM(lmZFile, true);
     }
     if (vm.count("write-parameters")) {
         const char *paramFile = vm["write-parameters"].as<string>().c_str();

@@ -45,7 +45,7 @@ WordErrorRateOptimizer::~WordErrorRateOptimizer() {
 }
 
 void
-WordErrorRateOptimizer::LoadLattices(const ZFile &latticesFile) {
+WordErrorRateOptimizer::LoadLattices(ZFile &latticesFile) {
     if (ReadUInt64(latticesFile) == MITLMv1) {
         _lattices.resize(ReadUInt64(latticesFile));
         for (size_t l = 0; l < _lattices.size(); ++l) {
@@ -53,7 +53,7 @@ WordErrorRateOptimizer::LoadLattices(const ZFile &latticesFile) {
             _lattices[l]->Deserialize(latticesFile);
         }
     } else {
-        fseek(latticesFile, 0, SEEK_SET);
+        latticesFile.ReOpen();
         char line[MAXLINE];
         while (getline(latticesFile, line, MAXLINE)) {
             // tag file trans
@@ -65,10 +65,11 @@ WordErrorRateOptimizer::LoadLattices(const ZFile &latticesFile) {
             while (*trans != 0 && !isspace(*trans))  ++trans;
             *trans++ = '\0';
             while (*trans != 0 && isspace(*trans))  ++trans;
+            ZFile zfile(file, "r");
             Logger::Log(2, "Loading lattice %s...\n", line);
             Lattice *pLattice = new Lattice(_lm);
             pLattice->SetTag(line);
-            pLattice->LoadLattice(ZFile(file, "r"));
+            pLattice->LoadLattice(zfile);
             pLattice->SetReferenceText(trans);
             _lattices.push_back(pLattice);
         }
@@ -95,7 +96,7 @@ WordErrorRateOptimizer::LoadLattices(const ZFile &latticesFile) {
 }
 
 void
-WordErrorRateOptimizer::SaveLattices(const ZFile &latticesFile) {
+WordErrorRateOptimizer::SaveLattices(ZFile &latticesFile) {
     WriteUInt64(latticesFile, MITLMv1);
     WriteUInt64(latticesFile, _lattices.size());
     for (size_t l = 0; l < _lattices.size(); ++l)
@@ -103,7 +104,7 @@ WordErrorRateOptimizer::SaveLattices(const ZFile &latticesFile) {
 }
 
 void
-WordErrorRateOptimizer::SaveTranscript(const ZFile &transcriptFile) {
+WordErrorRateOptimizer::SaveTranscript(ZFile &transcriptFile) {
     string             line;
     vector<VocabIndex> bestPath;
     for (size_t l = 0; l < _lattices.size(); ++l) {
@@ -122,7 +123,7 @@ WordErrorRateOptimizer::SaveTranscript(const ZFile &transcriptFile) {
 }
 
 void
-WordErrorRateOptimizer::SaveUttConfidence(const ZFile &confidenceFile) {
+WordErrorRateOptimizer::SaveUttConfidence(ZFile &confidenceFile) {
     for (size_t l = 0; l < _lattices.size(); ++l) {
         Lattice *lattice = _lattices[l];
         fprintf(confidenceFile, "%s\t%f\n",
@@ -131,7 +132,7 @@ WordErrorRateOptimizer::SaveUttConfidence(const ZFile &confidenceFile) {
 }
 
 void
-WordErrorRateOptimizer::SaveWER(const ZFile &werFile) {
+WordErrorRateOptimizer::SaveWER(ZFile &werFile) {
     for (size_t l = 0; l < _lattices.size(); ++l) {
         Lattice *lattice = _lattices[l];
         fprintf(werFile, "%s\t%lu\t%i\n", lattice->tag(),

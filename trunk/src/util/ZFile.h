@@ -43,7 +43,9 @@
 
 class ZFile {
 protected:
-    FILE *_file;
+    FILE *      _file;
+    std::string _filename;
+    std::string _mode;
 
     bool endsWith(const char *str, const char *suffix) {
         size_t strLen = strlen(str);
@@ -60,25 +62,32 @@ public:
         if (mode == NULL || (mode[0] != 'r' && mode[0] != 'w'))
             throw std::runtime_error("Invalid mode");
 
-        if (endsWith(filename, ".gz")) {
-            _file = (mode[0] == 'r') ?
-                processOpen(std::string("exec gunzip -c ") + filename, "r") :
-                processOpen(std::string("exec gzip -c > ") + filename, "w");
-        } else if (endsWith(filename, ".bz2")) {
-            _file = (mode[0] == 'r') ?
-                processOpen(std::string("exec bunzip2 -c ") + filename, "r") :
-                processOpen(std::string("exec bzip2 > ") + filename, "w");
-        } else if (endsWith(filename, ".zip")) {
-            _file = (mode[0] == 'r') ?
-                processOpen(std::string("exec unzip -c ") + filename, "r") :
-                processOpen(std::string("exec zip -q > ") + filename, "w");
+        _filename = filename;
+        _mode = mode;
+        ReOpen();
+    }
+    ~ZFile() { if (_file) fclose(_file); }
+
+    void ReOpen() {
+        const char *mode = _mode.c_str();
+        if (endsWith(_filename.c_str(), ".gz")) {
+            _file = (_mode[0] == 'r') ?
+                processOpen(std::string("exec gunzip -c ") + _filename, mode) :
+                processOpen(std::string("exec gzip -c > ") + _filename, mode);
+        } else if (endsWith(_filename.c_str(), ".bz2")) {
+            _file = (_mode[0] == 'r') ?
+                processOpen(std::string("exec bunzip2 -c ") + _filename, mode) :
+                processOpen(std::string("exec bzip2 > ") + _filename, mode);
+        } else if (endsWith(_filename.c_str(), ".zip")) {
+            _file = (_mode[0] == 'r') ?
+                processOpen(std::string("exec unzip -c ") + _filename, mode) :
+                processOpen(std::string("exec zip -q > ") + _filename, mode);
         } else { // Assume uncompressed
-            _file = fopen(filename, mode);
+            _file = fopen(_filename.c_str(), mode);
         }
         if (_file == NULL)
             throw std::runtime_error("Cannot open file");
     }
-    ~ZFile() { if (_file) fclose(_file); }
 
     operator FILE *() const { return _file; }
 };

@@ -49,17 +49,17 @@ NgramLMBase::NgramLMBase(size_t order)
 }
 
 void
-NgramLMBase::LoadVocab(const ZFile &vocabFile) {
+NgramLMBase::LoadVocab(ZFile &vocabFile) {
     _pModel->LoadVocab(vocabFile);
 }
 
 void
-NgramLMBase::SaveVocab(const ZFile &vocabFile, bool asBinary) const {
+NgramLMBase::SaveVocab(ZFile &vocabFile, bool asBinary) const {
     _pModel->SaveVocab(vocabFile, asBinary);
 }
 
 void
-NgramLMBase::SaveLM(const ZFile &lmFile, bool asBinary) const {
+NgramLMBase::SaveLM(ZFile &lmFile, bool asBinary) const {
     if (asBinary) {
         WriteUInt64(lmFile, MITLMv1);
         Serialize(lmFile);
@@ -133,11 +133,11 @@ NgramLMBase::SetModel(const SharedPtr<NgramModel> &m,
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-ArpaNgramLM::LoadLM(const ZFile &lmFile) {
+ArpaNgramLM::LoadLM(ZFile &lmFile) {
     if (ReadUInt64(lmFile) == MITLMv1) {
         Deserialize(lmFile);
     } else {
-        fseek(lmFile, 0, SEEK_SET);
+        lmFile.ReOpen();
         _pModel->LoadLM(_probVectors, _bowVectors, lmFile);
     }
 }
@@ -145,12 +145,12 @@ ArpaNgramLM::LoadLM(const ZFile &lmFile) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-NgramLM::LoadCorpus(const ZFile &corpusFile, bool reset) {
+NgramLM::LoadCorpus(ZFile &corpusFile, bool reset) {
     _pModel->LoadCorpus(_countVectors, corpusFile, reset);
 }
 
 void
-NgramLM::LoadCounts(const ZFile &countsFile, bool reset) {
+NgramLM::LoadCounts(ZFile &countsFile, bool reset) {
     if (ReadUInt64(countsFile) == MITLMv1) {
         if (!reset)
             throw std::runtime_error("Not implemented yet.");
@@ -160,13 +160,13 @@ NgramLM::LoadCounts(const ZFile &countsFile, bool reset) {
         for (size_t o = 0; o <= order(); ++o)
             ReadVector(countsFile, _countVectors[o]);
     } else {
-        fseek(countsFile, 0, SEEK_SET);
+        countsFile.ReOpen();
         _pModel->LoadCounts(_countVectors, countsFile, reset);
     }
 }
 
 void
-NgramLM::SaveCounts(const ZFile &countsFile, bool asBinary) const {
+NgramLM::SaveCounts(ZFile &countsFile, bool asBinary) const {
     if (asBinary) {
         WriteUInt64(countsFile, MITLMv1);
         WriteHeader(countsFile, "NgramCounts");
@@ -179,7 +179,7 @@ NgramLM::SaveCounts(const ZFile &countsFile, bool asBinary) const {
 }
 
 void
-NgramLM::SaveEffCounts(const ZFile &countsFile, bool asBinary) const {
+NgramLM::SaveEffCounts(ZFile &countsFile, bool asBinary) const {
     vector<CountVector> effCountVectors(_order + 1);
     for (size_t o = 0; o < _order; ++o) {
         effCountVectors[o].reset(sizes(o), 0);

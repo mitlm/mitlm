@@ -77,11 +77,11 @@ public:
     ~WordErrorRateOptimizer();
 
     void   SetOrder(size_t order) { _order = order; }
-    void   LoadLattices(const ZFile &latticesFile);
-    void   SaveLattices(const ZFile &latticesFile);
-    void   SaveTranscript(const ZFile &transcriptFile);
-    void   SaveUttConfidence(const ZFile &confidenceFile);
-    void   SaveWER(const ZFile &werFile);
+    void   LoadLattices(ZFile &latticesFile);
+    void   SaveLattices(ZFile &latticesFile);
+    void   SaveTranscript(ZFile &transcriptFile);
+    void   SaveUttConfidence(ZFile &confidenceFile);
+    void   SaveWER(ZFile &werFile);
     double ComputeMargin(const ParamVector &params);
     double ComputeWER(const ParamVector &params);
     double ComputeOracleWER() const;
