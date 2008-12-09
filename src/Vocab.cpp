@@ -142,11 +142,11 @@ Vocab::Sort(VocabVector &sortMap) {
 
 // Loads vocabulary from file where each word appears on a non-# line.
 void
-Vocab::LoadVocab(const ZFile &vocabFile) {
+Vocab::LoadVocab(ZFile &vocabFile) {
     if (ReadUInt64(vocabFile) == MITLMv1) {
         Deserialize(vocabFile);
     } else {
-        fseek(vocabFile, 0, SEEK_SET);
+        vocabFile.ReOpen();
         char   line[4096];
         size_t len = 0;
         while (!feof(vocabFile)) {
@@ -159,7 +159,7 @@ Vocab::LoadVocab(const ZFile &vocabFile) {
 
 // Saves vocabulary to file with each word on its own line.
 void
-Vocab::SaveVocab(const ZFile &vocabFile, bool asBinary) const {
+Vocab::SaveVocab(ZFile &vocabFile, bool asBinary) const {
     if (asBinary) {
         WriteUInt64(vocabFile, MITLMv1);
         Serialize(vocabFile);

@@ -184,9 +184,12 @@ int main(int argc, char* argv[]) {
     for (size_t l = 0; l < readLMs.size(); l++) {
         Logger::Log(1, "Loading component LM %s...\n", readLMs[l].c_str());
         ArpaNgramLM *pLM = new ArpaNgramLM(order);
-        if (vocabFile)
-            pLM->LoadVocab(ZFile(vocabFile));
-        pLM->LoadLM(ZFile(readLMs[l].c_str(), "r"));
+        if (vocabFile) {
+            ZFile vocabZFile(vocabFile);
+            pLM->LoadVocab(vocabZFile);
+        }
+        ZFile lmZFile(readLMs[l].c_str(), "r");
+        pLM->LoadLM(lmZFile);
         lms[l] = pLM;
     }
     Logger::Log(1, "Interpolating component LMs...\n");
@@ -266,8 +269,9 @@ int main(int argc, char* argv[]) {
             const char *devFile=vm["optimize-perplexity"].as<string>().c_str();
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
+            ZFile devZFile(devFile);
             PerplexityOptimizer dev(ilm);
-            dev.LoadCorpus(ZFile(devFile));
+            dev.LoadCorpus(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optEntropy = dev.Optimize(params, LBFGSBOptimization);
@@ -282,8 +286,9 @@ int main(int argc, char* argv[]) {
             const char *devFile=vm["optimize-margin"].as<string>().c_str();
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
+            ZFile devZFile(devFile);
             WordErrorRateOptimizer dev(ilm);
-            dev.LoadLattices(ZFile(devFile));
+            dev.LoadLattices(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optMargin = dev.OptimizeMargin(params, PowellOptimization);
@@ -297,8 +302,9 @@ int main(int argc, char* argv[]) {
             const char *devFile=vm["optimize-wer"].as<string>().c_str();
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
+            ZFile devZFile(devFile);
             WordErrorRateOptimizer dev(ilm);
-            dev.LoadLattices(ZFile(devFile));
+            dev.LoadLattices(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optWER = dev.OptimizeWER(params, PowellOptimization);
@@ -316,8 +322,9 @@ int main(int argc, char* argv[]) {
         Logger::Log(0, "Perplexity Evaluations:\n");
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
+            ZFile evalZFile(evalFiles[i].c_str());
             PerplexityOptimizer eval(ilm);
-            eval.LoadCorpus(ZFile(evalFiles[i].c_str()));
+            eval.LoadCorpus(evalZFile);
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                        eval.ComputePerplexity(params));
@@ -328,17 +335,20 @@ int main(int argc, char* argv[]) {
     if (vm.count("write-vocab")) {
         const char *vocabFile = vm["write-vocab"].as<string>().c_str();
         Logger::Log(1, "Saving vocabulary to %s...\n", vocabFile);
-        ilm.SaveVocab(ZFile(vocabFile, "w"));
+        ZFile vocabZFile(vocabFile, "w");
+        ilm.SaveVocab(vocabZFile);
     }
     if (vm.count("write-lm")) {
         const char *lmFile = vm["write-lm"].as<string>().c_str();
         Logger::Log(1, "Saving LM to %s...\n", lmFile);
-        ilm.SaveLM(ZFile(lmFile, "w"));
+        ZFile lmZFile(lmFile, "w");
+        ilm.SaveLM(lmZFile);
     }
     if (vm.count("write-binary-lm")) {
         const char *lmFile = vm["write-binary-lm"].as<string>().c_str();
         Logger::Log(1, "Saving binary LM to %s...\n", lmFile);
-        ilm.SaveLM(ZFile(lmFile, "wb"), true);
+        ZFile lmZFile(lmFile, "wb");
+        ilm.SaveLM(lmZFile, true);
     }
     if (vm.count("write-parameters")) {
         const char *paramFile = vm["write-parameters"].as<string>().c_str();

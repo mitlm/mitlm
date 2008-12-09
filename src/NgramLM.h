@@ -60,9 +60,9 @@ protected:
 public:
     NgramLMBase(size_t order = 3);
     virtual ~NgramLMBase() { }
-    void LoadVocab(const ZFile &vocabFile);
-    void SaveVocab(const ZFile &vocabFile, bool asBinary=false) const;
-    void SaveLM(const ZFile &lmFile, bool asBinary=false) const;
+    void LoadVocab(ZFile &vocabFile);
+    void SaveVocab(ZFile &vocabFile, bool asBinary=false) const;
+    void SaveLM(ZFile &lmFile, bool asBinary=false) const;
     void Serialize(FILE *outFile) const;
     void Deserialize(FILE *inFile);
 
@@ -91,7 +91,7 @@ public:
 class ArpaNgramLM : public NgramLMBase {
 public:
     ArpaNgramLM(size_t order = 3) : NgramLMBase(order) { }
-    void LoadLM(const ZFile &lmFile);
+    void LoadLM(ZFile &lmFile);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,10 +106,10 @@ protected:
 public:
     NgramLM(size_t order = 3) : NgramLMBase(order), _countVectors(order + 1), 
                                 _featureList(order + 1) { }
-    void LoadCorpus(const ZFile &corpusFile, bool reset=false);
-    void LoadCounts(const ZFile &countsFile, bool reset=false);
-    void SaveCounts(const ZFile &countsFile, bool asBinary=false) const;
-    void SaveEffCounts(const ZFile &countsFile, bool asBinary=false) const;
+    void LoadCorpus(ZFile &corpusFile, bool reset=false);
+    void LoadCounts(ZFile &countsFile, bool reset=false);
+    void SaveCounts(ZFile &countsFile, bool asBinary=false) const;
+    void SaveEffCounts(ZFile &countsFile, bool asBinary=false) const;
     void SetSmoothingAlgs(const vector<SharedPtr<Smoothing> > &smoothings);
     void SetWeighting(const vector<FeatureVectors> &featureList);
 

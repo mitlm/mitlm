@@ -79,8 +79,8 @@ public:
     VocabIndex Add(const char *word) { return Add(word, strlen(word)); }
     void       Reserve(size_t capacity);
     void       Sort(VocabVector &sortMap);
-    void       LoadVocab(const ZFile &vocabFile);
-    void       SaveVocab(const ZFile &vocabFile, bool asBinary=false) const;
+    void       LoadVocab(ZFile &vocabFile);
+    void       SaveVocab(ZFile &vocabFile, bool asBinary=false) const;
     void       Serialize(FILE *outFile) const;
     void       Deserialize(FILE *inFile);
 

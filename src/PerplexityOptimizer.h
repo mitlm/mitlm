@@ -69,7 +69,7 @@ public:
         : _lm(lm), _order(order) { }
 
     void   SetOrder(size_t order) { _order = order; }
-    void   LoadCorpus(const ZFile &corpusFile);
+    void   LoadCorpus(ZFile &corpusFile);
     double ComputeEntropy(const ParamVector &params);
     double ComputePerplexity(const ParamVector &params)
     { return exp(ComputeEntropy(params)); }

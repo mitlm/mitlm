@@ -93,7 +93,7 @@ typedef unordered_map<NodeNgram, NodeIndex, NodeNgramHash> NodeNgramMap;
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-Lattice::LoadLattice(const ZFile &latticeFile) {
+Lattice::LoadLattice(ZFile &latticeFile) {
     // TODO: Support optional weights.
     if (latticeFile == NULL) throw std::invalid_argument("Invalid file");
 
@@ -169,7 +169,7 @@ Lattice::LoadLattice(const ZFile &latticeFile) {
 }
 
 void
-Lattice::SaveLattice(const ZFile &latticeFile) const {
+Lattice::SaveLattice(ZFile &latticeFile) const {
     if (latticeFile == NULL) throw std::invalid_argument("Invalid file");
 
     fprintf(latticeFile, "#FSTBasic MinPlus\n");

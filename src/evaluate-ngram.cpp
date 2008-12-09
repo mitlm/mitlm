@@ -141,13 +141,15 @@ int main(int argc, char* argv[]) {
     if (vm.count("read-vocab")) {
         const char *vocabFile = vm["read-vocab"].as<string>().c_str();
         Logger::Log(1, "Loading vocab %s...\n", vocabFile);
-        lm.LoadVocab(ZFile(vocabFile));
+        ZFile vocabZFile(vocabFile);
+        lm.LoadVocab(vocabZFile);
     }
 
     // Read language model.
     const char *readLM = vm["read-lm"].as<string>().c_str();
     Logger::Log(1, "Loading LM %s...\n", readLM);
-    lm.LoadLM(ZFile(readLM, "r"));
+    ZFile lmZFile(readLM, "r");
+    lm.LoadLM(lmZFile);
 
     // Evaluate LM.
     if (vm.count("evaluate-perplexity")) {
@@ -157,8 +159,9 @@ int main(int argc, char* argv[]) {
         Logger::Log(0, "Perplexity Evaluations:\n");
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
+            ZFile evalZFile(evalFiles[i].c_str());
             PerplexityOptimizer eval(lm);
-            eval.LoadCorpus(ZFile(evalFiles[i].c_str()));
+            eval.LoadCorpus(evalZFile);
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                        eval.ComputePerplexity(lm.defParams()));
@@ -172,8 +175,9 @@ int main(int argc, char* argv[]) {
         Logger::Log(0, "Word Error Rate Evaluations:\n");
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
+            ZFile evalZFile(evalFiles[i].c_str());
             WordErrorRateOptimizer eval(lm);
-            eval.LoadLattices(ZFile(evalFiles[i].c_str()));
+            eval.LoadLattices(evalZFile);
             Logger::Log(1, "Computing word error rate...\n");
             Logger::Log(0, "\t%s\t%.2f%%\n", evalFiles[i].c_str(),
                        eval.ComputeWER(lm.defParams()));
@@ -187,8 +191,9 @@ int main(int argc, char* argv[]) {
         Logger::Log(0, "Discriminative Margin Evaluations:\n");
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
+            ZFile evalZFile(evalFiles[i].c_str());
             WordErrorRateOptimizer eval(lm);
-            eval.LoadLattices(ZFile(evalFiles[i].c_str()));
+            eval.LoadLattices(evalZFile);
             Logger::Log(1, "Computing discriminative margin...\n");
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                        eval.ComputeMargin(lm.defParams()));
@@ -198,28 +203,33 @@ int main(int argc, char* argv[]) {
     if (vm.count("compile-lattices")) {
         const char *latticesFile = vm["compile-lattices"].as<string>().c_str();
         Logger::Log(0, "Compiling lattices %s:\n", latticesFile);
+        ZFile latticesZFile(latticesFile);
         WordErrorRateOptimizer eval(lm);
-        eval.LoadLattices(ZFile(latticesFile));
+        eval.LoadLattices(latticesZFile);
         string outFile(latticesFile);
         outFile += ".bin";
-        eval.SaveLattices(ZFile(outFile.c_str(), "wb"));
+        ZFile outZFile(outFile.c_str(), "wb");
+        eval.SaveLattices(outZFile);
     }
 
     // Save results.
     if (vm.count("write-vocab")) {
         const char *vocabFile = vm["write-vocab"].as<string>().c_str();
         Logger::Log(1, "Saving vocabulary to %s...\n", vocabFile);
-        lm.SaveVocab(ZFile(vocabFile, "w"));
+        ZFile vocabZFile(vocabFile, "w");
+        lm.SaveVocab(vocabZFile);
     }
     if (vm.count("write-lm")) {
         const char *lmFile = vm["write-lm"].as<string>().c_str();
         Logger::Log(1, "Saving LM to %s...\n", lmFile);
-        lm.SaveLM(ZFile(lmFile, "w"));
+        ZFile lmZFile(lmFile, "w");
+        lm.SaveLM(lmZFile);
     }
     if (vm.count("write-binary-lm")) {
         const char *lmFile = vm["write-binary-lm"].as<string>().c_str();
         Logger::Log(1, "Saving binary LM to %s...\n", lmFile);
-        lm.SaveLM(ZFile(lmFile, "wb"), true);
+        ZFile lmZFile(lmFile, "wb");
+        lm.SaveLM(lmZFile, true);
     }
 
     return 0;

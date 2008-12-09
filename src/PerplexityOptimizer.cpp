@@ -39,7 +39,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-PerplexityOptimizer::LoadCorpus(const ZFile &corpusFile) {
+PerplexityOptimizer::LoadCorpus(ZFile &corpusFile) {
     //const CountVector &counts(_lm.counts(1));
     //BitVector vocabMask = (_lm.counts > 0);
     BitVector vocabMask(_lm.vocab().size(), 1);

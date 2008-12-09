@@ -60,26 +60,26 @@ protected:
 public:
     NgramModel(size_t order = 3);
     void   SetOrder(size_t order);
-    void   LoadVocab(const ZFile &vocabFile);
-    void   SaveVocab(const ZFile &vocabFile, bool asBinary=false) const;
+    void   LoadVocab(ZFile &vocabFile);
+    void   SaveVocab(ZFile &vocabFile, bool asBinary=false) const;
     void   LoadCorpus(vector<CountVector> &countVectors,
-                      const ZFile &corpusFile, bool reset=false);
+                      ZFile &corpusFile, bool reset=false);
     void   LoadCounts(vector<CountVector> &countVectors,
-                      const ZFile &countsFile, bool reset=false);
+                      ZFile &countsFile, bool reset=false);
     void   SaveCounts(const vector<CountVector> &countVectors,
-                      const ZFile &countsFile) const;
+                      ZFile &countsFile) const;
     void   LoadLM(vector<ProbVector> &probVectors,
                   vector<ProbVector> &bowVectors,
-                  const ZFile &lmFile);
+                  ZFile &lmFile);
     void   SaveLM(const vector<ProbVector> &probVectors,
                   const vector<ProbVector> &bowVectors,
-                  const ZFile &lmFile) const;
+                  ZFile &lmFile) const;
     void   LoadEvalCorpus(vector<CountVector> &probCountVectors,
                           vector<CountVector> &bowCountVectors,
-                          BitVector &vocabMask, const ZFile &corpusFile,
+                          BitVector &vocabMask, ZFile &corpusFile,
                           size_t &outNumOOV, size_t &outNumWords) const;
     void   LoadFeatures(vector<DoubleVector> &featureVectors,
-                        const ZFile &featureFile, size_t maxSize=0) const;
+                        ZFile &featureFile, size_t maxSize=0) const;
     void   LoadComputedFeatures(vector<DoubleVector> &featureVectors,
                                 const char *featureFile, size_t maxSize=0) const;
     size_t GetNgramWords(size_t order, NgramIndex index, StrVector &wrds) const;
@@ -105,9 +105,9 @@ protected:
     NgramIndex _Find(const VocabIndex *words, size_t wordsLen) const;
     void       _ComputeBackoffs();
     void       _LoadFrequency(vector<DoubleVector> &freqVectors,
-                              const ZFile &corpusFile, size_t maxSize=0) const;
+                              ZFile &corpusFile, size_t maxSize=0) const;
     void       _LoadEntropy(vector<DoubleVector> &entropyVectors,
-                            const ZFile &corpusFile, size_t maxSize=0) const;
+                            ZFile &corpusFile, size_t maxSize=0) const;
 };
 
 #endif // NGRAMMODEL_H
