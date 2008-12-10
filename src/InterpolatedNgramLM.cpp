@@ -134,7 +134,7 @@ InterpolatedNgramLM::SetInterpolation(Interpolation interpolation,
 
 Mask *
 InterpolatedNgramLM::GetMask(vector<BitVector> &probMaskVectors,
-                               vector<BitVector> &bowMaskVectors) const {
+                             vector<BitVector> &bowMaskVectors) const {
     // Extend prob and bow masks.
     InterpolatedNgramLMMask *pMask = new InterpolatedNgramLMMask();
     pMask->ProbMaskVectors.resize(_order + 1);
@@ -291,7 +291,7 @@ InterpolatedNgramLM::_EstimateBows() {
 
 void
 InterpolatedNgramLM::_EstimateProbsMasked(const ParamVector &params,
-                                    InterpolatedNgramLMMask *pMask) {
+                                          InterpolatedNgramLMMask *pMask) {
     size_t numFeatures = _featureList.size();
     for (size_t o = 1; o <= _order; o++) {
         Range              r(sizes(o - 1));

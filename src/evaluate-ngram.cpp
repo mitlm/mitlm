@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
             ZFile evalZFile(evalFiles[i].c_str());
-            PerplexityOptimizer eval(lm);
+            PerplexityOptimizer eval(lm, order);
             eval.LoadCorpus(evalZFile);
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
@@ -176,7 +176,7 @@ int main(int argc, char* argv[]) {
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
             ZFile evalZFile(evalFiles[i].c_str());
-            WordErrorRateOptimizer eval(lm);
+            WordErrorRateOptimizer eval(lm, order);
             eval.LoadLattices(evalZFile);
             Logger::Log(1, "Computing word error rate...\n");
             Logger::Log(0, "\t%s\t%.2f%%\n", evalFiles[i].c_str(),
@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
             ZFile evalZFile(evalFiles[i].c_str());
-            WordErrorRateOptimizer eval(lm);
+            WordErrorRateOptimizer eval(lm, order);
             eval.LoadLattices(evalZFile);
             Logger::Log(1, "Computing discriminative margin...\n");
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
         const char *latticesFile = vm["compile-lattices"].as<string>().c_str();
         Logger::Log(0, "Compiling lattices %s:\n", latticesFile);
         ZFile latticesZFile(latticesFile);
-        WordErrorRateOptimizer eval(lm);
+        WordErrorRateOptimizer eval(lm, order);
         eval.LoadLattices(latticesZFile);
         string outFile(latticesFile);
         outFile += ".bin";

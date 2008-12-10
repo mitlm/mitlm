@@ -270,7 +270,7 @@ int main(int argc, char* argv[]) {
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
             ZFile devZFile(devFile);
-            PerplexityOptimizer dev(ilm);
+            PerplexityOptimizer dev(ilm, order);
             dev.LoadCorpus(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
@@ -287,7 +287,7 @@ int main(int argc, char* argv[]) {
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
             ZFile devZFile(devFile);
-            WordErrorRateOptimizer dev(ilm);
+            WordErrorRateOptimizer dev(ilm, order);
             dev.LoadLattices(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
@@ -303,7 +303,7 @@ int main(int argc, char* argv[]) {
 
             Logger::Log(1, "Loading development set %s...\n", devFile);
             ZFile devZFile(devFile);
-            WordErrorRateOptimizer dev(ilm);
+            WordErrorRateOptimizer dev(ilm, order);
             dev.LoadLattices(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
@@ -323,7 +323,7 @@ int main(int argc, char* argv[]) {
         for (size_t i = 0; i < evalFiles.size(); i++) {
             Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
             ZFile evalZFile(evalFiles[i].c_str());
-            PerplexityOptimizer eval(ilm);
+            PerplexityOptimizer eval(ilm, order);
             eval.LoadCorpus(evalZFile);
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
