@@ -66,7 +66,7 @@ public:
     NgramIndex Add(NgramIndex hist, VocabIndex word);
     NgramIndex Add(NgramIndex hist, VocabIndex word, bool *outNew);
     void       Reserve(size_t capacity);
-    void       Sort(const VocabVector &vocabMap, const IndexVector &boNgramMap,
+    bool       Sort(const VocabVector &vocabMap, const IndexVector &boNgramMap,
                     IndexVector &ngramMap);
     void       Serialize(FILE *outFile) const;
     void       Deserialize(FILE *inFile);

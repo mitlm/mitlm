@@ -96,6 +96,7 @@ public:
     void swap(DenseVector<T> &v);
     void set(T value);
     void attach(const DenseVector<T> &v);
+    template <typename Compare> bool sort(Compare compare);
 
     size_t        length() const { return _length; }
     ConstIterator begin() const  { return _data; }

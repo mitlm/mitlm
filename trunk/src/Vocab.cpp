@@ -110,13 +110,16 @@ Vocab::Reserve(size_t capacity) {
 }
 
 // Sort the vocabulary and output the mapping from original to new index.
-void
+bool
 Vocab::Sort(VocabVector &sortMap) {
     // Sort indices using vocab index comparison function.
     // - Skip the first two words: </s> and <s>
     VocabIndexCompare compare(*this);
     VocabVector       sortIndices = Range(size());
-    std::sort(sortIndices.begin() + 2, sortIndices.end(), compare);
+    if (!sortIndices[Range(2, size())].sort(compare)) {
+        sortMap = Range(size());
+        return false;
+    }
 
     // Build new string buffer for the sorted words.
     // Change offsets to refer to new string buffer.
@@ -136,6 +139,8 @@ Vocab::Sort(VocabVector &sortMap) {
 
     // Rebuild index map by applying sortMap.
     MaskAssign(_indices != Invalid, sortMap[_indices], _indices);
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,20 +182,30 @@ Vocab::SaveVocab(ZFile &vocabFile, bool asBinary) const {
 void
 Vocab::Serialize(FILE *outFile) const {
     WriteHeader(outFile, "Vocab");
-    WriteUInt64(outFile, _length);
-    WriteVector(outFile, _offsetLens);
-    WriteVector(outFile, _indices);
     WriteString(outFile, _buffer);
 }
 
 void
 Vocab::Deserialize(FILE *inFile) {
     VerifyHeader(inFile, "Vocab");
-    _length = (size_t)ReadUInt64(inFile);
-    ReadVector(inFile, _offsetLens);
-    ReadVector(inFile, _indices);
     ReadString(inFile, _buffer);
-    _hashMask = _indices.length() - 1;
+
+    // Count the number of words.
+    _length = 0;
+    for (size_t i = 0; i < _buffer.capacity(); ++i)
+        if (_buffer[i] == '\0') ++_length;
+    _offsetLens.resize(_length);
+
+    // Rebuild _offsetLens and _indices.
+    uint offset = 0;
+    _length     = 0;
+    for (size_t i = 0; i < _buffer.capacity(); ++i) {
+        if (_buffer[i] == '\0') {
+            _offsetLens[_length++] = OffsetLen(offset, i - offset);
+            offset = i + 1;
+        }
+    }
+    _Reindex(nextPowerOf2(_length + _length/4));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

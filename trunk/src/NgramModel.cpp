@@ -135,8 +135,10 @@ NgramModel::LoadCorpus(vector<CountVector> &countVectors,
     _vocab.Sort(vocabMap);
     for (size_t o = 0; o < size(); ++o) {
         boNgramMap.swap(ngramMap);
-        _vectors[o].Sort(vocabMap, boNgramMap, ngramMap);
-        ApplySort(ngramMap, countVectors[o]);
+        if (_vectors[o].Sort(vocabMap, boNgramMap, ngramMap))
+            ApplySort(ngramMap, countVectors[o]);
+        else
+            countVectors[o].resize(ngramMap.length());
     }
     _ComputeBackoffs();
 }
@@ -200,8 +202,10 @@ NgramModel::LoadCounts(vector<CountVector> &countVectors,
     _vocab.Sort(vocabMap);
     for (size_t o = 0; o < size(); ++o) {
         boNgramMap.swap(ngramMap);
-        _vectors[o].Sort(vocabMap, boNgramMap, ngramMap);
-        ApplySort(ngramMap, countVectors[o]);
+        if (_vectors[o].Sort(vocabMap, boNgramMap, ngramMap))
+            ApplySort(ngramMap, countVectors[o]);
+        else
+            countVectors[o].resize(ngramMap.length());
     }
     _ComputeBackoffs();
 }
@@ -333,10 +337,15 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
     _vocab.Sort(vocabMap);
     for (size_t o = 0; o < size(); ++o) {
         boNgramMap.swap(ngramMap);
-        _vectors[o].Sort(vocabMap, boNgramMap, ngramMap);
-        ApplySort(ngramMap, probVectors[o]);
-        if (o < bowVectors.size())
-            ApplySort(ngramMap, bowVectors[o]);
+        if (_vectors[o].Sort(vocabMap, boNgramMap, ngramMap)) {
+            ApplySort(ngramMap, probVectors[o]);
+            if (o < bowVectors.size())
+                ApplySort(ngramMap, bowVectors[o]);
+        } else {
+            probVectors[o].resize(ngramMap.length());
+            if (o < bowVectors.size())
+                bowVectors[o].resize(ngramMap.length());
+        }
     }
     _ComputeBackoffs();
 }
@@ -660,6 +669,7 @@ NgramModel::Deserialize(FILE *inFile) {
     _vectors.resize(ReadUInt64(inFile));
     for (unsigned int i = 0; i < size(); i++)
         _vectors[i].Deserialize(inFile);
+    _ComputeBackoffs();
 }
 
 template <class T>
@@ -700,26 +710,15 @@ NgramModel::_ComputeBackoffs() {
             backoffs[i] = _vectors[1].Find(0, _vectors[2]._words[i]);
     }
 
-    // For higher order n-grams, need to recursively lookup history index.
-    VocabVector ngramVocabs(size());
+    // Backoffs for higher order n-grams are computed from lower order backoffs.
     for (size_t o = 3; o < size(); o++) {
-        NgramVector &v(_vectors[o]);
+        IndexVector &loBackoffs(_backoffVectors[o - 1]);
         IndexVector &backoffs(_backoffVectors[o]);
-        size_t       oldSize  = backoffs.length();
-        NgramIndex   prevHist = (NgramIndex)-1;
-        backoffs.resize(v.size());
-        for (NgramIndex i = oldSize; i < (NgramIndex)backoffs.length(); ++i) {
-            if (v._hists[i] != prevHist) {
-                NgramIndex index = prevHist = v._hists[i];
-                size_t     j     = o;
-                while (--j > 1) {
-                    ngramVocabs[j] = _vectors[j]._words[index];
-                    index          = _vectors[j]._hists[index];
-                }
-            }
-            ngramVocabs[o] = v._words[i];
-            backoffs[i]    = _Find(&ngramVocabs[2], o - 1);
-        }
+        size_t       oldSize = backoffs.length();
+        backoffs.resize(_vectors[o].size());
+        for (NgramIndex i = oldSize; i < (NgramIndex)backoffs.length(); ++i)
+            backoffs[i] = _vectors[o-1].Find(loBackoffs[_vectors[o]._hists[i]], 
+                                           _vectors[o]._words[i]);
     }
 }
 
