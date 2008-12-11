@@ -137,7 +137,7 @@ NgramVector::Reserve(size_t capacity) {
 }
 
 // Sort elements and return sort index mapping.
-void NgramVector::Sort(const VocabVector &vocabMap,
+bool NgramVector::Sort(const VocabVector &vocabMap,
                        const IndexVector &boNgramMap,
                        IndexVector &ngramMap) {
     // Update word and hist indices.
@@ -149,7 +149,10 @@ void NgramVector::Sort(const VocabVector &vocabMap,
     // Sort indices.
     NgramIndexCompare compare(*this);
     IndexVector       sortIndices = Range(0, size());
-    std::sort(sortIndices.begin(), sortIndices.end(), compare);
+    if (!sortIndices.sort(compare)) {
+        ngramMap = Range(size());
+        return false;
+    }
 
     // Apply ordered indices to values.
     // Build sort mapping that maps old to new indices.
@@ -171,14 +174,16 @@ void NgramVector::Sort(const VocabVector &vocabMap,
     Range r(_length);
     _wordsView.attach(_words[r]);
     _histsView.attach(_hists[r]);
+
+    return true;
 }
 
 void
 NgramVector::Serialize(FILE *outFile) const {
+    Range r(_length);
     WriteUInt64(outFile, _length);
-    WriteVector(outFile, _words);
-    WriteVector(outFile, _hists);
-    WriteVector(outFile, _indices);
+    WriteVector(outFile, _words[r]);
+    WriteVector(outFile, _hists[r]);
 }
 
 void
@@ -186,13 +191,11 @@ NgramVector::Deserialize(FILE *inFile) {
     _length = ReadUInt64(inFile);
     ReadVector(inFile, _words);
     ReadVector(inFile, _hists);
-    ReadVector(inFile, _indices);
-    _hashMask = _indices.length() - 1;
+    _Reindex(nextPowerOf2(_length + _length / 4));
 
     // Build truncated view into words and hists.
-    Range r(_length);
-    _wordsView.attach(_words[r]);
-    _histsView.attach(_hists[r]);
+    _wordsView.attach(_words);
+    _histsView.attach(_hists);
 }
 
 // Return the iterator to the position of the value.
