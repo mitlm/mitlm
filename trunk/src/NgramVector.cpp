@@ -93,11 +93,14 @@ NgramVector::Find(NgramIndex hist, VocabIndex word) const {
 // If value already exists, return the existing index.
 NgramIndex
 NgramVector::Add(NgramIndex hist, VocabIndex word) {
+    assert(hist != Invalid);
+    assert(word != Invalid);
     NgramIndex *pIndex = _FindIndex(hist, word);
     if (*pIndex == Invalid) {
         // Increase index table size as needed.
         if (size() >= _words.length()) {
-            Reserve(std::max((size_t)1<<16, _words.length()*2));  // Double capacity.
+            Reserve(std::max((size_t)1<<16,
+                             _words.length()*2));  // Double capacity.
             pIndex = _FindIndex(hist, word);  // Update iterator for new index.
         }
         *pIndex = _length;
@@ -110,6 +113,8 @@ NgramVector::Add(NgramIndex hist, VocabIndex word) {
 
 NgramIndex
 NgramVector::Add(NgramIndex hist, VocabIndex word, bool *outNew) {
+    assert(hist != Invalid);
+    assert(word != Invalid);
     NgramIndex *pIndex = _FindIndex(hist, word);
     *outNew = (*pIndex == Invalid);
     if (*outNew) {

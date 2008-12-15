@@ -60,6 +60,7 @@ protected:
 public:
     NgramLMBase(size_t order = 3);
     virtual ~NgramLMBase() { }
+    void UseUnknown() { _pModel->UseUnknown(); }
     void LoadVocab(ZFile &vocabFile);
     void SaveVocab(ZFile &vocabFile, bool asBinary=false) const;
     void SaveLM(ZFile &lmFile, bool asBinary=false) const;
@@ -104,7 +105,7 @@ protected:
     IntVector                      _paramStarts;
 
 public:
-    NgramLM(size_t order = 3) : NgramLMBase(order), _countVectors(order + 1), 
+    NgramLM(size_t order = 3) : NgramLMBase(order), _countVectors(order + 1),
                                 _featureList(order + 1) { }
     void LoadCorpus(ZFile &corpusFile, bool reset=false);
     void LoadCounts(ZFile &countsFile, bool reset=false);

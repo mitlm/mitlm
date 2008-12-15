@@ -59,6 +59,7 @@ protected:
 
 public:
     NgramModel(size_t order = 3);
+    void   UseUnknown() { _vocab.UseUnknown(); }
     void   SetOrder(size_t order);
     void   LoadVocab(ZFile &vocabFile);
     void   SaveVocab(ZFile &vocabFile, bool asBinary=false) const;

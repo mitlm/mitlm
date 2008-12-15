@@ -123,10 +123,11 @@ int main(int argc, char* argv[]) {
         ("read-vocab,v", po::value<string>(),
          "Restrict the vocabulary to only words from the specified vocabulary "
          "vocabfile.  n-grams with out of vocabulary words are ignored.")
+        ("use-unknown,k", "Replace all words outside vocabulary with <unk>.")
         ("read-text,t", po::value<vector<string> >()->composing(),
          "Cumulate n-gram count statistics from textfile, where each line "
-         "corresponds to a sentence.  Begin and end of sentence tags (<s>, "
-         "</s>) are automatically added.  Empty lines are ignored.")
+         "corresponds to a sentence.  Sentence boundary tags (</s>) are "
+         "automatically added.  Empty lines are ignored.")
         ("read-count,c", po::value<vector<string> >()->composing(),
          "Read n-gram counts from countsfile.  Using both -read-text and "
          "-read-count will combine the counts.")
@@ -196,6 +197,10 @@ int main(int argc, char* argv[]) {
 
     // Read language model input files.
     NgramLM lm(order);
+    if (vm.count("use-unknown")) {
+        Logger::Log(1, "Replace unknown words with <unk>...\n");
+        lm.UseUnknown();
+    }
     if (vm.count("read-vocab")) {
         const char *vocabFile = vm["read-vocab"].as<string>().c_str();
         Logger::Log(1, "Loading vocab %s...\n", vocabFile);
