@@ -61,14 +61,8 @@ void KneserNeySmoothing::Initialize(NgramLM *pLM, size_t order) {
                 _effCounts[hoBackoffs[i]]++;
 
         // Use original counts for n-grams without left context.
-        // Ex. Words starting with <s>.
+        // Ex. N-grams starting with </s>.
         _effCounts.masked(_effCounts == 0) = _pLM->counts(_order);
-
-        // Explicitly set count of <s> to 0.
-        if (_order == 1) {
-            assert(_pLM->words(_order)[1] == Vocab::BeginOfSentence);
-            _effCounts[1] = 0;
-        }
     } else {
         // Use original counts for highest order.
         _effCounts.attach(_pLM->counts(_order));
@@ -210,17 +204,12 @@ KneserNeySmoothing::_Estimate(ProbVector &probs, ProbVector &bows) {
     // Compute backoff weights.
     bows.set(0);
     BinWeight(hists, discounts, bows);
-    bows = CondExpr(_invHistCounts == 0, 1.0, bows * _invHistCounts);
+    bows = CondExpr(_invHistCounts == 0, NAN, bows * _invHistCounts);
 
     // Compute interpolated probabilities.
-    if (_order == 1)
-        probs = CondExpr(!_effCounts, 0,
-                         (_effCounts - discounts) * _invHistCounts[hists]
-                         + boProbs[backoffs] * bows[hists]);
-    else
-        probs = CondExpr(!_effCounts, 0,
-                         (_effCounts - discounts) * _invHistCounts[hists])
-                + boProbs[backoffs] * bows[hists];
+    probs = CondExpr(!_effCounts, 0,
+                     (_effCounts - discounts) * _invHistCounts[hists])
+            + boProbs[backoffs] * bows[hists];
 }
 
 void
@@ -245,27 +234,21 @@ KneserNeySmoothing::_EstimateMasked(const NgramLMMask *pMask,
     MaskedVectorClosure<ProbVector, BitVector> maskedBows(bows.masked(bowMask));
     maskedBows.set(0);
     BinWeight(hists, discounts, maskedBows);
-//    maskedBows = CondExpr(isnan(_invHistCounts), 1.0, bows * _invHistCounts);
+//    maskedBows = CondExpr(_invHistCounts == 0, NAN, bows * _invHistCounts);
     for (size_t i = 0; i < bows.length(); i++)
         if (bowMask[i]) {
             if (_invHistCounts[i] == 0)
-                bows[i] = 1.0;
+                bows[i] = NAN;
             else
                 bows[i] *= _invHistCounts[i];
         }
 
     // Compute interpolated probabilities.
     const BitVector &probMask(pMask->ProbMaskVectors[_order]);
-    if (_order == 1)
-        probs.masked(probMask) =
-            CondExpr(!_effCounts, 0,
-                     (_effCounts - discounts) * _invHistCounts[hists]
-                     + boProbs[backoffs] * bows[hists]);
-    else
-        probs.masked(probMask) =
-            CondExpr(!_effCounts, 0,
-                     (_effCounts - discounts) * _invHistCounts[hists])
-            + boProbs[backoffs] * bows[hists];
+    probs.masked(probMask) =
+        CondExpr(!_effCounts, 0,
+                 (_effCounts - discounts) * _invHistCounts[hists])
+        + boProbs[backoffs] * bows[hists];
 }
 
 void
@@ -281,19 +264,13 @@ KneserNeySmoothing::_EstimateWeighted(ProbVector &probs, ProbVector &bows) {
     // Compute backoff weights.
     bows.set(0);
     BinWeight(hists, _ngramWeights * discounts, bows);
-    bows = CondExpr(_invHistCounts == 0, 1.0, bows * _invHistCounts);
+    bows = CondExpr(_invHistCounts == 0, NAN, bows * _invHistCounts);
 
     // Compute interpolated probabilities.
-    if (_order == 1)
-        probs = CondExpr(!_effCounts, 0,
-                         _ngramWeights * (_effCounts - discounts)
-                         * _invHistCounts[hists]
-                         + boProbs[backoffs] * bows[hists]);
-    else
-        probs = CondExpr(!_effCounts, 0,
-                         _ngramWeights * (_effCounts - discounts)
-                         * _invHistCounts[hists])
-                + boProbs[backoffs] * bows[hists];
+    probs = CondExpr(!_effCounts, 0,
+                     _ngramWeights * (_effCounts - discounts)
+                     * _invHistCounts[hists])
+            + boProbs[backoffs] * bows[hists];
 }
 
 void
@@ -319,27 +296,20 @@ KneserNeySmoothing::_EstimateWeightedMasked(const NgramLMMask *pMask,
     MaskedVectorClosure<ProbVector, BitVector> maskedBows(bows.masked(bowMask));
     maskedBows.set(0);
     BinWeight(hists, _ngramWeights * discounts, maskedBows);
-//    maskedBows = CondExpr(isnan(_invHistCounts), 1.0, bows * _invHistCounts);
+//    maskedBows = CondExpr(_invHistCounts == 0, NAN, bows * _invHistCounts);
     for (size_t i = 0; i < bows.length(); i++)
         if (bowMask[i]) {
             if (_invHistCounts[i] == 0)
-                bows[i] = 1.0;
+                bows[i] = NAN;
             else
                 bows[i] *= _invHistCounts[i];
         }
 
     // Compute interpolated probabilities.
     const BitVector &probMask(pMask->ProbMaskVectors[_order]);
-    if (_order == 1)
-        probs.masked(probMask) =
-            CondExpr(!_effCounts, 0,
-                     _ngramWeights * (_effCounts - discounts)
-                     * _invHistCounts[hists]
-                     + boProbs[backoffs] * bows[hists]);
-    else
-        probs.masked(probMask) =
-            CondExpr(!_effCounts, 0,
-                     _ngramWeights * (_effCounts - discounts)
-                     * _invHistCounts[hists])
-            + boProbs[backoffs] * bows[hists];
+    probs.masked(probMask) =
+        CondExpr(!_effCounts, 0,
+                 _ngramWeights * (_effCounts - discounts)
+                 * _invHistCounts[hists])
+        + boProbs[backoffs] * bows[hists];
 }

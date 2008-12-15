@@ -214,12 +214,8 @@ NgramLM::SetSmoothingAlgs(const vector<SharedPtr<Smoothing> > &smoothings) {
     }
     _probVectors[_order].reset(_pModel->sizes(_order));
 
-    // Explicitly set count of <s> to 0.
-    assert(words(1)[1] == Vocab::BeginOfSentence);
-    _countVectors[1][1] = 0;
-
-    // Compute 0th order probability (ignore 0 count unigrams).
-    _probVectors[0][0] = Prob(1.0) / sum(_countVectors[1] > 0);
+    // Compute 0th order probability.
+    _probVectors[0][0] = Prob(1.0 / sizes(1));
 
     // Compute default parameters.
     _paramStarts.reset(_order + 2);

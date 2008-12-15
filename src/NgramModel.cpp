@@ -88,14 +88,14 @@ NgramModel::LoadCorpus(vector<CountVector> &countVectors,
     // Accumulate counts for each n-gram in corpus file.
     char line[MAXLINE];
     vector<VocabIndex> words(256);
-    vector<NgramIndex> hists(size());
+    vector<NgramIndex> hists(size(), -1);
     while (getline(corpusFile, line, MAXLINE)) {
         if (strncmp(line, "<DOC ", 5) == 0 || strcmp(line, "</DOC>") == 0)
             continue;
 
         // Lookup vocabulary indices for each word in the line.
         words.clear();
-        words.push_back(Vocab::BeginOfSentence);
+        words.push_back(Vocab::EndOfSentence);
         char *p = &line[0];
         while (*p != '\0') {
             while (isspace(*p)) ++p;  // Skip consecutive spaces.
@@ -109,11 +109,12 @@ NgramModel::LoadCorpus(vector<CountVector> &countVectors,
 
         // Add each order n-gram.
         countVectors[0][0] += words.size() - 1;
-        for (size_t i = 0; i < words.size(); ++i) {
+        hists[1] = _vectors[1].Add(0, Vocab::EndOfSentence);
+        for (size_t i = 1; i < words.size(); ++i) {
             VocabIndex word = words[i];
             NgramIndex hist = 0;
             for (size_t j = 1; j < std::min(i + 2, size()); ++j) {
-                if (word != Vocab::Invalid) {
+                if (word != Vocab::Invalid && hist != NgramVector::Invalid) {
                     bool       newNgram;
                     NgramIndex index = _vectors[j].Add(hist, word, &newNgram);
                     if (newNgram && (size_t)index >= countVectors[j].length())
@@ -127,6 +128,13 @@ NgramModel::LoadCorpus(vector<CountVector> &countVectors,
                 }
             }
         }
+    }
+
+    // Add remaining vocabulary, if necessary.
+    if (_vectors[1].size() != _vocab.size()) {
+        for (VocabIndex i = 0; i < (VocabIndex)_vocab.size(); ++i)
+            _vectors[1].Add(0, i);
+        countVectors[1].resize(_vocab.size(), 0);
     }
 
     // Sort and resize counts to actual size.
@@ -356,9 +364,10 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
                    ZFile &lmFile) const {
     if (lmFile == NULL) throw std::invalid_argument("Invalid file");
 
-    // Write ARPA backoff LM header.
+    // Write ARPA backoff LM header.  Add <s> to 1-grams.
     fputs("\n\\data\\\n", lmFile);
-    for (size_t o = 1; o < size(); o++)
+    fprintf(lmFile, "ngram 1=%lu\n", (unsigned long)_vectors[1].size() + 1);
+    for (size_t o = 2; o < size(); o++)
         fprintf(lmFile, "ngram %lu=%lu\n",
                 (unsigned long)o, (unsigned long)_vectors[o].size());
 
@@ -372,7 +381,20 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
         const ProbVector &bows  = bowVectors[o];
         assert(probs.length() == _vectors[o].size());
         assert(bows.length() == _vectors[o].size());
-        for (NgramIndex i = 0; i < (NgramIndex)_vectors[o].size(); ++i) {
+        NgramIndex iStart = 0;
+        if (o == 1) {
+            iStart = 1;
+            char *ptr = &lineBuffer[0];
+            ptr = CopyLProb(ptr, probs[Vocab::EndOfSentence]);
+            *ptr++ = '\t';
+            ptr = CopyString(ptr, "</s>\n-99\t<s>\t");
+            ptr = CopyLProb(ptr, bows[Vocab::EndOfSentence]);
+            *ptr++ = '\n';
+            *ptr = '\0';
+            assert((size_t)(ptr - lineBuffer.data()) < lineBuffer.size());
+            fputs(&lineBuffer[0], lmFile);
+        }
+        for (NgramIndex i = iStart; i < (NgramIndex)_vectors[o].size(); ++i) {
             // Allocate spaces for Prob, words, spaces, Prob, \n\0.
             size_t len = GetNgramWords(o, i, ngramWords) + 22;
             if (lineBuffer.size() < len)
@@ -452,7 +474,7 @@ NgramModel::LoadEvalCorpus(vector<CountVector> &probCountVectors,
 
         // Lookup vocabulary indices for each word in the line.
         words.clear();
-        words.push_back(Vocab::BeginOfSentence);
+        words.push_back(Vocab::EndOfSentence);
         char *p = &line[0];
         while (*p != 0) {
             while (isspace(*p)) ++p;  // Skip consecutive spaces.
@@ -717,7 +739,7 @@ NgramModel::_ComputeBackoffs() {
         size_t       oldSize = backoffs.length();
         backoffs.resize(_vectors[o].size());
         for (NgramIndex i = oldSize; i < (NgramIndex)backoffs.length(); ++i)
-            backoffs[i] = _vectors[o-1].Find(loBackoffs[_vectors[o]._hists[i]], 
+            backoffs[i] = _vectors[o-1].Find(loBackoffs[_vectors[o]._hists[i]],
                                            _vectors[o]._words[i]);
     }
 }
@@ -760,7 +782,7 @@ NgramModel::_LoadFrequency(vector<DoubleVector> &freqVectors,
 
         // Lookup vocabulary indices for each word in the line.
         words.clear();
-        words.push_back(Vocab::BeginOfSentence);
+        words.push_back(Vocab::EndOfSentence);
         char *p = &line[0];
         while (*p != '\0') {
             while (isspace(*p)) ++p;  // Skip consecutive spaces.
@@ -774,7 +796,8 @@ NgramModel::_LoadFrequency(vector<DoubleVector> &freqVectors,
 
         // Add each order n-gram.
         countVectors[0][0] += words.size() - 1;
-        for (size_t i = 0; i < words.size(); ++i) {
+        hists[1] = _vectors[1].Find(0, Vocab::EndOfSentence);
+        for (size_t i = 1; i < words.size(); ++i) {
             VocabIndex word = words[i];
             NgramIndex hist = 0;
             for (size_t j = 1; j < std::min(i + 2, maxSize); ++j) {
@@ -841,7 +864,7 @@ NgramModel::_LoadEntropy(vector<DoubleVector> &entropyVectors,
 
         // Lookup vocabulary indices for each word in the line.
         words.clear();
-        words.push_back(Vocab::BeginOfSentence);
+        words.push_back(Vocab::EndOfSentence);
         char *p = &line[0];
         while (*p != '\0') {
             while (isspace(*p)) ++p;  // Skip consecutive spaces.
@@ -855,7 +878,8 @@ NgramModel::_LoadEntropy(vector<DoubleVector> &entropyVectors,
 
         // Add each order n-gram.
         countVectors[0][0] += words.size() - 1;
-        for (size_t i = 0; i < words.size(); ++i) {
+        hists[1] = _vectors[1].Find(0, Vocab::EndOfSentence);
+        for (size_t i = 1; i < words.size(); ++i) {
             VocabIndex word = words[i];
             NgramIndex hist = 0;
             for (size_t j = 1; j < std::min(i + 2, maxSize); ++j) {

@@ -65,14 +65,15 @@ protected:
     std::string     _buffer;      // String buffer storing all words
     size_t          _hashMask;    // Hash mask: hashIndex = hash & hashMask
     bool            _readOnly;
+    VocabIndex      _unkIndex;
 
 public:
     static const VocabIndex Invalid;          // = (VocabIndex)-1;
     static const VocabIndex EndOfSentence;    // = (VocabIndex)0;
-    static const VocabIndex BeginOfSentence;  // = (VocabIndex)1;
 
     Vocab(size_t capacity = 1<<16);
     void       SetReadOnly(bool readOnly);
+    void       UseUnknown();
     VocabIndex Find(const char *word, size_t len) const;
     VocabIndex Find(const char *word) const { return Find(word, strlen(word)); }
     VocabIndex Add(const char *word, size_t len);

@@ -52,20 +52,28 @@ struct VocabIndexCompare
 
 const VocabIndex Vocab::Invalid         = (VocabIndex)-1;
 const VocabIndex Vocab::EndOfSentence   = (VocabIndex)0;
-const VocabIndex Vocab::BeginOfSentence = (VocabIndex)1;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Create Vocab with specified capacity.
-Vocab::Vocab(size_t capacity) : _length(0), _readOnly(false) {
+Vocab::Vocab(size_t capacity) : _length(0), _readOnly(false),
+                                _unkIndex(Invalid) {
     Reserve(capacity);
     Add("</s>");
-    Add("<s>");
 }
 
 void
 Vocab::SetReadOnly(bool readOnly) {
     _readOnly = readOnly;
+}
+
+void
+Vocab::UseUnknown() {
+    assert(!_readOnly);  // Call UseUnknown() before SetReadOnly().
+    if (_unkIndex == Invalid) {
+        _unkIndex = Add("<unk>");
+        assert(_unkIndex == 1);
+    }
 }
 
 // Return associated index of the word, or Invalid if not found.
@@ -79,7 +87,7 @@ Vocab::Find(const char *word, size_t len) const {
            !(wordlen(index)==len && strncmp(operator[](index), word, len)==0)) {
         pos = (pos + ++skip) & _hashMask;
     }
-    return index;
+    return (index == Invalid) ? _unkIndex : index;
 }
 
 // Add word to the vocab and return the associated index.
@@ -97,7 +105,7 @@ Vocab::Add(const char *word, size_t len) {
         _offsetLens[_length++] = OffsetLen(_buffer.size(), len);
         _buffer.append(word, len + 1);        // Include terminating NULL.
     }
-    return *pIndex;
+    return (*pIndex == Invalid) ? _unkIndex : *pIndex;
 }
 
 void
@@ -113,10 +121,11 @@ Vocab::Reserve(size_t capacity) {
 bool
 Vocab::Sort(VocabVector &sortMap) {
     // Sort indices using vocab index comparison function.
-    // - Skip the first two words: </s> and <s>
+    // - Skip the first two words: </s> (and optionally <unk>).
+    int               numFixedWords = (_unkIndex == Invalid) ? 1 : 2;
     VocabIndexCompare compare(*this);
     VocabVector       sortIndices = Range(size());
-    if (!sortIndices[Range(2, size())].sort(compare)) {
+    if (!sortIndices[Range(numFixedWords, size())].sort(compare)) {
         sortMap = Range(size());
         return false;
     }

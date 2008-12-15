@@ -649,7 +649,7 @@ Lattice::_ComputeArcNgramMapping() {
 
         map.resize(_finalNode, NgramVector::Invalid);
         NgramIndex hist = (o == 1) ? 0 : boMap[0];
-        map[0] = ngramVector.Find(hist, Vocab::BeginOfSentence);
+        map[0] = ngramVector.Find(hist, Vocab::EndOfSentence);
         for (size_t i = 0; i < _arcWords.length(); ++i) {
             NgramIndex hist       = (o == 1) ? 0 : boMap[_arcStarts[i]];
             NgramIndex ngramIndex = ngramVector.Find(hist, _arcWords[i]);
