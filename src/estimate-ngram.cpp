@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
         ("use-unknown,k", "Replace all words outside vocabulary with <unk>.")
         ("read-text,t", po::value<vector<string> >()->composing(),
          "Cumulate n-gram count statistics from textfile, where each line "
-         "corresponds to a sentence.  Sentence boundary tags (</s>) are "
+         "corresponds to a sentence.  Sentence boundary tags (<s>, </s>) are "
          "automatically added.  Empty lines are ignored.")
         ("read-count,c", po::value<vector<string> >()->composing(),
          "Read n-gram counts from countsfile.  Using both -read-text and "

@@ -61,7 +61,7 @@ void KneserNeySmoothing::Initialize(NgramLM *pLM, size_t order) {
                 _effCounts[hoBackoffs[i]]++;
 
         // Use original counts for n-grams without left context.
-        // Ex. N-grams starting with </s>.
+        // Ex. N-grams starting with <s>.
         _effCounts.masked(_effCounts == 0) = _pLM->counts(_order);
     } else {
         // Use original counts for highest order.
@@ -204,7 +204,7 @@ KneserNeySmoothing::_Estimate(ProbVector &probs, ProbVector &bows) {
     // Compute backoff weights.
     bows.set(0);
     BinWeight(hists, discounts, bows);
-    bows = CondExpr(_invHistCounts == 0, NAN, bows * _invHistCounts);
+    bows = CondExpr(_invHistCounts == 0, 1, bows * _invHistCounts);
 
     // Compute interpolated probabilities.
     probs = CondExpr(!_effCounts, 0,
@@ -234,11 +234,11 @@ KneserNeySmoothing::_EstimateMasked(const NgramLMMask *pMask,
     MaskedVectorClosure<ProbVector, BitVector> maskedBows(bows.masked(bowMask));
     maskedBows.set(0);
     BinWeight(hists, discounts, maskedBows);
-//    maskedBows = CondExpr(_invHistCounts == 0, NAN, bows * _invHistCounts);
+//    maskedBows = CondExpr(_invHistCounts == 0, 1, bows * _invHistCounts);
     for (size_t i = 0; i < bows.length(); i++)
         if (bowMask[i]) {
             if (_invHistCounts[i] == 0)
-                bows[i] = NAN;
+                bows[i] = 1;
             else
                 bows[i] *= _invHistCounts[i];
         }
@@ -264,7 +264,7 @@ KneserNeySmoothing::_EstimateWeighted(ProbVector &probs, ProbVector &bows) {
     // Compute backoff weights.
     bows.set(0);
     BinWeight(hists, _ngramWeights * discounts, bows);
-    bows = CondExpr(_invHistCounts == 0, NAN, bows * _invHistCounts);
+    bows = CondExpr(_invHistCounts == 0, 1, bows * _invHistCounts);
 
     // Compute interpolated probabilities.
     probs = CondExpr(!_effCounts, 0,
@@ -296,11 +296,11 @@ KneserNeySmoothing::_EstimateWeightedMasked(const NgramLMMask *pMask,
     MaskedVectorClosure<ProbVector, BitVector> maskedBows(bows.masked(bowMask));
     maskedBows.set(0);
     BinWeight(hists, _ngramWeights * discounts, maskedBows);
-//    maskedBows = CondExpr(_invHistCounts == 0, NAN, bows * _invHistCounts);
+//    maskedBows = CondExpr(_invHistCounts == 0, 1, bows * _invHistCounts);
     for (size_t i = 0; i < bows.length(); i++)
         if (bowMask[i]) {
             if (_invHistCounts[i] == 0)
-                bows[i] = NAN;
+                bows[i] = 1;
             else
                 bows[i] *= _invHistCounts[i];
         }

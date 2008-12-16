@@ -80,6 +80,9 @@ Vocab::UseUnknown() {
 // In case of collision, apply quadratic probing.
 VocabIndex
 Vocab::Find(const char *word, size_t len) const {
+    if (len == 3 && strcmp(word, "<s>") == 0)
+        return EndOfSentence;
+
     size_t     skip = 0;
     VocabIndex pos  = StringHash(word, len) & _hashMask;
     VocabIndex index;
@@ -94,6 +97,9 @@ Vocab::Find(const char *word, size_t len) const {
 // If word already exists, return the existing index.
 VocabIndex
 Vocab::Add(const char *word, size_t len) {
+    if (len == 3 && strcmp(word, "<s>") == 0)
+        return EndOfSentence;
+
     VocabIndex *pIndex = _FindIndex(word, len);
     if (*pIndex == Invalid && !_readOnly) {
         // Increase index table size as needed.
