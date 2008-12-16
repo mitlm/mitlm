@@ -310,9 +310,10 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
             Prob prob = (Prob)pow(10.0, strtod(p, &p)); p++;
 
             // Read i words.
-            NgramIndex index = 0;
+            NgramIndex index  = 0;
+            const char *token = NULL;
             for (i = 1; i <= o; ++i) {
-                const char *token = p;
+                token = p;
                 while (*p != 0 && !isspace(*p)) ++p;
                 len = p - token;
                 *p++ = 0;
@@ -326,11 +327,22 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
             if (index == NgramVector::Invalid) break;
 
             // Set probability and backoff weight.
-            probs[index] = prob;
-            if (hasBow) {
-                // Read optional backoff weight.
-                bows[index] = (p >= &line[lineLen]) ?
-                    NAN : (Prob)pow(10.0, strtod(p, &p));
+            if (index == Vocab::EndOfSentence && o == 1) {
+                if (strcmp(token, "<s>") == 0) {
+                    assert(prob <= pow(10, -99));
+                    bows[index] = (p >= &line[lineLen]) ?
+                        (Prob)1 : (Prob)pow(10.0, strtod(p, &p));
+                } else {
+                    probs[index] = prob;
+                    assert(p >= &line[lineLen]);
+                }
+            } else {
+                probs[index] = prob;
+                if (hasBow) {
+                    // Read optional backoff weight.
+                    bows[index] = (p >= &line[lineLen]) ?
+                        (Prob)1 : (Prob)pow(10.0, strtod(p, &p));
+                }
             }
         }
     }
@@ -381,6 +393,8 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
         const ProbVector &bows  = bowVectors[o];
         assert(probs.length() == _vectors[o].size());
         assert(bows.length() == _vectors[o].size());
+        assert(!anyTrue(isnan(probs)));
+        assert(!anyTrue(isnan(bows)));
         NgramIndex iStart = 0;
         if (o == 1) {
             iStart = 1;
@@ -407,7 +421,7 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
                 *ptr++ = ' ';
                 ptr = CopyString(ptr, ngramWords[j]);
             }
-            if (!isnan(bows[i])) {
+            if (bows[i] != 1) {
                 *ptr++ = '\t';
                 ptr = CopyLProb(ptr, bows[i]);
             }
@@ -614,14 +628,19 @@ NgramModel::GetNgramWords(size_t order,
     // TODO: If n-grams are sorted, we can cache the history for each order
     //       and short circuit the iteration once the history matches.
     //       Primarily useful for higher orders.
-    size_t totalLength = 0;
+    size_t     totalLength = 0;
+    VocabIndex word = Vocab::Invalid;
     for (size_t i = order; i > 0; --i) {
         const NgramVector &v(_vectors[i]);
         assert(index >= 0 && index < (NgramIndex)v.size());
-        VocabIndex word = v._words[index];
+        word            = v._words[index];
         words[i - 1]    = _vocab[word];
         totalLength    += _vocab.wordlen(word);
         index           = v._hists[index];
+    }
+    if (word == Vocab::EndOfSentence) {
+        words[0] = "<s>";
+        totalLength--;  // <s> is shorter than </s>.
     }
     return totalLength;
 }
@@ -795,7 +814,6 @@ NgramModel::_LoadFrequency(vector<DoubleVector> &freqVectors,
         words.push_back(Vocab::EndOfSentence);
 
         // Add each order n-gram.
-        countVectors[0][0] += words.size() - 1;
         hists[1] = _vectors[1].Find(0, Vocab::EndOfSentence);
         for (size_t i = 1; i < words.size(); ++i) {
             VocabIndex word = words[i];
@@ -877,7 +895,6 @@ NgramModel::_LoadEntropy(vector<DoubleVector> &entropyVectors,
         words.push_back(Vocab::EndOfSentence);
 
         // Add each order n-gram.
-        countVectors[0][0] += words.size() - 1;
         hists[1] = _vectors[1].Find(0, Vocab::EndOfSentence);
         for (size_t i = 1; i < words.size(); ++i) {
             VocabIndex word = words[i];
