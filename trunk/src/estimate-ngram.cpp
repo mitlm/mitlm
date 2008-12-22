@@ -155,7 +155,7 @@ int main(int argc, char* argv[]) {
          "Write n-gram counts to countsfile.")
         ("write-binary-count,D", po::value<string>(),
          "Write n-gram counts to countsfile in MITLM binary format.")
-        ("write-eff-count", po::value<string>(),
+        ("write-eff-count,E", po::value<string>(),
          "Write effective n-gram counts to countsfile.")
         ("write-lm,L", po::value<string>(),
          "Write n-gram language model to lmfile in ARPA backoff text format.")

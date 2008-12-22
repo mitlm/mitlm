@@ -58,7 +58,7 @@ enum Interpolation {
 class InterpolatedNgramLM : public NgramLMBase {
 protected:
     vector<SharedPtr<NgramLMBase> > _lms;
-    vector<vector<DoubleVector> >   _featureList;
+    vector<vector<FeatureVectors> > _featureList;
     Interpolation                   _interpolation;
     ProbVector                      _weights;
     ProbVector                      _totWeights;
@@ -71,7 +71,7 @@ public:
         : NgramLMBase(order), _interpolation(LI) { }
     void  LoadLMs(const vector<SharedPtr<NgramLMBase> > &lms);
     void  SetInterpolation(Interpolation interpolation,
-                           const vector<FeatureVectors> &featureList);
+                           const vector<vector<FeatureVectors> > &featureList);
     SharedPtr<NgramLMBase> &lms(int l) { return _lms[l]; }
     size_t                  numLMs()   { return _lms.size(); }
 

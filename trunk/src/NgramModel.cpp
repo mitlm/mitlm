@@ -108,7 +108,6 @@ NgramModel::LoadCorpus(vector<CountVector> &countVectors,
         words.push_back(Vocab::EndOfSentence);
 
         // Add each order n-gram.
-        countVectors[0][0] += words.size() - 1;
         hists[1] = _vectors[1].Add(0, Vocab::EndOfSentence);
         for (size_t i = 1; i < words.size(); ++i) {
             VocabIndex word = words[i];
@@ -227,14 +226,6 @@ NgramModel::SaveCounts(const vector<CountVector> &countVectors,
     StrVector   ngramWords(size());
     std::string lineBuffer;
     lineBuffer.resize(size() * 32);
-
-    // Write 0th order counts.
-    char *ptr = &lineBuffer[0];
-    *ptr++ = '\t';
-    ptr = CopyUInt(ptr, countVectors[0][0]);
-    *ptr++ = '\n';
-    *ptr = '\0';
-    fputs(&lineBuffer[0], countsFile);
 
     // Write higher order counts.
     for (size_t o = 1; o < countVectors.size(); ++o) {
@@ -528,14 +519,14 @@ NgramModel::LoadEvalCorpus(vector<CountVector> &probCountVectors,
 
 void
 NgramModel::LoadFeatures(vector<DoubleVector> &featureVectors,
-                         ZFile &featureFile, size_t maxSize) const {
+                         ZFile &featureFile, size_t maxOrder) const {
     if (featureFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Allocate space for feature vectors.
-    if (maxSize == 0 || maxSize > size())
-        maxSize = size();
-    featureVectors.resize(maxSize);
-    for (size_t i = 0; i < maxSize; i++)
+    if (maxOrder == 0 || maxOrder > size() - 1)
+        maxOrder = size() - 1;
+    featureVectors.resize(maxOrder + 1);
+    for (size_t i = 0; i <= maxOrder; i++)
         featureVectors[i].reset(sizes(i), 0);  // Initialize to 0.
 
     // Load feature value for each n-gram in feature file.
@@ -565,7 +556,7 @@ NgramModel::LoadFeatures(vector<DoubleVector> &featureVectors,
             size_t len = p - token;
             *p++ = 0;
             if (len > 0) words.push_back(_vocab.Find(token, len));
-            if (words.size() >= maxSize) break;
+            if (words.size() > maxOrder) break;
         }
     }
 }
@@ -573,43 +564,80 @@ NgramModel::LoadFeatures(vector<DoubleVector> &featureVectors,
 void
 NgramModel::LoadComputedFeatures(vector<DoubleVector> &featureVectors,
                                  const char *featureFile,
-                                 size_t maxSize) const {
-    std::string strFilename(featureFile);
-    size_t colonIndex = strFilename.find(':');
-    const char *featFunc, *filename;
-    if (colonIndex == std::string::npos) {
-        featFunc = NULL;
-        filename = strFilename.c_str();
-    } else {
-        strFilename[colonIndex] = 0;
-        featFunc = strFilename.c_str();
-        filename = &strFilename[colonIndex + 1];
+                                 size_t maxOrder) const {
+    std::string featurePath(featureFile);
+    size_t      colonIndex = featurePath.rfind(':');
+    const char *filename = &featurePath[colonIndex + 1];
+    const char *func = NULL;
+
+    if (colonIndex != std::string::npos) {
+        featurePath[colonIndex] = 0;
+        colonIndex = featurePath.rfind(':', colonIndex);
+        func = &featurePath[colonIndex + 1];
     }
 
     ZFile f(filename, "r");
-    if (featFunc == NULL)
-        LoadFeatures(featureVectors, f, maxSize);
-    else if (strcmp(featFunc, "freq") == 0)
-        _LoadFrequency(featureVectors, f, maxSize);
-    else if (strcmp(featFunc, "entropy") == 0)
-        _LoadEntropy(featureVectors, f, maxSize);
-    else {
-        LoadFeatures(featureVectors, f, maxSize);
-        if (strcmp(featFunc, "log") == 0)
+    if (func == NULL)
+        LoadFeatures(featureVectors, f, maxOrder);
+    else if (strcmp(func, "freq") == 0) {
+        _LoadFrequency(featureVectors, f, maxOrder);
+        if (colonIndex == std::string::npos) {
+            func = NULL;
+        } else {
+            featurePath[colonIndex] = 0;
+            colonIndex = featurePath.rfind(':', colonIndex);
+            func = &featurePath[colonIndex + 1];
+        }
+    } else if (strcmp(func, "entropy") == 0) {
+        _LoadEntropy(featureVectors, f, maxOrder);
+        if (colonIndex == std::string::npos) {
+            func = NULL;
+        } else {
+            featurePath[colonIndex] = 0;
+            colonIndex = featurePath.rfind(':', colonIndex);
+            func = &featurePath[colonIndex + 1];
+        }
+    } else
+        LoadFeatures(featureVectors, f, maxOrder);
+
+    while (func != NULL) {
+        if (strcmp(func, "log") == 0)
             for (size_t o = 0; o < featureVectors.size(); ++o)
                 featureVectors[o] = log(featureVectors[o] + 1e-99);
-        else if (strcmp(featFunc, "log1p") == 0)
+        else if (strcmp(func, "log1p") == 0)
             for (size_t o = 0; o < featureVectors.size(); ++o)
                 featureVectors[o] = log(featureVectors[o] + 1);
-        else if (strcmp(featFunc, "pow2") == 0)
+        else if (strcmp(func, "pow2") == 0)
             for (size_t o = 0; o < featureVectors.size(); ++o)
                 featureVectors[o] *= featureVectors[o];
-        else if (strcmp(featFunc, "pow3") == 0)
+        else if (strcmp(func, "pow3") == 0)
             for (size_t o = 0; o < featureVectors.size(); ++o)
-                featureVectors[o] = pow(featureVectors[o], 3);
+                featureVectors[o] *= featureVectors[o] * featureVectors[o];
+        else if (strcmp(func, "norm") == 0)
+            for (size_t o = 0; o < featureVectors.size(); ++o)
+                featureVectors[o] *= (1 / max(featureVectors[o]));
+        else if (strcmp(func, "sumhist") == 0) {
+            for (size_t o = 0; o < featureVectors.size() - 1; ++o) {
+                featureVectors[o] = 0;
+                BinWeight(_vectors[o + 1].hists(), featureVectors[o + 1],
+                          featureVectors[o]);
+                //featureVectors[o] = log(featureVectors[o] + 1e-99);
+            }
+            featureVectors.resize(maxOrder);
+        } else if (strcmp(func, "norm") == 0)
+                for (size_t o = 0; o < featureVectors.size(); ++o)
+                    featureVectors[o] *= (1 / max(featureVectors[o]));
         else {
-            Logger::Error(1, "Unknown feature function: %s\n", featFunc);
+            Logger::Error(1, "Unknown feature function: %s\n", func);
             exit(1);
+        }
+
+        if (colonIndex == std::string::npos) {
+            func = NULL;
+        } else {
+            featurePath[colonIndex] = 0;
+            colonIndex = featurePath.rfind(':', colonIndex);
+            func = &featurePath[colonIndex + 1];
         }
     }
 

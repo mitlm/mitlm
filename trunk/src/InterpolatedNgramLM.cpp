@@ -88,45 +88,57 @@ InterpolatedNgramLM::LoadLMs(const vector<SharedPtr<NgramLMBase> > &lms) {
     }
     _paramStarts[_lms.size()] = builder.length();
     _defParams = builder;
+
+    _featureList.resize(lms.size());
 }
 
 void
 InterpolatedNgramLM::SetInterpolation(Interpolation interpolation,
-                                      const vector<FeatureVectors> &featureList)
+                                      const vector<vector<FeatureVectors> > &featureList)
 {
+    // Make an attached clone of featureList.
     _featureList.resize(featureList.size());
-    for (size_t f = 0; f < featureList.size(); ++f) {
-        _featureList[f].resize(featureList[f].size());
-        for (size_t o = 0; o < featureList[f].size(); ++o)
-            _featureList[f][o].attach(featureList[f][o]);
+    for (size_t l = 0; l < featureList.size(); ++l) {
+        _featureList[l].resize(featureList[l].size());
+        for (size_t f = 0; f < featureList[l].size(); ++f) {
+            _featureList[l][f].resize(featureList[l][f].size());
+            for (size_t o = 0; o < featureList[l][f].size(); ++o)
+                _featureList[l][f][o].attach(featureList[l][f][o]);
+        }
     }
 
     _interpolation = interpolation;
     switch (_interpolation) {
     case LinearInterpolation:
-        assert(_featureList.size() == 0);
+        for (size_t l = 0; l < _featureList.size(); ++l)
+            assert(_featureList[l].size() == 0);
         break;
     case CountMerging:
         {
             assert(_featureList.size() == _lms.size());
+            for (size_t l = 0; l < _featureList.size(); ++l)
+                assert(_featureList[l].size() == 1);
+
             Range  r(_defParams.length());
-            size_t numParams = r.length() + _lms.size()*_lms.size();
-            _paramDefaults.reset(numParams, 0);
+            size_t numParams = r.length() + _lms.size();
+            _paramDefaults.reset(numParams, 1);
             _paramDefaults[r] = _defParams;
-            _paramMask.reset(numParams, 0);
+            _paramMask.reset(numParams, false);
             _paramMask[r] = true;
-            for (size_t l = 0; l < _lms.size(); ++l)
-                _paramDefaults[r.length() + l * _lms.size() + l] = 1;
         }
         break;
     case GeneralizedLinearInterpolation:
         {
+            assert(_featureList.size() == _lms.size());
+
             Range  r(_defParams.length());
-            size_t numParams = r.length() + _lms.size() * _featureList.size();
-            _paramDefaults.reset(numParams, 0);
+            size_t numParams = r.length();
+            for (size_t l = 0; l < _featureList.size(); ++l)
+                numParams += _featureList[l].size();
+            _paramDefaults.reset(numParams, 1);
             _paramDefaults[r] = _defParams;
             _paramMask.reset(numParams, true);
-            _defParams.resize(numParams, 0);
+            _defParams.resize(numParams, 1);
         }
         break;
     }
@@ -183,13 +195,6 @@ InterpolatedNgramLM::GetMask(vector<BitVector> &probMaskVectors,
 
 bool
 InterpolatedNgramLM::Estimate(const ParamVector &params, Mask *pMask) {
-    // Check of out of bounds parameters.
-    for (size_t i = 0; i < params.length(); i++)
-        if (fabs(params[i] > 100)) {
-            Logger::Log(2, "Clipping\n");
-            return false;
-        }
-
     // Map parameters.
     if (_paramMask.length()) {
         const Param *p = params.begin();
@@ -222,7 +227,6 @@ InterpolatedNgramLM::Estimate(const ParamVector &params, Mask *pMask) {
 
 void
 InterpolatedNgramLM::_EstimateProbs(const ParamVector &params) {
-    size_t numFeatures = _featureList.size();
     for (size_t o = 1; o <= _order; o++) {
         Range              r(sizes(o - 1));
         ProbVector         weights(_weights[r]);
@@ -232,36 +236,43 @@ InterpolatedNgramLM::_EstimateProbs(const ParamVector &params) {
 
         totWeights.set(0);
         probs.set(0);
+        const Param *pFeatParams = &params[_lms.size() - 1];
         for (size_t l = 0; l < _lms.size(); l++) {
             // Initialize weights with bias.
             weights.set((l == 0) ? 0 : params[l - 1]);
 
             // Compute weights from log-linear combination of features.
-            size_t startIndex = _paramStarts[_paramStarts.length() - 1] +
-                                l * numFeatures;
-            assert(startIndex + numFeatures <= params.length());
-            ParamVector featParams = params[Range(startIndex,
-                                                  startIndex + numFeatures)];
-            for (size_t f = 0; f < numFeatures; f++) {
-                if (featParams[f] == 0) continue;
+            for (size_t f = 0; f < _featureList[l].size(); f++) {
+                Param param = *pFeatParams++;
+                if (param == 0) continue;
+                // weights += _featureList[l][f][o-1] * param;
                 for (size_t i = 0; i < _probVectors[o-1].length(); ++i)
-                    weights[i] += _featureList[f][o-1][i] * featParams[f];
+                    weights[i] += _featureList[l][f][o-1][i] * param;
             }
 
             // Compute component weights and update total weights.
+            // weights = exp(weights);
+            // totWeights += weights;
             for (size_t i = 0; i < weights.length(); ++i) {
                 weights[i] = exp(weights[i]);
                 totWeights[i] += weights[i];
             }
 
             // Interpolate component LM probabilities.
+            //probs += _lms[l]->probs(o) * weights[hists];
             const ProbVector &lmProbs(_lms[l]->probs(o));
             for (size_t i = 0; i < probs.length(); ++i)
                 probs[i] += lmProbs[i] * weights[hists[i]];
         }
+        assert(allTrue(totWeights != 0));
+        assert(!anyTrue(isnan(probs)));
+        assert(allTrue(hists >= 0));
+
         // Normalize probabilities.
+        //probs /= totWeights[hists];
         for (size_t i = 0; i < probs.length(); ++i)
             probs[i] /= totWeights[hists[i]];
+        assert(!anyTrue(isnan(probs)));
     }
 }
 
@@ -286,13 +297,15 @@ InterpolatedNgramLM::_EstimateBows() {
         }
         for (size_t i = 0; i < bows.length(); ++i)
             bows[i] = (1 - numerator[i]) / (1 - denominator[i]);
+        assert(!anyTrue(isnan(bows)));
     }
 }
 
 void
 InterpolatedNgramLM::_EstimateProbsMasked(const ParamVector &params,
                                           InterpolatedNgramLMMask *pMask) {
-    size_t numFeatures = _featureList.size();
+    assert(pMask != NULL);
+
     for (size_t o = 1; o <= _order; o++) {
         Range              r(sizes(o - 1));
         ProbVector         weights(_weights[r]);
@@ -302,26 +315,18 @@ InterpolatedNgramLM::_EstimateProbsMasked(const ParamVector &params,
 
         totWeights.set(0);
         probs.set(0);
-        for (size_t l = 0; l < _lms.size(); l++) {
+        const Param *pFeatParams = &params[_lms.size() - 1];
+        for (size_t l = 0; l < _lms.size(); ++l) {
             // Initialize weights with bias.
             weights.set((l == 0) ? 0 : params[l - 1]);
 
             // Compute weights from log-linear combination of features.
-            size_t startIndex = _paramStarts[_paramStarts.length() - 1] +
-                                l * numFeatures;
-            assert(startIndex + numFeatures <= params.length());
-            ParamVector featParams = params[Range(startIndex,
-                                                  startIndex + numFeatures)];
-            for (size_t f = 0; f < numFeatures; f++) {
-                if (featParams[f] == 0) continue;
-                if (pMask) {
-                    for (size_t i = 0; i < _probVectors[o-1].length(); ++i)
-                        if (pMask->WeightMaskVectors[o-1][i])
-                            weights[i] += _featureList[f][o-1][i]*featParams[f];
-                } else {
-                    for (size_t i = 0; i < _probVectors[o-1].length(); ++i)
-                        weights[i] += _featureList[f][o-1][i] * featParams[f];
-                }
+            for (size_t f = 0; f < _featureList[l].size(); ++f) {
+                Param param = *pFeatParams++;
+                if (param == 0) continue;
+                for (size_t i = 0; i < _probVectors[o-1].length(); ++i)
+                    if (pMask->WeightMaskVectors[o-1][i])
+                        weights[i] += _featureList[l][f][o-1][i] * param;
             }
 
             // Compute component weights and update total weights.

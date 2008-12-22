@@ -127,6 +127,8 @@ NgramLMBase::SetModel(const SharedPtr<NgramModel> &m,
         const ProbVector & bows(_bowVectors[o-1]);
         ProbVector &       probs(_probVectors[o]);
         MaskAssign(probs == 0, boProbs[backoffs] * bows[hists], probs);
+        assert(!anyTrue(isnan(probs)));
+        assert(!anyTrue(isnan(bows)));
     }
 }
 
@@ -181,9 +183,9 @@ NgramLM::SaveCounts(ZFile &countsFile, bool asBinary) const {
 void
 NgramLM::SaveEffCounts(ZFile &countsFile, bool asBinary) const {
     vector<CountVector> effCountVectors(_order + 1);
-    for (size_t o = 0; o < _order; ++o) {
+    for (size_t o = 1; o <= _order; ++o) {
         effCountVectors[o].reset(sizes(o), 0);
-        const Smoothing *smoothing = (const Smoothing *)_smoothings[o + 1];
+        const Smoothing *smoothing = (const Smoothing *)_smoothings[o];
         effCountVectors[o].attach(smoothing->effCounts());
     }
     if (asBinary) {
