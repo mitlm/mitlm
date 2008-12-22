@@ -80,9 +80,10 @@ public:
                           BitVector &vocabMask, ZFile &corpusFile,
                           size_t &outNumOOV, size_t &outNumWords) const;
     void   LoadFeatures(vector<DoubleVector> &featureVectors,
-                        ZFile &featureFile, size_t maxSize=0) const;
+                        ZFile &featureFile, size_t maxOrder=0) const;
     void   LoadComputedFeatures(vector<DoubleVector> &featureVectors,
-                                const char *featureFile, size_t maxSize=0) const;
+                                const char *featureFile,
+                                size_t maxOrder=0) const;
     size_t GetNgramWords(size_t order, NgramIndex index, StrVector &wrds) const;
     void   ExtendModel(const NgramModel &m, VocabVector &vocabMap,
                        vector<IndexVector> &ngramMap);

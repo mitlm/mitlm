@@ -101,7 +101,7 @@ PerplexityOptimizer::ComputeEntropy(const ParamVector &params) {
         std::cout << exp(entropy) << "\t" << params << std::endl;
     else
         Logger::Log(2, "%f\n", exp(entropy));
-    return entropy;
+    return isnan(entropy) ? 7 : entropy;
 }
 
 double

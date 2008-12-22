@@ -114,11 +114,9 @@ int main(int argc, char* argv[]) {
         ("read-lms,l", po::value<vector<string> >()->composing(),
          "Reads component LMs from specified lmfiles in either ARPA or binary "
          "format.")
-        ("read-features,f", po::value<vector<string> >()->composing(),
+        ("read-features,f", po::value<string>(),
          "Reads n-gram feature vectors from specified featurefiles, where each "
-         "line contains an n-gram and its feature value.  Since interpolation "
-         "weights are computed on features of the n-gram history, it is "
-         "sufficient to have features only up to order n - 1.")
+         "line contains an n-gram and its feature value.")
         ("read-parameters,p", po::value<string>(),
          "Read model parameters from paramfile.")
         ("interpolation,i", po::value<string>()->default_value("LI"),
@@ -196,57 +194,87 @@ int main(int argc, char* argv[]) {
     InterpolatedNgramLM ilm(order);
     ilm.LoadLMs(lms);
 
-    // Process interpolation & features.
-    string         interpolation = vm["interpolation"].as<string>();
-    vector<string> readFeatures;
-    if (vm.count("read-features"))
-        readFeatures = vm["read-features"].as<vector<string> >();
+    // Process features.
+    string readFeatures;  // Declare here to allocate string buffer
+    vector<vector<string> > lmFeatures(lms.size());
+    if (vm.count("read-features")) {
+        readFeatures = vm["read-features"].as<string>();
+        vector<char *> features;
+        char *p = &readFeatures[0];
+        while (true) {
+            char *token = p;
+            while (*p != ';' && *p != '\0') ++p;
+            if (*p == '\0') {
+                features.push_back(token);
+                break;
+            } else {
+                *p++ = 0;
+                features.push_back(token);
+            }
+        }
+        if (features.size() != lms.size()) {
+            Logger::Error(1, "Number of components specified in read-features "
+                             "does not match number of LMs.\n");
+            exit(1);
+        }
+        for (size_t l = 0; l < lmFeatures.size(); ++l) {
+            p = &features[l][0];
+            while (*p != '\0') {
+                char *token = p;
+                while (*p != ',' && *p != '\0') ++p;
+                if (*p != 0) *p++ = 0;
+                lmFeatures[l].push_back(token);
+            }
+        }
+    }
 
+    // Process interpolation.
+    string interpolation = vm["interpolation"].as<string>();
     Logger::Log(1, "Interpolation Method = %s\n", interpolation.c_str());
-
     if (interpolation == "LI") {
-        // No features.
-        if (readFeatures.size()) {
-            Logger::Warn(1, "Linear interpolation does not utilize features.\n");
-            Logger::Warn(1, "%lu features ignored.\n", readFeatures.size());
-        }
-    } else if (interpolation == "CM") {
-        // Use features specified by --read-features or default .counts files.
-        if (readFeatures.size() > readLMs.size()) {
-            Logger::Warn(1, "Too many count features specified.\n");
-            Logger::Warn(1, "%lu features ignored.\n",
-                        readFeatures.size() - readLMs.size());
-        }
-        vector<vector<DoubleVector> > featureList(readLMs.size());
-        size_t numReadFeatures = readFeatures.size();
-        readFeatures.resize(readLMs.size());
-        for (size_t f = 0; f < readLMs.size(); ++f) {
-            if (f >= numReadFeatures) {
-                size_t extIndex = readLMs[f].find_last_of('.');
-                readFeatures[f] = "log:" + readLMs[f].substr(0, extIndex) +
-                                  ".counts";
+        // Verify no features are specified.
+        for (size_t l = 0; l < lmFeatures.size(); ++l)
+            if (lmFeatures[l].size() > 0) {
+                Logger::Error(1, "Linear interpolation uses no features.\n");
+                exit(1);
             }
-            const char *featFilename = readFeatures[f].c_str();
-            Logger::Log(1, "Loading counts for %s from %s...\n",
-                       readLMs[f].c_str(), featFilename);
-            ilm.model().LoadComputedFeatures(featureList[f], featFilename,
-                                             ilm.order());
-            if (featureList[f][0][0] < 0) {
-                Logger::Warn(1, "0-th order should contain total count.\n");
-                printf("%f\n", sum(exp(featureList[f][1])));
+    } else {
+        Interpolation mode;
+        if (interpolation == "CM") {
+            // Default CM features to log:sumhist:*.counts.
+            for (size_t l = 0; l < lms.size(); ++l) {
+                if (lmFeatures[l].size() > 1) {
+                    Logger::Error(1, "Too many count features specified.\n");
+                    exit(1);
+                } else if (lmFeatures[l].size() == 0) {
+                    size_t extIndex = readLMs[l].find_last_of('.');
+                    lmFeatures[l].push_back("log:sumhist:" +
+                        readLMs[l].substr(0, extIndex) + ".counts");
+                }
             }
+            mode = CountMerging;
+        } else if (interpolation == "GLI") {
+            mode = GeneralizedLinearInterpolation;
+        } else {
+            Logger::Error(1, "Unsupported interpolation mode %s.\n",
+                          interpolation.c_str());
+            exit(1);
         }
 
-        ilm.SetInterpolation(CM, featureList);
-    } else if (interpolation == "GLI") {
-        vector<vector<DoubleVector> > featureList(readFeatures.size());
-        for (size_t f = 0; f < readFeatures.size(); ++f) {
-            const char *featFilename = readFeatures[f].c_str();
-            Logger::Log(1, "Loading features %s...\n", featFilename);
-            ilm.model().LoadComputedFeatures(featureList[f], featFilename,
-                                             ilm.order());
+        // Load features.
+        vector<vector<FeatureVectors> > featureList(lms.size());
+        for (size_t l = 0; l < lms.size(); ++l) {
+            featureList[l].resize(lmFeatures[l].size());
+            for (size_t f = 0; f < lmFeatures[l].size(); ++f) {
+                Logger::Log(1, "Loading feature for %s from %s...\n",
+                            readLMs[l].c_str(), lmFeatures[l][f].c_str());
+                ilm.model().LoadComputedFeatures(
+                    featureList[l][f], lmFeatures[l][f].c_str(), ilm.order());
+                if (featureList[l][f][0].length() == 0)
+                    Logger::Warn(1, "0th order should contain total count.\n");
+            }
         }
-        ilm.SetInterpolation(GLI, featureList);
+        ilm.SetInterpolation(mode, featureList);
     }
 
     // Estimate LM.
