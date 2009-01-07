@@ -65,10 +65,15 @@ protected:
     IntVector                       _paramStarts;
     ParamVector                     _paramDefaults;
     BitVector                       _paramMask;
+    bool                            _tieParamOrder;
+    bool                            _tieParamLM;
 
 public:
-    InterpolatedNgramLM(size_t order = 3)
-        : NgramLMBase(order), _interpolation(LI) { }
+    InterpolatedNgramLM(size_t order = 3, 
+                        bool tieParamOrder = false, 
+                        bool tieParamLM = false)
+        : NgramLMBase(order), _interpolation(LI), 
+          _tieParamOrder(tieParamOrder), _tieParamLM(tieParamLM) { }
     void  LoadLMs(const vector<SharedPtr<NgramLMBase> > &lms);
     void  SetInterpolation(Interpolation interpolation,
                            const vector<vector<FeatureVectors> > &featureList);

@@ -152,14 +152,21 @@ WordErrorRateOptimizer::ComputeWER(const ParamVector &params) {
     for (size_t l = 0; l < _lattices.size(); ++l) {
         _lattices[l]->UpdateWeights();
         int wer = _lattices[l]->ComputeWER();
+        if (Logger::GetVerbosity() > 2) {
+            Logger::Log(3, "Lattice %lu: (%lu / %lu)\n", 
+                        l, wer, _lattices[l]->refWords().length());
+            for (size_t i = 0; i < _lattices[l]->refWords().length(); ++i)
+                Logger::Log(3, "%s ", _lm.vocab()[_lattices[l]->refWords()[i]]);
+            Logger::Log(3, "\n");
+        }
         numErrors += wer;
         totWords  += _lattices[l]->refWords().length();
     }
     double wer = (double)numErrors / totWords * 100;
     if (Logger::GetVerbosity() > 2) {
-        Logger::Log(2, "%.2f%% = (%lu / %lu)\t", wer, numErrors, totWords);
+        Logger::Log(3, "%.2f%% = (%lu / %lu)\t", wer, numErrors, totWords);
         std::cout << params << std::endl;
-    } else if (Logger::GetVerbosity() > 1)
+    } else
         Logger::Log(2, "%.2f%% = (%lu / %lu)\n", wer, numErrors, totWords);
     return wer;
 }

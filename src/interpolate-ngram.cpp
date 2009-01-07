@@ -117,6 +117,8 @@ int main(int argc, char* argv[]) {
         ("read-features,f", po::value<string>(),
          "Reads n-gram feature vectors from specified featurefiles, where each "
          "line contains an n-gram and its feature value.")
+        ("tie-param-order", "Tie parameters across n-gram order.")
+        ("tie-param-lm", "Tie parameters across LM components.")
         ("read-parameters,p", po::value<string>(),
          "Read model parameters from paramfile.")
         ("interpolation,i", po::value<string>()->default_value("LI"),
@@ -191,7 +193,8 @@ int main(int argc, char* argv[]) {
         lms[l] = pLM;
     }
     Logger::Log(1, "Interpolating component LMs...\n");
-    InterpolatedNgramLM ilm(order);
+    InterpolatedNgramLM ilm(order, vm.count("tie-param-order"), 
+                            vm.count("tie-param-lm"));
     ilm.LoadLMs(lms);
 
     // Process features.

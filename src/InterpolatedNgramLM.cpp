@@ -78,15 +78,15 @@ InterpolatedNgramLM::LoadLMs(const vector<SharedPtr<NgramLMBase> > &lms) {
     _probVectors[0][0] = 0;
 
     // Compute default parameters.
-    //    [BiasParams] [LM1Params]...[LMlParams] [Feat2Params]...[FeatlParams]
+    //    [LM1Params]...[LMlParams] [BiasParams] [Feat2Params]...[FeatlParams]
     _paramStarts.reset(_lms.size() + 1);
     VectorBuilder<Param> builder;
-    builder.append(0, _lms.size() - 1);
     for (size_t l = 0; l < _lms.size(); ++l) {
         _paramStarts[l] = builder.length();
         builder.append(_lms[l]->defParams());
     }
     _paramStarts[_lms.size()] = builder.length();
+    builder.append(0, (_lms.size() - 1) * (_tieParamOrder ? 1 : order()));
     _defParams = builder;
 
     _featureList.resize(lms.size());
@@ -120,7 +120,8 @@ InterpolatedNgramLM::SetInterpolation(Interpolation interpolation,
                 assert(_featureList[l].size() == 1);
 
             Range  r(_defParams.length());
-            size_t numParams = r.length() + _lms.size();
+            size_t numParams = r.length() +
+                _lms.size() * (_tieParamOrder ? 1 : order());
             _paramDefaults.reset(numParams, 1);
             _paramDefaults[r] = _defParams;
             _paramMask.reset(numParams, false);
@@ -132,9 +133,21 @@ InterpolatedNgramLM::SetInterpolation(Interpolation interpolation,
             assert(_featureList.size() == _lms.size());
 
             Range  r(_defParams.length());
-            size_t numParams = r.length();
-            for (size_t l = 0; l < _featureList.size(); ++l)
-                numParams += _featureList[l].size();
+            size_t numParams = 0;
+            if (_tieParamLM) {
+                numParams = _featureList[0].size();
+                for (size_t l = 1; l < _featureList.size(); ++l) {
+                    if (_featureList[l].size() != numParams) {
+                        throw std::runtime_error("TieParamLM requires "
+                            "consistent number of features across LMs.");
+                    }
+                }
+            } else {
+                for (size_t l = 0; l < _featureList.size(); ++l)
+                    numParams += _featureList[l].size();
+            }
+            if (!_tieParamOrder) numParams *= order();
+            numParams += r.length();
             _paramDefaults.reset(numParams, 1);
             _paramDefaults[r] = _defParams;
             _paramMask.reset(numParams, true);
@@ -215,11 +228,13 @@ InterpolatedNgramLM::Estimate(const ParamVector &params, Mask *pMask) {
     }
 
     // Interpolate weighted probabilities and normalize backoff weights.
+    ParamVector interpolationParams(_paramDefaults[
+        Range(_paramStarts[_lms.size()], _paramDefaults.length())]);
     if (pLMMask != NULL) {
-        _EstimateProbsMasked(_paramDefaults, pLMMask);
+        _EstimateProbsMasked(interpolationParams, pLMMask);
         _EstimateBowsMasked(pLMMask);
     } else {
-        _EstimateProbs(_paramDefaults);
+        _EstimateProbs(interpolationParams);
         _EstimateBows();
     }
     return true;
@@ -227,6 +242,9 @@ InterpolatedNgramLM::Estimate(const ParamVector &params, Mask *pMask) {
 
 void
 InterpolatedNgramLM::_EstimateProbs(const ParamVector &params) {
+    const Param *pBiasParams = &params[0];
+    const Param *pFeatParams = &params[(_lms.size() - 1) * 
+                                       (_tieParamOrder ? 1 : order())];
     for (size_t o = 1; o <= _order; o++) {
         Range              r(sizes(o - 1));
         ProbVector         weights(_weights[r]);
@@ -236,10 +254,17 @@ InterpolatedNgramLM::_EstimateProbs(const ParamVector &params) {
 
         totWeights.set(0);
         probs.set(0);
-        const Param *pFeatParams = &params[_lms.size() - 1];
+        if (_tieParamOrder) {
+            pBiasParams = &params[0];
+            pFeatParams = &params[_lms.size() - 1];
+        }
+        const Param *pLMFeatParams = pFeatParams;
         for (size_t l = 0; l < _lms.size(); l++) {
+            if (_tieParamLM)
+                pFeatParams = pLMFeatParams;
+
             // Initialize weights with bias.
-            weights.set((l == 0) ? 0 : params[l - 1]);
+            weights.set((l == 0) ? 0 : *pBiasParams++);
 
             // Compute weights from log-linear combination of features.
             for (size_t f = 0; f < _featureList[l].size(); f++) {
@@ -306,6 +331,9 @@ InterpolatedNgramLM::_EstimateProbsMasked(const ParamVector &params,
                                           InterpolatedNgramLMMask *pMask) {
     assert(pMask != NULL);
 
+    const Param *pBiasParams = &params[0];
+    const Param *pFeatParams = &params[(_lms.size() - 1) * 
+                                       (_tieParamOrder ? 1 : order())];
     for (size_t o = 1; o <= _order; o++) {
         Range              r(sizes(o - 1));
         ProbVector         weights(_weights[r]);
@@ -315,10 +343,17 @@ InterpolatedNgramLM::_EstimateProbsMasked(const ParamVector &params,
 
         totWeights.set(0);
         probs.set(0);
-        const Param *pFeatParams = &params[_lms.size() - 1];
+        if (_tieParamOrder) {
+            pBiasParams = &params[0];
+            pFeatParams = &params[_lms.size() - 1];
+        }
+        const Param *pLMFeatParams = pFeatParams;
         for (size_t l = 0; l < _lms.size(); ++l) {
+            if (_tieParamLM)
+                pFeatParams = pLMFeatParams;
+
             // Initialize weights with bias.
-            weights.set((l == 0) ? 0 : params[l - 1]);
+            weights.set((l == 0) ? 0 : *pBiasParams++);
 
             // Compute weights from log-linear combination of features.
             for (size_t f = 0; f < _featureList[l].size(); ++f) {
