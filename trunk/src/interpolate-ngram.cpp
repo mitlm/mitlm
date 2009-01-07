@@ -342,8 +342,6 @@ int main(int argc, char* argv[]) {
             Logger::Log(2, " Best WER = %f%%\n", optWER);
         }
     }
-    Logger::Log(1, "Estimating full n-gram model...\n");
-    ilm.Estimate(params);
 
     // Evaluate LM.
     if (vm.count("evaluate-perplexity")) {
@@ -358,9 +356,12 @@ int main(int argc, char* argv[]) {
             eval.LoadCorpus(evalZFile);
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
-                       eval.ComputePerplexity(params));
+                        eval.ComputePerplexity(params));
         }
     }
+
+    Logger::Log(1, "Estimating full n-gram model...\n");
+    ilm.Estimate(params);
 
     // Save results.
     if (vm.count("write-vocab")) {
