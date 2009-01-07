@@ -36,6 +36,7 @@
 #define FASTHASH_H
 
 #include <stdint.h>
+#include <cassert>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -126,7 +127,8 @@ inline uint32_t SuperFastHash(uint32_t key1, uint32_t key2) {
 inline size_t StringHash(const char *s, size_t len) {
     // Approximate SRILM Hash Function
     unsigned long i = 0;
-    for (; *s; s++)
+    const char *end = s + len;
+    for (; s != end; s++)
         i += (i << 3) + *s;
     return i * 1103515245;
 }
