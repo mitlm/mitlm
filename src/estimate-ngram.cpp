@@ -331,7 +331,7 @@ int main(int argc, char* argv[]) {
             eval.LoadCorpus(evalZFile);
 
             Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
-                       eval.ComputePerplexity(params));
+                        eval.ComputePerplexity(params));
         }
     }
 
