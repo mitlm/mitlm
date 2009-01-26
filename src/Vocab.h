@@ -64,7 +64,7 @@ protected:
     VocabVector     _indices;     // Index table mapping string to index
     std::string     _buffer;      // String buffer storing all words
     size_t          _hashMask;    // Hash mask: hashIndex = hash & hashMask
-    bool            _readOnly;
+    bool            _fixedVocab;
     VocabIndex      _unkIndex;
 
 public:
@@ -72,7 +72,7 @@ public:
     static const VocabIndex EndOfSentence;    // = (VocabIndex)0;
 
     Vocab(size_t capacity = 1<<16);
-    void       SetReadOnly(bool readOnly);
+    void       SetFixedVocab(bool fixedVocab);
     void       UseUnknown();
     VocabIndex Find(const char *word, size_t len) const;
     VocabIndex Find(const char *word) const { return Find(word, strlen(word)); }
@@ -85,6 +85,7 @@ public:
     void       Serialize(FILE *outFile) const;
     void       Deserialize(FILE *inFile);
 
+    bool        IsFixedVocab() const        { return _fixedVocab; }
     size_t      size() const                { return _length; }
     size_t      wordlen(VocabIndex n) const { return _offsetLens[n].Len; }
     const char *operator[](VocabIndex n) const

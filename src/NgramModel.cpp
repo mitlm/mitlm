@@ -61,7 +61,7 @@ NgramModel::SetOrder(size_t order) {
 void
 NgramModel::LoadVocab(ZFile &vocabFile) {
     _vocab.LoadVocab(vocabFile);
-    _vocab.SetReadOnly(true);
+    _vocab.SetFixedVocab(true);
 }
 
 void
@@ -219,15 +219,16 @@ NgramModel::LoadCounts(vector<CountVector> &countVectors,
 
 void
 NgramModel::SaveCounts(const vector<CountVector> &countVectors,
-                       ZFile &countsFile) const {
+                       ZFile &countsFile,
+                       bool includeZeroOrder) const {
     if (countsFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Write counts.
     StrVector   ngramWords(size());
     std::string lineBuffer;
     lineBuffer.resize(size() * 32);
-
-    // Write higher order counts.
+    if (includeZeroOrder && countVectors[0].length() == 1)
+        fprintf(countsFile, "\t%i\n", countVectors[0][0]);
     for (size_t o = 1; o < countVectors.size(); ++o) {
         const CountVector &counts = countVectors[o];
         for (NgramIndex i = 0; i < (NgramIndex)countVectors[o].length(); ++i) {
@@ -565,6 +566,8 @@ void
 NgramModel::LoadComputedFeatures(vector<DoubleVector> &featureVectors,
                                  const char *featureFile,
                                  size_t maxOrder) const {
+    if (maxOrder == 0) maxOrder = size() - 1;
+    
     std::string featurePath(featureFile);
     size_t      colonIndex = featurePath.rfind(':');
     const char *filename = &featurePath[colonIndex + 1];
@@ -577,19 +580,24 @@ NgramModel::LoadComputedFeatures(vector<DoubleVector> &featureVectors,
     }
 
     ZFile f(filename, "r");
-    if (func == NULL)
+    bool  isFuncProcessed = true;
+    if (func == NULL) {
         LoadFeatures(featureVectors, f, maxOrder);
-    else if (strcmp(func, "freq") == 0) {
-        _LoadFrequency(featureVectors, f, maxOrder);
-        if (colonIndex == std::string::npos) {
-            func = NULL;
-        } else {
-            featurePath[colonIndex] = 0;
-            colonIndex = featurePath.rfind(':', colonIndex);
-            func = &featurePath[colonIndex + 1];
-        }
+    } else if (strcmp(func, "freq") == 0) {
+        _LoadFrequency(featureVectors, f, maxOrder + 1);
     } else if (strcmp(func, "entropy") == 0) {
-        _LoadEntropy(featureVectors, f, maxOrder);
+        _LoadEntropy(featureVectors, f, maxOrder + 1);
+    } else if (strcmp(func, "wordtopicprob") == 0) {
+        _LoadTopicProbs2(featureVectors, f, maxOrder + 1);
+    } else if (strcmp(func, "histtopicprob") == 0) {
+        _LoadTopicProbs(featureVectors, f, maxOrder + 1, false);
+    } else if (strcmp(func, "wordprob") == 0) {
+        _LoadTopicProbs(featureVectors, f, maxOrder + 1, true);
+    } else {
+        LoadFeatures(featureVectors, f, maxOrder);
+        isFuncProcessed = false;
+    }
+    if (isFuncProcessed) {
         if (colonIndex == std::string::npos) {
             func = NULL;
         } else {
@@ -597,8 +605,7 @@ NgramModel::LoadComputedFeatures(vector<DoubleVector> &featureVectors,
             colonIndex = featurePath.rfind(':', colonIndex);
             func = &featurePath[colonIndex + 1];
         }
-    } else
-        LoadFeatures(featureVectors, f, maxOrder);
+    }
 
     while (func != NULL) {
         if (strcmp(func, "log") == 0)
@@ -645,6 +652,42 @@ NgramModel::LoadComputedFeatures(vector<DoubleVector> &featureVectors,
         if (anyTrue(featureVectors[o] > 20.0)) {
             Logger::Warn(1, "Feature value %s exceed 20.0.\n", featureFile);
             break;
+        }
+    }
+//     ZFile zfile("feat2.out", "w");
+//     SaveFeatures(featureVectors, zfile);
+}
+
+void
+NgramModel::SaveFeatures(vector<DoubleVector> &featureVectors,
+                         ZFile &featureFile) const {
+    assert(featureVectors.size() <= size());
+    if (featureFile == NULL) throw std::invalid_argument("Invalid file");
+
+    // Write counts.
+    StrVector   ngramWords(size());
+    std::string lineBuffer;
+    lineBuffer.resize(size() * 32);
+    if (featureVectors[0].length() == 1)
+        fprintf(featureFile, "\t%f\n", featureVectors[0][0]);
+    for (size_t o = 1; o < featureVectors.size(); ++o) {
+        const DoubleVector &features = featureVectors[o];
+        assert(features.length() == sizes(o));
+        for (NgramIndex i = 0; i < (NgramIndex)features.length(); ++i){
+            // Allocate spaces for words, spaces, double, \n\0.
+            size_t len = GetNgramWords(o, i, ngramWords) + o + 20;
+            if (lineBuffer.size() < len)
+                lineBuffer.resize(len);
+            char *ptr = &lineBuffer[0];
+            ptr = CopyString(ptr, ngramWords[0]);
+            for (size_t j = 1; j < o; j++) {
+                *ptr++ = ' ';
+                ptr = CopyString(ptr, ngramWords[j]);
+            }
+            *ptr++ = '\t';
+            sprintf(ptr, "%f\n", features[i]);
+
+            fputs(&lineBuffer[0], featureFile);
         }
     }
 }
@@ -793,7 +836,7 @@ NgramModel::_ComputeBackoffs() {
 
 void
 NgramModel::_LoadFrequency(vector<DoubleVector> &freqVectors,
-                              ZFile &corpusFile, size_t maxSize) const {
+                           ZFile &corpusFile, size_t maxSize) const {
     if (corpusFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Resize vectors and allocate counts.
@@ -870,7 +913,7 @@ NgramModel::_LoadFrequency(vector<DoubleVector> &freqVectors,
 
 void
 NgramModel::_LoadEntropy(vector<DoubleVector> &entropyVectors,
-                            ZFile &corpusFile, size_t maxSize) const {
+                         ZFile &corpusFile, size_t maxSize) const {
     if (corpusFile == NULL) throw std::invalid_argument("Invalid file");
 
     // Resize vectors and allocate counts.
@@ -951,4 +994,126 @@ NgramModel::_LoadEntropy(vector<DoubleVector> &entropyVectors,
             totCountVectors[o] == 0, 0.0,
             ((entropyVectors[o] / -totCountVectors[o])
              + log(asDouble(totCountVectors[o]))) * invLogNumDocs);
+}
+
+void 
+NgramModel::_LoadTopicProbs(vector<DoubleVector> &topicProbVectors,
+                            ZFile &hmmldaFile, size_t maxSize, 
+                            bool onlyTargetWord) const {
+    assert(maxSize <= size());
+
+    vector<CountVector> countVectors(maxSize);
+    topicProbVectors.resize(maxSize);
+    for (size_t o = 0; o < maxSize; ++o) {
+        countVectors[o].resize(sizes(o), 0);
+        topicProbVectors[o].resize(sizes(o), 0);
+    }
+
+    // Accumulate counts for each n-gram in words.
+    size_t      numSentenceWords = 1;
+    IndexVector hists(maxSize, -1);
+    char        line[MAXLINE];
+    char        wordStr[1024];
+    VocabIndex  word;
+    int         state, topic;
+    size_t      lastTopicState = maxSize;
+    while (getline(hmmldaFile, line, MAXLINE)) {
+        if (line[0] == '#') continue;  // Skip comment lines.
+        int numItems = sscanf(line, "%s\t%d\t%d\n", wordStr, &state, &topic);
+        if (numItems != 3) throw std::invalid_argument("Bad format");
+        word = _vocab.Find(wordStr);
+        if (state == 1)
+            lastTopicState = 1;
+        else if (lastTopicState < maxSize)
+            lastTopicState++;
+
+        NgramIndex hist = 0, index;
+        for (size_t j = 1; j <= std::min(numSentenceWords, maxSize - 1); j++) {
+            index = _vectors[j].Find(hist, word);
+            if (index == -1) {
+                printf("Feature skipped\n");
+            } else {
+                countVectors[j][index]++;
+                if (onlyTargetWord) {
+                    // Count fraction of n-grams ending on topic word.
+                    if (state == 1)
+                        topicProbVectors[j][index]++;
+                } else {
+                    // Count fraction of n-grams containing a topic word.
+                    if (lastTopicState <= j)
+                        topicProbVectors[j][index]++;
+                }
+            }
+            hist     = hists[j];
+            hists[j] = index;
+        }
+        if (word == Vocab::EndOfSentence)
+            numSentenceWords = 1;
+        else
+            numSentenceWords++;
+    }
+
+    // Finalize probability computation.
+    for (size_t o = 1; o < maxSize; o++) {
+        for (size_t i = 0; i < countVectors[o].length(); i++) {
+            if (countVectors[o][i] == 0)
+                topicProbVectors[o][i] = 0.0;
+            else
+                topicProbVectors[o][i] /= countVectors[o][i];
+        }
+    }    
+}
+
+void 
+NgramModel::_LoadTopicProbs2(vector<DoubleVector> &topicProbVectors,
+                            ZFile &hmmldaFile, size_t maxSize) const {
+    assert(maxSize <= size());
+
+    vector<CountVector> countVectors(maxSize);
+    topicProbVectors.resize(maxSize);
+    for (size_t o = 0; o < maxSize; ++o) {
+        countVectors[o].resize(sizes(o), 0);
+        topicProbVectors[o].resize(sizes(o), 0);
+    }
+
+    // Accumulate counts for each n-gram in words.
+    size_t      numSentenceWords = 1;
+    IndexVector hists(maxSize, 0);
+    char        line[MAXLINE];
+    char        wordStr[1024];
+    VocabIndex  word;
+    int         state, topic;
+    while (getline(hmmldaFile, line, MAXLINE)) {
+        if (line[0] == '#') continue;  // Skip comment lines.
+        int numItems = sscanf(line, "%s\t%d\t%d\n", wordStr, &state, &topic);
+        if (numItems != 3) throw std::invalid_argument("Bad format");
+        word = _vocab.Find(wordStr);
+        numSentenceWords++;
+
+        NgramIndex hist = 0, index;
+        for (size_t j = 1; j <= std::min(numSentenceWords, maxSize - 1); j++) {
+            index = _vectors[j].Find(hist, word);
+            if (index == -1) {
+                printf("Feature skipped\n");
+            } else {
+                countVectors[j-1][hist]++;
+                if (state == 1)
+                    topicProbVectors[j-1][hist]++;
+            }
+            hist     = hists[j];
+            hists[j] = index;
+        }
+        if (word == Vocab::EndOfSentence)
+            numSentenceWords = 1;
+    }
+
+    // Finalize probability computation.
+    for (size_t o = 0; o < maxSize; o++) {
+        for (size_t i = 0; i < countVectors[o].length(); i++) {
+            if (countVectors[o][i] == 0)
+                topicProbVectors[o][i] = 0.0;
+            else
+                topicProbVectors[o][i] /= countVectors[o][i];
+        }
+    }    
 }

@@ -96,6 +96,8 @@ int main(int argc, char* argv[]) {
          "Compute the wer of latticefile.  Repeatable.")
         ("evaluate-margin,m", po::value<vector<string> >()->composing(),
          "Compute the discriminative margin of latticefile.  Repeatable.")
+        ("write-transcript,T", po::value<vector<string> >()->composing(),
+         "Write the transcript of specified latticefile in SCTK trans format.")
         ("compile-lattices,c", po::value<string>(),
          "Compiles lattices into a binary file.")
         ("write-vocab,V", po::value<string>(),
@@ -171,6 +173,9 @@ int main(int argc, char* argv[]) {
     if (vm.count("evaluate-wer")) {
         const vector<string> &evalFiles = vm["evaluate-wer"]
             .as<vector<string> >();
+        vector<string> transFiles;
+        if (vm.count("write-transcript"))
+            transFiles = vm["write-transcript"].as<vector<string> >();
 
         Logger::Log(0, "Word Error Rate Evaluations:\n");
         for (size_t i = 0; i < evalFiles.size(); i++) {
@@ -181,6 +186,13 @@ int main(int argc, char* argv[]) {
             Logger::Log(1, "Computing word error rate...\n");
             Logger::Log(0, "\t%s\t%.2f%%\n", evalFiles[i].c_str(),
                        eval.ComputeWER(lm.defParams()));
+
+            if (i < transFiles.size()) {
+                Logger::Log(1, "Saving transcript to %s...\n", 
+                            transFiles[i].c_str());
+                ZFile transZFile(transFiles[i].c_str(), "w");
+                eval.SaveTranscript(transZFile);
+            }
         }
     }
 
