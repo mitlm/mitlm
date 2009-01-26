@@ -111,11 +111,12 @@ WordErrorRateOptimizer::SaveTranscript(ZFile &transcriptFile) {
         const Lattice *lattice = _lattices[l];
         lattice->GetBestPath(bestPath);
 
-        line = lattice->tag();
+        line = "";
         for (size_t i = 0; i < bestPath.size(); ++i) {
-            line += " ";
             line += _lm.vocab()[bestPath[i]];
+            line += " ";
         }
+        line += string("(") + lattice->tag() + ")";
 
         fwrite(line.c_str(), sizeof(char), line.length(), transcriptFile);
         fputc('\n', transcriptFile);

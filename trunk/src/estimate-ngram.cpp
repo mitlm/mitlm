@@ -157,6 +157,10 @@ int main(int argc, char* argv[]) {
          "Write n-gram counts to countsfile in MITLM binary format.")
         ("write-eff-count,E", po::value<string>(),
          "Write effective n-gram counts to countsfile.")
+        ("write-lcount", po::value<string>(),
+         "Write left-branching n-gram counts to countsfile.")
+        ("write-rcount", po::value<string>(),
+         "Write right-branching n-gram counts to countsfile.")
         ("write-lm,L", po::value<string>(),
          "Write n-gram language model to lmfile in ARPA backoff text format.")
         ("write-binary-lm,B", po::value<string>(),
@@ -362,6 +366,30 @@ int main(int argc, char* argv[]) {
         Logger::Log(1, "Saving effective counts to %s...\n", countFile);
         ZFile countZFile(countFile, "w");
         lm.SaveEffCounts(countZFile);
+    }
+    if (vm.count("write-lcount")) {
+        const char *countFile = vm["write-lcount"].as<string>().c_str();
+        Logger::Log(1, "Saving left-branching counts to %s...\n", countFile);
+        ZFile countZFile(countFile, "w");
+
+        vector<CountVector> countVectors(order + 1);
+        for (int o = 0; o < order; ++o) {
+            countVectors[o].reset(lm.sizes(o), 0);
+            BinCount(lm.backoffs(o+1), countVectors[o]);
+        }
+        lm.model().SaveCounts(countVectors, countZFile, true);
+    }
+    if (vm.count("write-rcount")) {
+        const char *countFile = vm["write-rcount"].as<string>().c_str();
+        Logger::Log(1, "Saving right-branching counts to %s...\n", countFile);
+        ZFile countZFile(countFile, "w");
+
+        vector<CountVector> countVectors(order + 1);
+        for (int o = 0; o < order; ++o) {
+            countVectors[o].reset(lm.sizes(o), 0);
+            BinCount(lm.hists(o+1), countVectors[o]);
+        }
+        lm.model().SaveCounts(countVectors, countZFile, true);
     }
     if (vm.count("write-lm")) {
         const char *lmFile = vm["write-lm"].as<string>().c_str();

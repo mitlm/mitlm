@@ -207,9 +207,14 @@ KneserNeySmoothing::_Estimate(ProbVector &probs, ProbVector &bows) {
     bows = CondExpr(_invHistCounts == 0, 1, bows * _invHistCounts);
 
     // Compute interpolated probabilities.
-    probs = CondExpr(!_effCounts, 0,
-                     (_effCounts - discounts) * _invHistCounts[hists])
-            + boProbs[backoffs] * bows[hists];
+    if (_order == 1 && !_pLM->vocab().IsFixedVocab())
+        probs = CondExpr(!_effCounts, 0,
+                         (_effCounts - discounts) * _invHistCounts[hists]
+                         + boProbs[backoffs] * bows[hists]);
+    else
+        probs = CondExpr(!_effCounts, 0,
+                         (_effCounts - discounts) * _invHistCounts[hists])
+                + boProbs[backoffs] * bows[hists];
 }
 
 void
@@ -245,10 +250,16 @@ KneserNeySmoothing::_EstimateMasked(const NgramLMMask *pMask,
 
     // Compute interpolated probabilities.
     const BitVector &probMask(pMask->ProbMaskVectors[_order]);
-    probs.masked(probMask) =
-        CondExpr(!_effCounts, 0,
-                 (_effCounts - discounts) * _invHistCounts[hists])
-        + boProbs[backoffs] * bows[hists];
+    if (_order == 1 && !_pLM->vocab().IsFixedVocab())
+        probs.masked(probMask) =
+            CondExpr(!_effCounts, 0,
+                     (_effCounts - discounts) * _invHistCounts[hists]
+                     + boProbs[backoffs] * bows[hists]);
+    else
+        probs.masked(probMask) =
+            CondExpr(!_effCounts, 0,
+                     (_effCounts - discounts) * _invHistCounts[hists])
+            + boProbs[backoffs] * bows[hists];
 }
 
 void
@@ -267,9 +278,15 @@ KneserNeySmoothing::_EstimateWeighted(ProbVector &probs, ProbVector &bows) {
     bows = CondExpr(_invHistCounts == 0, 1, bows * _invHistCounts);
 
     // Compute interpolated probabilities.
-    probs = CondExpr(!_effCounts, 0,
-                     _ngramWeights * (_effCounts - discounts)
-                     * _invHistCounts[hists])
+    if (_order == 1 && !_pLM->vocab().IsFixedVocab())
+        probs = CondExpr(!_effCounts, 0,
+                         _ngramWeights * (_effCounts - discounts)
+                         * _invHistCounts[hists]
+                         + boProbs[backoffs] * bows[hists]);
+    else
+        probs = CondExpr(!_effCounts, 0,
+                         _ngramWeights * (_effCounts - discounts)
+                         * _invHistCounts[hists])
             + boProbs[backoffs] * bows[hists];
 }
 
@@ -307,9 +324,16 @@ KneserNeySmoothing::_EstimateWeightedMasked(const NgramLMMask *pMask,
 
     // Compute interpolated probabilities.
     const BitVector &probMask(pMask->ProbMaskVectors[_order]);
-    probs.masked(probMask) =
-        CondExpr(!_effCounts, 0,
-                 _ngramWeights * (_effCounts - discounts)
-                 * _invHistCounts[hists])
-        + boProbs[backoffs] * bows[hists];
+    if (_order == 1 && !_pLM->vocab().IsFixedVocab())
+        probs.masked(probMask) =
+            CondExpr(!_effCounts, 0,
+                     _ngramWeights * (_effCounts - discounts)
+                     * _invHistCounts[hists]
+                     + boProbs[backoffs] * bows[hists]);
+    else
+        probs.masked(probMask) =
+            CondExpr(!_effCounts, 0,
+                     _ngramWeights * (_effCounts - discounts)
+                     * _invHistCounts[hists])
+            + boProbs[backoffs] * bows[hists];
 }

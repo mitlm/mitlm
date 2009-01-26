@@ -217,7 +217,10 @@ NgramLM::SetSmoothingAlgs(const vector<SharedPtr<Smoothing> > &smoothings) {
     _probVectors[_order].reset(_pModel->sizes(_order));
 
     // Compute 0th order probability.
-    _probVectors[0][0] = Prob(1.0 / sizes(1));
+    if (vocab().IsFixedVocab())
+        _probVectors[0][0] = Prob(1.0 / sizes(1));
+    else
+        _probVectors[0][0] = Prob(1.0 / sum(_countVectors[1] > 0));
 
     // Compute default parameters.
     _paramStarts.reset(_order + 2);

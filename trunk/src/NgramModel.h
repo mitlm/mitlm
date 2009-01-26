@@ -68,7 +68,7 @@ public:
     void   LoadCounts(vector<CountVector> &countVectors,
                       ZFile &countsFile, bool reset=false);
     void   SaveCounts(const vector<CountVector> &countVectors,
-                      ZFile &countsFile) const;
+                      ZFile &countsFile, bool includeZeroOrder=false) const;
     void   LoadLM(vector<ProbVector> &probVectors,
                   vector<ProbVector> &bowVectors,
                   ZFile &lmFile);
@@ -84,6 +84,8 @@ public:
     void   LoadComputedFeatures(vector<DoubleVector> &featureVectors,
                                 const char *featureFile,
                                 size_t maxOrder=0) const;
+    void   SaveFeatures(vector<DoubleVector> &featureVectors,
+                        ZFile &featureFile) const;
     size_t GetNgramWords(size_t order, NgramIndex index, StrVector &wrds) const;
     void   ExtendModel(const NgramModel &m, VocabVector &vocabMap,
                        vector<IndexVector> &ngramMap);
@@ -110,6 +112,11 @@ protected:
                               ZFile &corpusFile, size_t maxSize=0) const;
     void       _LoadEntropy(vector<DoubleVector> &entropyVectors,
                             ZFile &corpusFile, size_t maxSize=0) const;
+    void       _LoadTopicProbs(vector<DoubleVector> &topicProbVectors,
+                               ZFile &hmmldaFile, size_t maxSize,
+                               bool onlyTargetWord=false) const;
+    void       _LoadTopicProbs2(vector<DoubleVector> &topicProbVectors,
+                                ZFile &hmmldaFile, size_t maxSize) const;
 };
 
 #endif // NGRAMMODEL_H

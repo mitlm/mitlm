@@ -56,20 +56,20 @@ const VocabIndex Vocab::EndOfSentence   = (VocabIndex)0;
 ////////////////////////////////////////////////////////////////////////////////
 
 // Create Vocab with specified capacity.
-Vocab::Vocab(size_t capacity) : _length(0), _readOnly(false),
+Vocab::Vocab(size_t capacity) : _length(0), _fixedVocab(false),
                                 _unkIndex(Invalid) {
     Reserve(capacity);
     Add("</s>");
 }
 
 void
-Vocab::SetReadOnly(bool readOnly) {
-    _readOnly = readOnly;
+Vocab::SetFixedVocab(bool fixedVocab) {
+    _fixedVocab = fixedVocab;
 }
 
 void
 Vocab::UseUnknown() {
-    assert(!_readOnly);  // Call UseUnknown() before SetReadOnly().
+    assert(!_fixedVocab);  // Call UseUnknown() before SetReadOnly().
     if (_unkIndex == Invalid) {
         _unkIndex = Add("<unk>");
         assert(_unkIndex == 1);
@@ -101,7 +101,7 @@ Vocab::Add(const char *word, size_t len) {
         return EndOfSentence;
 
     VocabIndex *pIndex = _FindIndex(word, len);
-    if (*pIndex == Invalid && !_readOnly) {
+    if (*pIndex == Invalid && !_fixedVocab) {
         // Increase index table size as needed.
         if (size() >= _offsetLens.length()) {
             Reserve(std::max((size_t)1<<16, _offsetLens.length()*2));

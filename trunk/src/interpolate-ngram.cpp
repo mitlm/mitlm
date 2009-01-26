@@ -34,9 +34,12 @@
 
 #include <vector>
 #include <boost/program_options.hpp>
+#include <boost/algorithm/string.hpp>
 #include "util/Logger.h"
 #include "util/ZFile.h"
 #include "Types.h"
+#include "MaxLikelihoodSmoothing.h"
+#include "KneserNeySmoothing.h"
 #include "InterpolatedNgramLM.h"
 #include "PerplexityOptimizer.h"
 #include "WordErrorRateOptimizer.h"
@@ -44,6 +47,8 @@
 using std::vector;
 using std::string;
 using std::cout;
+using boost::split;
+using boost::is_any_of;
 namespace po = boost::program_options;
 namespace cls = boost::program_options::command_line_style;
 
@@ -93,9 +98,14 @@ const char *footerDesc =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void LoadComputedFeatures(const NgramModel &model,
-                          vector<DoubleVector> &feature,
-                          string &featFilename);
+NgramLM *CreateNgramLM(string corpusFilename,
+                       string vocabFilename,
+                       size_t order,
+                       string smoothingAlgs,
+                       string weightFeatures,
+                       bool useUnknown);
+Smoothing *CreateSmoothing(const char *smoothing);
+
 
 int main(int argc, char* argv[]) {
     // Parse command line options.
@@ -111,9 +121,24 @@ int main(int argc, char* argv[]) {
         ("read-vocab,v", po::value<string>(),
          "Restrict the vocabulary to only words from the specified vocabulary "
          "vocabfile.  n-grams with out of vocabulary words are ignored.")
+
+        ("use-unknown,k", "Replace all words outside vocabulary with <unk>.")
+        ("read-text,t", po::value<string>(),
+         "Cumulate n-gram count statistics from textfile, where each line "
+         "corresponds to a sentence.  Sentence boundary tags (<s>, </s>) are "
+         "automatically added.  Empty lines are ignored.")
+        ("read-count,c", po::value<string>(),
+         "Read n-gram counts from countsfile.  Using both -read-text and "
+         "-read-count will combine the counts.")
+        ("read-wfeatures,w", po::value<string>()->default_value(""),
+         "Read n-gram weighting features from feature file.")
+        ("smoothing,s", po::value<string>()->default_value("ModKN"),
+         "Apply specified smoothing algorithms to all n-gram orders.  See "
+         "SMOOTHING.")
         ("read-lms,l", po::value<vector<string> >()->composing(),
          "Reads component LMs from specified lmfiles in either ARPA or binary "
          "format.")
+
         ("read-features,f", po::value<string>(),
          "Reads n-gram feature vectors from specified featurefiles, where each "
          "line contains an n-gram and its feature value.")
@@ -124,12 +149,14 @@ int main(int argc, char* argv[]) {
         ("interpolation,i", po::value<string>()->default_value("LI"),
          "Apply specified interpolation algorithms to all n-gram orders.  "
          "See INTERPOLATION.")
+
         ("optimize-perplexity,d", po::value<string>(),
          "Tune the model parameters to minimize the perplexity of dev text.")
         ("optimize-margin,m", po::value<string>(),
          "Tune the model parameters to maximize the discriminative margin.")
         ("optimize-wer,a", po::value<string>(),
          "Tune the model parameters to minimize the word error rate.")
+
         ("evaluate-perplexity,e", po::value<vector<string> >()->composing(),
          "Compute the perplexity of textfile.  This option can be repeated.")
         ("write-vocab,V", po::value<string>(),
@@ -167,36 +194,53 @@ int main(int argc, char* argv[]) {
              << "MIT Computer Science and Artificial Intelligence Laboratory\n";
         return 0;
     }
-    if (vm.count("help") || vm.count("read-lms") == 0) {
+    if (vm.count("help")) {
         cout << progDesc << "\n" << desc << "\n" << footerDesc << "\n";
         return 1;
     }
 
-    const char *vocabFile = NULL;
-    if (vm.count("read-vocab")) {
-        vocabFile = vm["read-vocab"].as<string>().c_str();
-        Logger::Log(1, "Loading vocab %s...\n", vocabFile);
+    // Read language models.
+    vector<SharedPtr<NgramLMBase> > lms;
+    vector<string> corpusFiles;
+    string vocabFile = vm.count("read-vocab") ? vm["read-vocab"].as<string>() : "";
+    if (vm.count("read-text")) {
+        vector<string> sAlgs;
+        vector<string> wFeats;
+        split(corpusFiles, vm["read-text"].as<string>(), is_any_of(",;"));
+        split(sAlgs, vm["smoothing"].as<string>(), is_any_of(";"));
+        split(wFeats, vm["read-wfeatures"].as<string>(), is_any_of(";"));
+
+        lms.resize(corpusFiles.size());
+        for (size_t l = 0; l < corpusFiles.size(); ++l)
+            lms[l] = CreateNgramLM(corpusFiles[l],
+                                   vocabFile, order,
+                                   sAlgs[sAlgs.size() == 1 ? 0 : l],
+                                   wFeats.size() == 1 ? "" : wFeats[l],
+                                   vm.count("use-unknown"));
     }
 
     // Read component language model input files.
-    const vector<string> &readLMs = vm["read-lms"].as<vector<string> >();
-    vector<SharedPtr<NgramLMBase> > lms(readLMs.size());
-    for (size_t l = 0; l < readLMs.size(); l++) {
-        Logger::Log(1, "Loading component LM %s...\n", readLMs[l].c_str());
-        ArpaNgramLM *pLM = new ArpaNgramLM(order);
-        if (vocabFile) {
-            ZFile vocabZFile(vocabFile);
-            pLM->LoadVocab(vocabZFile);
+    if (vm.count("read-lms")) {
+        corpusFiles = vm["read-lms"].as<vector<string> >();
+        for (size_t l = 0; l < corpusFiles.size(); l++) {
+            Logger::Log(1, "Loading component LM %s...\n", corpusFiles[l].c_str());
+            ArpaNgramLM *pLM = new ArpaNgramLM(order);
+            if (vocabFile.length() > 0) {
+                ZFile vocabZFile(vocabFile.c_str());
+                pLM->LoadVocab(vocabZFile);
+            }
+            ZFile lmZFile(corpusFiles[l].c_str(), "r");
+            pLM->LoadLM(lmZFile);
+            lms.push_back((SharedPtr<NgramLMBase>)pLM);
         }
-        ZFile lmZFile(readLMs[l].c_str(), "r");
-        pLM->LoadLM(lmZFile);
-        lms[l] = pLM;
     }
+
+    // Interpolate language models.
     Logger::Log(1, "Interpolating component LMs...\n");
     InterpolatedNgramLM ilm(order, vm.count("tie-param-order"), 
                             vm.count("tie-param-lm"));
     ilm.LoadLMs(lms);
-
+    
     // Process features.
     string readFeatures;  // Declare here to allocate string buffer
     vector<vector<string> > lmFeatures(lms.size());
@@ -250,9 +294,9 @@ int main(int argc, char* argv[]) {
                     Logger::Error(1, "Too many count features specified.\n");
                     exit(1);
                 } else if (lmFeatures[l].size() == 0) {
-                    size_t extIndex = readLMs[l].find_last_of('.');
+                    size_t extIndex = corpusFiles[l].find_last_of('.');
                     lmFeatures[l].push_back("log:sumhist:" +
-                        readLMs[l].substr(0, extIndex) + ".counts");
+                        corpusFiles[l].substr(0, extIndex) + ".counts");
                 }
             }
             mode = CountMerging;
@@ -270,7 +314,7 @@ int main(int argc, char* argv[]) {
             featureList[l].resize(lmFeatures[l].size());
             for (size_t f = 0; f < lmFeatures[l].size(); ++f) {
                 Logger::Log(1, "Loading feature for %s from %s...\n",
-                            readLMs[l].c_str(), lmFeatures[l][f].c_str());
+                            corpusFiles[l].c_str(), lmFeatures[l][f].c_str());
                 ilm.model().LoadComputedFeatures(
                     featureList[l][f], lmFeatures[l][f].c_str(), ilm.order());
                 if (featureList[l][f][0].length() == 0)
@@ -305,8 +349,8 @@ int main(int argc, char* argv[]) {
             dev.LoadCorpus(devZFile);
 
             Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
-            double optEntropy = dev.Optimize(params, LBFGSBOptimization);
-//            double optEntropy = dev.Optimize(params, PowellOptimization);
+//            double optEntropy = dev.Optimize(params, LBFGSOptimization);
+            double optEntropy = dev.Optimize(params, PowellOptimization);
             Logger::Log(2, " Best perplexity = %f\n", exp(optEntropy));
         }
     }
@@ -391,4 +435,75 @@ int main(int argc, char* argv[]) {
     }
 
     return 0;
+}
+
+NgramLM *CreateNgramLM(string corpusFilename,
+                       string vocabFilename,
+                       size_t order,
+                       string smoothingAlgs,
+                       string weightFeatures,
+                       bool useUnknown) {
+    NgramLM *pLM = new NgramLM(order);
+    if (useUnknown) {
+        Logger::Log(1, "Replace unknown words with <unk>...\n");
+        pLM->UseUnknown();
+    }
+    if (vocabFilename.length() != 0) {
+        Logger::Log(1, "Loading vocab %s...\n", vocabFilename.c_str());
+        ZFile vocabZFile(vocabFilename.c_str());
+        pLM->LoadVocab(vocabZFile);
+    }
+    Logger::Log(1, "Loading corpus %s...\n", corpusFilename.c_str());
+    ZFile corpusZFile(ZFile(corpusFilename.c_str()));
+    pLM->LoadCorpus(corpusZFile);
+    
+    // Process n-gram weighting features.
+    if (weightFeatures.size() > 0) {
+        vector<string> wFeats;
+        split(wFeats, weightFeatures, is_any_of(","));
+        vector<vector<DoubleVector> > featureList(wFeats.size());
+        for (size_t f = 0; f < wFeats.size(); ++f) {
+            const char *featFilename = wFeats[f].c_str();
+            Logger::Log(1, "Loading weight features %s...\n", featFilename);
+            pLM->model().LoadComputedFeatures(featureList[f], featFilename);
+        }
+        pLM->SetWeighting(featureList);
+    }
+    
+    // Set smoothing algorithms.
+    Logger::Log(1, "Set smoothing algorithms...\n");
+    vector<SharedPtr<Smoothing> > smoothings(order + 1);
+    for (size_t o = 1; o <= order; o++) {
+        Logger::Log(1, "Smoothing[%i] = %s\n", o, smoothingAlgs.c_str());
+        smoothings[o] = CreateSmoothing(smoothingAlgs.c_str());
+        if (smoothings[o].get() == NULL) {
+            Logger::Error(1, "Unknown smoothing %s.\n", smoothingAlgs.c_str());
+            exit(1);
+        }
+    }
+    pLM->SetSmoothingAlgs(smoothings);
+    return pLM;
+}
+
+Smoothing *CreateSmoothing(const char *smoothing) {
+    if (strcmp(smoothing, "FixKN") == 0) {
+        return new KneserNeySmoothing(1, false);
+    } else if (strcmp(smoothing, "FixModKN") == 0) {
+        return new KneserNeySmoothing(3, false);
+    } else if (strncmp(smoothing, "FixKN", 5) == 0) {
+        for (size_t i = 5; i < strlen(smoothing); ++i)
+            if (!isdigit(smoothing[i])) return NULL;
+        return new KneserNeySmoothing(atoi(&smoothing[5]), false);
+    } else if (strcmp(smoothing, "KN") == 0) {
+        return new KneserNeySmoothing(1, true);
+    } else if (strcmp(smoothing, "ModKN") == 0) {
+        return new KneserNeySmoothing(3, true);
+    } else if (strncmp(smoothing, "KN", 2) == 0) {
+        for (size_t i = 2; i < strlen(smoothing); ++i)
+            if (!isdigit(smoothing[i])) return NULL;
+        return new KneserNeySmoothing(atoi(&smoothing[2]), true);
+    } else if (strcmp(smoothing, "ML") == 0) {
+        return new MaxLikelihoodSmoothing();
+    } else
+        return NULL;
 }
