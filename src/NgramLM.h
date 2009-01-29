@@ -107,6 +107,9 @@ protected:
 public:
     NgramLM(size_t order = 3) : NgramLMBase(order), _countVectors(order + 1),
                                 _featureList(order + 1) { }
+    void Initialize(const char *vocab, bool useUnknown,
+                    const char *text, const char *counts,
+                    const char *smoothing, const char *features);
     void LoadCorpus(ZFile &corpusFile, bool reset=false);
     void LoadCounts(ZFile &countsFile, bool reset=false);
     void SaveCounts(ZFile &countsFile, bool asBinary=false) const;

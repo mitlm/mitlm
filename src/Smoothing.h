@@ -61,6 +61,9 @@ public:
     const ParamVector &defParams() const { return _defParams; }
     const CountVector &effCounts() const { return _effCounts; }
 
+public:
+    static Smoothing *Create(const char *smoothing);
 };
+
 
 #endif // SMOOTHING_H

@@ -816,21 +816,21 @@ NgramModel::_ComputeBackoffs() {
     // Compute backoffs for bigram via vocabulary lookup.
     if (size() > 2) {
         IndexVector &backoffs(_backoffVectors[2]);
-        size_t       oldSize = backoffs.length();
         backoffs.resize(_vectors[2].size());
-        for (NgramIndex i = oldSize; i < (NgramIndex)backoffs.length(); ++i)
+        for (NgramIndex i = 0; i < (NgramIndex)backoffs.length(); ++i)
             backoffs[i] = _vectors[1].Find(0, _vectors[2]._words[i]);
+        assert(allTrue(backoffs != NgramVector::Invalid));
     }
 
     // Backoffs for higher order n-grams are computed from lower order backoffs.
     for (size_t o = 3; o < size(); o++) {
         IndexVector &loBackoffs(_backoffVectors[o - 1]);
         IndexVector &backoffs(_backoffVectors[o]);
-        size_t       oldSize = backoffs.length();
         backoffs.resize(_vectors[o].size());
-        for (NgramIndex i = oldSize; i < (NgramIndex)backoffs.length(); ++i)
+        for (NgramIndex i = 0; i < (NgramIndex)backoffs.length(); ++i)
             backoffs[i] = _vectors[o-1].Find(loBackoffs[_vectors[o]._hists[i]],
-                                           _vectors[o]._words[i]);
+                                             _vectors[o]._words[i]);
+        assert(allTrue(backoffs != NgramVector::Invalid));
     }
 }
 

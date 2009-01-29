@@ -32,30 +32,29 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef OPTIMIZATION_H
-#define OPTIMIZATION_H
+#include "MaxLikelihoodSmoothing.h"
+#include "KneserNeySmoothing.h"
 
-#include "Powell.h"
-#include "LBFGS.h"
-#include "LBFGSB.h"
-
-////////////////////////////////////////////////////////////////////////////////
-
-enum Optimization {
-    UnknownOptimization,
-    PowellOptimization,
-    LBFGSOptimization,
-    LBFGSBOptimization
-};
-
-inline Optimization ToOptimization(const char *optimization) {
-    if (strcmp(optimization, "Powell") == 0)
-        return PowellOptimization;
-    if (strcmp(optimization, "LBFGS") == 0)
-        return LBFGSOptimization;
-    if (strcmp(optimization, "LBFGSB") == 0)
-        return LBFGSBOptimization;
-    return UnknownOptimization;
+Smoothing *
+Smoothing::Create(const char *smoothing) {
+    if (strcmp(smoothing, "FixKN") == 0) {
+        return new KneserNeySmoothing(1, false);
+    } else if (strcmp(smoothing, "FixModKN") == 0) {
+        return new KneserNeySmoothing(3, false);
+    } else if (strncmp(smoothing, "FixKN", 5) == 0) {
+        for (size_t i = 5; i < strlen(smoothing); ++i)
+            if (!isdigit(smoothing[i])) return NULL;
+        return new KneserNeySmoothing(atoi(&smoothing[5]), false);
+    } else if (strcmp(smoothing, "KN") == 0) {
+        return new KneserNeySmoothing(1, true);
+    } else if (strcmp(smoothing, "ModKN") == 0) {
+        return new KneserNeySmoothing(3, true);
+    } else if (strncmp(smoothing, "KN", 2) == 0) {
+        for (size_t i = 2; i < strlen(smoothing); ++i)
+            if (!isdigit(smoothing[i])) return NULL;
+        return new KneserNeySmoothing(atoi(&smoothing[2]), true);
+    } else if (strcmp(smoothing, "ML") == 0) {
+        return new MaxLikelihoodSmoothing();
+    } else
+        return NULL;
 }
-
-#endif // OPTIMIZATION_H

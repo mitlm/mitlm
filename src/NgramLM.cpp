@@ -32,13 +32,18 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   //
 ////////////////////////////////////////////////////////////////////////////
 
+#include <string>
+#include <vector>
 #include <algorithm>
 #include "util/FastIO.h"
+#include "util/CommandOptions.h"
 #include "Types.h"
 #include "NgramModel.h"
 #include "NgramLM.h"
-#include "MaxLikelihoodSmoothing.h"
-#include "KneserNeySmoothing.h"
+#include "Smoothing.h"
+
+using std::string;
+using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -145,6 +150,80 @@ ArpaNgramLM::LoadLM(ZFile &lmFile) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void
+NgramLM::Initialize(const char *vocab, bool useUnknown,
+                    const char *text, const char *counts,
+                    const char *smoothingDesc, const char *featureDesc) {
+    // Read vocabulary.
+    if (useUnknown) {
+        Logger::Log(1, "Replace unknown words with <unk>...\n");
+        UseUnknown();
+    }
+    if (vocab) {
+        Logger::Log(1, "Loading vocab %s...\n", vocab);
+        ZFile vocabZFile(vocab);
+        LoadVocab(vocabZFile);
+    }
+    
+    // Read language model input files.
+    string corpusFile;
+    if (text) {
+        vector<string> textFiles;
+        trim_split(textFiles, text, ',');
+        for (size_t i = 0; i < textFiles.size(); i++) {
+            Logger::Log(1, "Loading corpus %s...\n", textFiles[i].c_str());
+            ZFile corpusZFile(ZFile(textFiles[i].c_str()));
+            LoadCorpus(corpusZFile);
+            if (corpusFile.length() == 0) corpusFile = textFiles[i].c_str();
+        }
+    }
+    if (counts) {
+        vector<string> countsFiles;
+        trim_split(countsFiles, counts, ',');
+        for (size_t i = 0; i < countsFiles.size(); i++) {
+            Logger::Log(1, "Loading counts %s...\n", countsFiles[i].c_str());
+            ZFile countsZFile(ZFile(countsFiles[i].c_str()));
+            LoadCounts(countsZFile);
+            if (corpusFile.length() == 0) corpusFile = countsFiles[i].c_str();
+        }
+    }
+
+    // Process n-gram weighting features.
+    if (featureDesc) {
+        vector<string> feats;
+        trim_split(feats, featureDesc, ',');
+        vector<vector<DoubleVector> > featureList(feats.size());
+        for (size_t f = 0; f < feats.size(); ++f) {
+            char feature[1024];
+            sprintf(feature, feats[f].c_str(), GetBasename(corpusFile).c_str());
+            Logger::Log(1, "Loading weight features %s...\n", feature);
+            model().LoadComputedFeatures(featureList[f], feature);
+        }
+        SetWeighting(featureList);
+    }
+    
+    // Set smoothing algorithms.
+    vector<string> smoothings;
+    trim_split(smoothings, smoothingDesc, ',');
+    if (smoothings.size() != 1 && smoothings.size() != order()) {
+        Logger::Error(1, "Inconsistent number of smoothing algorithms.\n");
+        exit(1);
+    }
+    vector<SharedPtr<Smoothing> > smoothingAlgs(order() + 1);
+    for (size_t o = 1; o <= order(); o++) {
+        const char *smoothing = smoothings.size() == 1 ?
+            smoothings[0].c_str() : smoothings[o-1].c_str();
+        Logger::Log(1, "Smoothing[%i] = %s\n", o, smoothing);
+        smoothingAlgs[o] = Smoothing::Create(smoothing);
+        if (smoothingAlgs[o].get() == NULL) {
+            Logger::Error(1, "Unknown smoothing %s.\n", smoothing);
+            exit(1);
+        }
+    }
+    Logger::Log(1, "Set smoothing algorithms...\n");
+    SetSmoothingAlgs(smoothingAlgs);
+}
 
 void
 NgramLM::LoadCorpus(ZFile &corpusFile, bool reset) {
@@ -293,3 +372,4 @@ NgramLM::SetModel(const SharedPtr<NgramModel> &m,
     }
     SetSmoothingAlgs(_smoothings);
 }
+
