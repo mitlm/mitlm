@@ -32,30 +32,64 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef OPTIMIZATION_H
-#define OPTIMIZATION_H
+#include <vector>
+#include <ext/hash_map>
 
-#include "Powell.h"
-#include "LBFGS.h"
-#include "LBFGSB.h"
+using std::string;
+using std::vector;
+using __gnu_cxx::hash_map;
 
-////////////////////////////////////////////////////////////////////////////////
-
-enum Optimization {
-    UnknownOptimization,
-    PowellOptimization,
-    LBFGSOptimization,
-    LBFGSBOptimization
-};
-
-inline Optimization ToOptimization(const char *optimization) {
-    if (strcmp(optimization, "Powell") == 0)
-        return PowellOptimization;
-    if (strcmp(optimization, "LBFGS") == 0)
-        return LBFGSOptimization;
-    if (strcmp(optimization, "LBFGSB") == 0)
-        return LBFGSBOptimization;
-    return UnknownOptimization;
+namespace __gnu_cxx {
+  template<> struct hash<std::string> {
+    size_t operator()(const std::string &x) const { 
+        return hash<const char*>()(x.c_str());
+    }
+  };
 }
 
-#endif // OPTIMIZATION_H
+class CommandOptions {
+protected:
+    struct CmdOption {
+        CmdOption(const char *name_, const char *desc_, const char *defval_)
+            : name(name_), desc(desc_), defval(defval_) { }
+        const char *name;
+        const char *desc;
+        const char *defval;
+    };
+
+    typedef hash_map<string, int>::const_iterator hash_map_iter;
+
+    string                _header;
+    string                _footer;
+    vector<CmdOption>     _options;
+    vector<const char *>  _values;
+    hash_map<string, int> _nameIndexMap;
+
+public:
+    CommandOptions(const char *header="", const char *footer="");
+    void AddOption(const char *name, const char *desc, const char *defval=NULL);
+    bool ParseArguments(int argc, const char **argv);
+    void PrintHelp() const;
+    
+    const char * operator[](const char *name) const;
+};
+
+vector<string> & 
+trim_split(vector<string> &result, const char *str, char delimiter);
+
+inline const char *GetItem(vector<string> &items, size_t index) {
+    if (items.size() == 0) return NULL;
+    if (items.size() == 1) return items[0].c_str();
+    return items[index].c_str();
+}
+
+inline string GetBasename(string str) {
+    size_t extIndex = str.find_last_of('.');
+    return extIndex == string::npos ? str : str.substr(0, extIndex);
+}
+
+inline bool AsBoolean(const char *str) {
+    if (str == NULL) return false;
+    if (str[0] == 't' || str[0] == 'T' || str[0] == '1') return true;
+    return false;
+}
