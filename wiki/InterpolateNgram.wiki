@@ -1,67 +1,63 @@
 #labels Featured
+_Syntax for MITLM v0.3 and older can be found at InterpolateNgramV01._
+
 =interpolate-ngram=
 
 ==NAME==
 
-`interpolate-ngram` - Constructs a statically interpolated n-gram language model from component n-gram models.
+`interpolate-ngram` - Constructs a statically interpolated n-gram language model from component _n_-gram models.
 
 ==SYNOPSIS==
 
-{{{interpolate-ngram [Options] [lmfile1 lmfile2 ...]}}}
+{{{interpolate-ngram [Options]}}}
 
 ==DESCRIPTION==
 
-Takes multiple n-gram language models, computes appropriate interpolation
-weights from optional features, and constructs a statically interpolated
-n-gram model.  It also supports perplexity computation and parameter tuning
-to optimize the development set perplexity.
+Interpolates multiple _n_-gram models by computing appropriate interpolation
+weights from optional features and constructing a statically interpolated
+_n_-gram model.  Parameters can be optionally tuned to optimize development set
+performance.
 
 Filename argument can be an ASCII file, a compressed file (ending in .Z or .gz),
 or '-' to indicate stdin/stdout.
 
 ==OPTIONS==
 
-`--help`
-  Print this message.
-`--version`
-  Print version number.
-`--verbose arg (=1)`
-  Set verbosity level.
-`-o [ --order ] arg (=3)`
-  Set the n-gram order of the estimated LM.
-`-v [ --read-vocab ] arg`
-  Restrict the vocabulary to only words from the specified vocabulary vocabfile.  
-  n-grams with out of vocabulary words are ignored.
-`-l [ --read-lms ] arg`
-  Reads component LMs from specified lmfiles in either ARPA or binary format.
-`-f [ --read-features ] arg`
-  Reads n-gram feature vectors from specified featurefiles, where each line contains an 
-  n-gram and its feature value.  Since interpolation weights are computed on features of
-  the n-gram history, it is sufficient to have features only up to order n - 1.
-`-p [ --read-parameters ] arg`
-  Read model parameters from paramfile.
-`-i [ --interpolation ] arg (=LI)`
-  Apply specified interpolation algorithms to all n-gram orders.  See INTERPOLATION.
-`-d [ --optimize-perplexity ] arg`
-  Tune the model parameters to minimize the perplexity of dev text.
-`-e [ --evaluate-perplexity ] arg`
-  Compute the perplexity of textfile.  This option can be repeated.
-`-V [ --write-vocab ] arg`
-  Write the LM vocabulary to vocabfile.
-`-L [ --write-lm ] arg`
-  Write the interpolated n-gram language model to lmfile in ARPA backoff text format.
-`-B [ --write-binary-lm ] arg`
-  Write the interpolated n-gram language model to lmfile in MITLM binary format.
-`-P [ --write-parameters ] arg`
-  Write model parameters to paramfile.
+|| `-h`, `-help`                 || Print this message. ||
+|| `-verbose` (1)                || Set verbosity level. ||
+|| `-o`, `-order` (3)            || Set the _n_-gram order of the estimated LM. ||
+|| `-v`, `-vocab`                || Fix the vocab to only words from the specified file. ||
+|| `-u`, `-unk`                  || Replace all out of vocab words with `<unk>`. ||
+|| `-l`, `-lm`                   || Interpolate specified LM files. ||
+|| `-t`, `-text`                 || Interpolate models trained from text files. ||
+|| `-c`, `-counts`               || Interpolate models trained from counts files. ||
+|| `-s`, `-smoothing` (`ModKN`)  || Specify smoothing algorithms.  (`ML`, `FixKN`, `FixModKN`, `FixKN`_d_, `KN`, `ModKN`, `KN`_d_) ||
+|| `-wf`, `-weight-features`     || Specify _n_-gram weighting features. ||
+|| `-i`, `-interpolation` (`LI`) || Specify interpolation mode.  (`LI`, `CM`, `GLI`) ||
+|| `-if`, `-interpolation-features`  || Specify interpolation features. ||
+|| `-tpo`, `-tie-param-order` (true) || Tie parameters across _n_-gram order. ||
+|| `-tpl`, `-tie-param-lm` (false)   || Tie parameters across LM components. ||
+|| `-p`, `-params`               || Set initial model params. ||
+|| `-oa`, `-opt-alg` (`Powell`)  || Specify optimization algorithm.  (`Powell`, `LBFGS`, `LBFGSB`) ||
+|| `-op`, `-opt-perp`            || Tune params to minimize dev set perplexity. ||
+|| `-ow`, `-opt-wer`             || Tune params to minimize lattice word error rate. ||
+|| `-om`, `-opt-margin`          || Tune params to minimize lattice margin. ||
+|| `-wb`, `-write-binary`        || Write LM/counts files in binary format. ||
+|| `-wp`, `-write-params`        || Write tuned model params to file. ||
+|| `-wv`, `-write-vocab`         || Write LM vocab to file. ||
+|| `-wl`, `-write-lm`            || Write ARPA backoff LM to file. ||
+|| `-ep`, `-eval-perp`           || Compute test set perplexity. ||
+|| `-ew`, `-eval-wer`            || Compute test set lattice word error rate. ||
+|| `-em`, `-eval-margin`         || Compute test set lattice margin. ||
+
 
 ==INTERPOLATION==
 
 MITLM currently supports the following interpolation algorithms:
 
- * `LI` - Interpolates the component models using linear interpolation.  Constructs a model consisting of the union of all observed n-grams, with probabilities equal to the weighted sum of the component n-gram probabilities, using backoff, if necessary.  Backoff weights are computed to normalize the model.  In linear interpolation, the weight of each component is a fixed constant.
- * `CM` - Interpolates the component models using count merging (Bacchiani et al., 2006; Hsu, 2007).  Unlike linear interpolation, the weight of each component depends on the n-gram history count for that component.
- * `GLI` - Interpolates the component models using generalized linear interpolation (Hsu, 2007).  Unlike count merging, the weight of each component depends on arbitrary features of the n-gram history, specified through the `--read-features` option.
+ * `LI` - Interpolates the component models using linear interpolation.  Constructs a model consisting of the union of all observed _n_-grams, with probabilities equal to the weighted sum of the component _n_-gram probabilities, using backoff, if necessary.  Backoff weights are computed to normalize the model.  In linear interpolation, the weight of each component is a fixed constant.
+ * `CM` - Interpolates the component models using count merging (Bacchiani et al., 2006; Hsu, 2007).  Unlike linear interpolation, the weight of each component depends on the _n_-gram history count for that component.
+ * `GLI` - Interpolates the component models using generalized linear interpolation (Hsu, 2007).  Unlike count merging, the weight of each component depends on arbitrary features of the _n_-gram history, specified through the `-interpolation-features` option.
 
 ==REFERENCES==
 
