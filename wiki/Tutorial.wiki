@@ -243,9 +243,61 @@ evaluate-ngram -lm Lectures.blm -ep CS-Dev.txt
 
 Binary file representations are also available for counts.
 
+==SLS Usage==
+
+The MITLM toolkit can be found at `/usr/sls/mitlm/current/`. This section describes SLS-specific usages of the toolkit that are not yet ready for public consumption. SLS-specific scripts can be found at `/usr/sls/mitlm/scripts/`.
+
+===Recognition===
+
+In this section, we will build a SUMMIT recognizer from an ARPA backoff _n_-gram model and perform recognition over a lecture.
+
+We start with a basic recognizer configuration for lecture transcription.
+
+{{{
+cp -r /usr/sls/mitlm/recognizer lecture_recognizer
+cd lecture_recognizer
+}}}
+
+After initializing the environment (in `bash`), we build the recognition FSTs from the language model.
+
+{{{
+export SLS_HOME=/usr/sls/Galaxy/debcurrent/sls
+source /usr/local/initializations/sls.bashrc
+export SRILM=/usr/local/srilm
+export PATH=$SRILM/bin:$SRILM/bin/i686:/usr/sls/mitlm/sctk-2.2.2/bin:/usr/sls/mitlm/current:/usr/sls/mitlm/scripts:$PATH
+
+cp ../Lectures+Textbook.lm lectures.lm
+build_recognizer_from_lm.cmd lectures
+}}}
+
+We perform distributed speech recognition by creating a `.espec` file and running `asr_batch`.
+
+{{{
+echo "corpus: /s/lectures/corpus/lectures.corpus" > lectures.espec
+echo "set: <6.001-1986-L01>" >> lectures.espec
+echo "line: -tag <tag>; -waveform_in ; -ref_words {<orthography>};" >> lectures.espec
+mkdir results
+asr_batch -sctk -basename results/Lectures+Textbook
+}}}
+
+===Lattice Rescoring===
+
+When evaluating multiple language models, it is often more efficient to perform lattice rescoring to compute the word error rate instead of re-running speech recognition over the entire dataset. We can significantly speed up the evaluation by computing the recognition lattices, removing the language model weights, and compiling the lattices into an efficient binary form.
+
+{{{
+build_lattices.cmd lectures 6.001-1986-L01 results/Lectures+Textbook
+}}}
+
+The above script performs speech recognition using the lectures models on the `6.001-1986-L01` dataset and compiles the resulting lattices to `results/Lectures+Textbook.lattices.bin`. Using this lattice, we can quickly evaluate the performance of other language models with the same _n_-gram structure as follows:
+
+{{{
+evaluate-ngram -lm ../Lectures+Textbook.GLI.lm \
+  -eval-wer results/Lectures+textbook.lattices.bin
+}}}
+
 ==References==
  * Bo-June (Paul) Hsu. Language Modeling in Limited-Data Domains. _PhD thesis_, Massachusetts Institute of Technology, 2009. 
  * Bo-June (Paul) Hsu and James Glass. [http://people.csail.mit.edu/bohsu/IterativeLanguageModelEstimation2008.pdf Iterative language model estimation: Efficient data structure & algorithms]. In _Proc. Interspeech_, Brisbane, Australia, 2008. 
  * Bo-June (Paul) Hsu. [http://people.csail.mit.edu/bohsu/GeneralizedLinearInterpolationOfLanguageModels2007.pdf Generalized linear interpolation of language models]. In _Proc. ASRU_, Kyoto, Japan, 2007. 
  * Bo-June (Paul) Hsu and James Glass. [http://people.csail.mit.edu/bohsu/NgramWeighting2008.pdf N-gram weighting: Reducing training data mismatch in cross-domain language model estimation]. In _Proc. EMNLP_, Honolulu, Hawaii, USA, 2008. 
- * Bo-June (Paul) Hsu and James Glass. [http://people.csail.mit.edu/bohsu/ParameterEstimation.pdf Language model parameter estimation using user transcriptions]. In _Proc. ICASSP_, Taipei, Taiwan, 2009. 
+ * Bo-June (Paul) Hsu and James Glass. [http://people.csail.mit.edu/bohsu/ParameterEstimation.pdf Language model parameter estimation using user transcriptions]. In _Proc. ICASSP_, Taipei, Taiwan, 2009.
