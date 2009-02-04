@@ -23,7 +23,7 @@ A statistical _n_-gram language model describes the conditional probability of a
 
 ===Estimation & Evaluation===
 
-We can estimate an _n_-gram language model using `estimate-ngram`. To gather _n_-gram statistics from the text corpus `Lectures.txt`, estimate the probabilities and backoff weights of the _n_-gram language model, and output the result to `Lectures.lm` in the ARPA backoff _n_-gram format, we run:
+We can estimate an _n_-gram language model using EstimateNgram. To gather _n_-gram statistics from the text corpus `Lectures.txt`, estimate the probabilities and backoff weights of the _n_-gram language model, and output the result to `Lectures.lm` in the ARPA backoff _n_-gram format, we run:
 
 {{{
 estimate-ngram -text Lectures.txt -write-lm Lectures.lm
@@ -47,7 +47,7 @@ To evaluate the performance of the resulting language model, we can specify the 
 estimate-ngram -t Lectures.txt -wl Lectures.lm -eval-perp CS-Dev.txt
 }}}
 
-Alternatively, we can use `evaluate-ngram` to compute the model perplexity.
+Alternatively, we can use EvaluateNgram to compute the model perplexity.
 
 {{{
 evaluate-ngram -lm Lectures.lm -eval-perp CS-Dev.txt
@@ -139,7 +139,7 @@ The following lists the currently supported optimization algorithms:
 
 ===Interpolation===
 
-In scenarios where we have multiple partially-matched training corpora, we can build individual language models from each corpus and combine the resulting _n_-gram models using linear interpolation. Linear interpolation introduces the component model weights as tunable parameters. We can tune the parameters to minimize the development set perplexity.
+In scenarios where we have multiple partially-matched training corpora, we can build individual language models from each corpus and combine the resulting _n_-gram models using linear interpolation using InterpolateNgram. Linear interpolation introduces the component model weights as tunable parameters. We can tune the parameters to minimize the development set perplexity.
 
 {{{
 interpolate-ngram -lm "Lectures.lm, Textbook.lm" -interpolation LI \
