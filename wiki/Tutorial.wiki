@@ -1,3 +1,4 @@
+#labels Featured
 =MIT Language Modeling Toolkit Tutorial=
 
 The MIT Language Modeling (MITLM) toolkit is a set of tools designed for the efficient estimation of statistical _n_-gram language models involving iterative parameter estimation. In addition to standard language modeling estimation, MITLM support the tuning of smoothing, interpolation, and _n_-gram weighting parameters. In this tutorial, we will describe how to build and tune language models using MITLM. Please refer to the references for additional details on the language modeling techniques presented below.
