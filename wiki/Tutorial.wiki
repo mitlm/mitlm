@@ -8,13 +8,13 @@ The MIT Language Modeling (MITLM) toolkit is a set of tools designed for the eff
 To install MITLM, download the latest stable release from http://www.sls.csail.mit.edu/mitlm. Alternatively, you can download the latest source code from the SVN repository.
 
 {{{
-svn checkout http://mitlm.googlecode.com/svn/trunk/ mitlm-read-only
+svn checkout http://mitlm.googlecode.com/svn/trunk/ mitlm
 }}}
 
 To build the toolkit, run:
 
 {{{
-cd mitlm-read-only
+cd mitlm
 make -j
 }}}
 
