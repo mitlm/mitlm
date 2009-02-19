@@ -429,7 +429,18 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
         size_t o = size() - 1;
         fprintf(lmFile, "\n\\%lu-grams:\n", (unsigned long)o);
         const ProbVector &probs = probVectors[o];
-        for (NgramIndex i = 0; i < (NgramIndex)_vectors[o].size(); ++i) {
+        NgramIndex iStart = 0;
+        if (o == 1) {
+            iStart = 1;
+            char *ptr = &lineBuffer[0];
+            ptr = CopyLProb(ptr, probs[Vocab::EndOfSentence]);
+            *ptr++ = '\t';
+            ptr = CopyString(ptr, "</s>\n-99\t<s>\n");
+            *ptr = '\0';
+            assert((size_t)(ptr - lineBuffer.data()) < lineBuffer.size());
+            fputs(&lineBuffer[0], lmFile);
+        }
+        for (NgramIndex i = iStart; i < (NgramIndex)_vectors[o].size(); ++i) {
             // Allocate spaces for Prob, words, spaces, \n\0.
             size_t len = GetNgramWords(o, i, ngramWords) + 12;
             if (lineBuffer.size() < len)
@@ -797,6 +808,13 @@ NgramModel::ApplySort(const IndexVector &ngramMap,
         sortedData[ngramMap[i]] = data[i];
     data.swap(sortedData);
 }
+
+template void 
+NgramModel::ApplySort<int>(const IndexVector&, DenseVector<int>&, 
+                           size_t, int);
+template void 
+NgramModel::ApplySort<double>(const IndexVector&, DenseVector<double>&, 
+                              size_t, double);
 
 NgramIndex
 NgramModel::_Find(const VocabIndex *words, size_t wordsLen) const {
