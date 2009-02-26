@@ -504,7 +504,7 @@ NgramModel::LoadEvalCorpus(vector<CountVector> &probCountVectors,
         words.push_back(Vocab::EndOfSentence);
 
         // Add each top order n-gram.
-        size_t ngramOrder = 2;
+        size_t ngramOrder = std::min((size_t)2, size() - 1);
         for (size_t i = 1; i < words.size(); i++) {
             if (words[i] == Vocab::Invalid || !vocabMask[words[i]]) {
                 // OOV word encountered.  Reset order to unigrams.
