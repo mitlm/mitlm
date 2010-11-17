@@ -1,0 +1,2 @@
+debian/install/usr/lib/*.so.*	usr/lib/
+debian/install/usr/lib/*.so	usr/lib/

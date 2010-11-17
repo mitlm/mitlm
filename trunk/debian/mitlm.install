@@ -1,0 +1,3 @@
+debian/install/usr/bin/estimate-ngram	usr/bin/
+debian/install/usr/bin/evaluate-ngram	usr/bin/
+debian/install/usr/bin/interpolate-ngram	usr/bin/
