@@ -38,6 +38,7 @@
 #include "Scalar.h"
 #include "Vector.h"
 #include "VectorClosures.h"
+#include <limits>
 
 ////////////////////////////////////////////////////////////////////////////////
 // Boolean Operations

@@ -38,6 +38,8 @@
 #include <stdint.h>
 #include <cmath>
 #include <cassert>
+#include <cstdio>
+#include <cstring>
 #include <stdexcept>
 #include <vector>
 #include "Logger.h"

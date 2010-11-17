@@ -143,7 +143,7 @@ NgramModel::LoadCorpus(vector<CountVector> &countVectors,
     for (size_t o = 0; o < size(); ++o) {
         boNgramMap.swap(ngramMap);
         if (_vectors[o].Sort(vocabMap, boNgramMap, ngramMap))
-            ApplySort(ngramMap, countVectors[o]);
+            NgramModel::ApplySort(ngramMap, countVectors[o]);
         else
             countVectors[o].resize(ngramMap.length());
     }
@@ -210,7 +210,7 @@ NgramModel::LoadCounts(vector<CountVector> &countVectors,
     for (size_t o = 0; o < size(); ++o) {
         boNgramMap.swap(ngramMap);
         if (_vectors[o].Sort(vocabMap, boNgramMap, ngramMap))
-            ApplySort(ngramMap, countVectors[o]);
+            NgramModel::ApplySort(ngramMap, countVectors[o]);
         else
             countVectors[o].resize(ngramMap.length());
     }
@@ -350,9 +350,9 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
     for (size_t o = 0; o < size(); ++o) {
         boNgramMap.swap(ngramMap);
         if (_vectors[o].Sort(vocabMap, boNgramMap, ngramMap)) {
-            ApplySort(ngramMap, probVectors[o]);
+            NgramModel::ApplySort(ngramMap, probVectors[o]);
             if (o < bowVectors.size())
-                ApplySort(ngramMap, bowVectors[o]);
+                NgramModel::ApplySort(ngramMap, bowVectors[o]);
         } else {
             probVectors[o].resize(ngramMap.length());
             if (o < bowVectors.size())
@@ -795,26 +795,19 @@ NgramModel::Deserialize(FILE *inFile) {
     _ComputeBackoffs();
 }
 
-template <class T>
-void
-NgramModel::ApplySort(const IndexVector &ngramMap,
-                     DenseVector<T> &data,
-                     size_t length,
-                     T defValue) {
-    assert(data.length() >= ngramMap.length());
-    if (length == 0) length = ngramMap.length();
-    DenseVector<T> sortedData(length, defValue);
-    for (size_t i = 0; i < ngramMap.length(); ++i)
-        sortedData[ngramMap[i]] = data[i];
-    data.swap(sortedData);
-}
-
-template void 
-NgramModel::ApplySort<int>(const IndexVector&, DenseVector<int>&, 
-                           size_t, int);
-template void 
-NgramModel::ApplySort<double>(const IndexVector&, DenseVector<double>&, 
-                              size_t, double);
+// template <class T>
+// void
+// NgramModel::ApplySort(const IndexVector &ngramMap,
+//                      DenseVector<T> &data,
+//                      size_t length,
+//                      T defValue) {
+//     assert(data.length() >= ngramMap.length());
+//     if (length == 0) length = ngramMap.length();
+//     DenseVector<T> sortedData(length, defValue);
+//     for (size_t i = 0; i < ngramMap.length(); ++i)
+//         sortedData[ngramMap[i]] = data[i];
+//     data.swap(sortedData);
+// }
 
 NgramIndex
 NgramModel::_Find(const VocabIndex *words, size_t wordsLen) const {

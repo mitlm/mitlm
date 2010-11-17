@@ -42,7 +42,7 @@
 #include "NgramLM.h"
 #include "Smoothing.h"
 
-using std::string;
+//using std::string;
 using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////

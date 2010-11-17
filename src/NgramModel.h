@@ -95,7 +95,14 @@ public:
 
     template <class T>
     static void ApplySort(const IndexVector &ngramMap, DenseVector<T> &data,
-                          size_t length = 0, T defValue = T());
+                          size_t length = 0, T defValue = T()) {
+    assert(data.length() >= ngramMap.length());
+    if (length == 0) length = ngramMap.length();
+    DenseVector<T> sortedData(length, defValue);
+    for (size_t i = 0; i < ngramMap.length(); ++i)
+        sortedData[ngramMap[i]] = data[i];
+    data.swap(sortedData);
+    };
 
     size_t             size() const             { return _vectors.size(); }
     size_t             sizes(size_t o) const    { return _vectors[o].size(); }

@@ -34,6 +34,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <cstring>
 #include "CommandOptions.h"
 #include "util/Logger.h"
 
