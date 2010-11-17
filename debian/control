@@ -1,0 +1,80 @@
+Source: mitlm
+Section: contrib
+Priority: optional
+Maintainer: Giulio Paci <giuliopaci@interfree.it>
+Build-Depends: debhelper (>= 5),
+	       gcc,
+	       gfortran
+Standards-Version: 3.7.2
+
+Package: mitlm
+Architecture: any
+Depends: libmitlm (= ${binary:Version}),
+	 ${shlibs:Depends},
+	 ${misc:Depends}
+Description: The MIT Language Modeling toolkit.
+ The MIT Language Modeling (MITLM) toolkit is a set of tools designed for the
+ efficient estimation of statistical n-gram language models involving iterative
+ parameter estimation. It achieves much of its efficiency through the use of a
+ compact vector representation of n-grams.
+ .
+ Currently, MITLM supports the following features:
+  * Smoothing: Modified Kneser-Ney, Kneser-Ney, maximum likelihood
+  * Interpolation: Linear interpolation, count merging, generalized linear
+    interpolation
+  * Evaluation: Perplexity
+  * File formats: ARPA, binary, gzip, bz2 
+
+Package: libmitlm-dev
+Section: libdevel
+Architecture: any
+Depends: libmitlm (= ${binary:Version}),
+         ${misc:Depends}
+Description: The MIT Language Modeling toolkit development files.
+ The MIT Language Modeling (MITLM) toolkit is a set of tools designed for the
+ efficient estimation of statistical n-gram language models involving iterative
+ parameter estimation. It achieves much of its efficiency through the use of a
+ compact vector representation of n-grams.
+ .
+ Currently, MITLM supports the following features:
+  * Smoothing: Modified Kneser-Ney, Kneser-Ney, maximum likelihood
+  * Interpolation: Linear interpolation, count merging, generalized linear
+    interpolation
+  * Evaluation: Perplexity
+  * File formats: ARPA, binary, gzip, bz2
+
+Package: libmitlm-dbg
+Section: libdevel
+Architecture: any
+Depends: libmitlm (= ${binary:Version}),
+         ${misc:Depends}
+Description: The MIT Language Modeling toolkit debug symbols.
+ The MIT Language Modeling (MITLM) toolkit is a set of tools designed for the
+ efficient estimation of statistical n-gram language models involving iterative
+ parameter estimation. It achieves much of its efficiency through the use of a
+ compact vector representation of n-grams.
+ .
+ Currently, MITLM supports the following features:
+  * Smoothing: Modified Kneser-Ney, Kneser-Ney, maximum likelihood
+  * Interpolation: Linear interpolation, count merging, generalized linear
+    interpolation
+  * Evaluation: Perplexity
+  * File formats: ARPA, binary, gzip, bz2
+
+Package: libmitlm
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Description: The MIT Language Modeling toolkit library.
+ The MIT Language Modeling (MITLM) toolkit is a set of tools designed for the
+ efficient estimation of statistical n-gram language models involving iterative
+ parameter estimation. It achieves much of its efficiency through the use of a
+ compact vector representation of n-grams.
+ .
+ Currently, MITLM supports the following features:
+  * Smoothing: Modified Kneser-Ney, Kneser-Ney, maximum likelihood
+  * Interpolation: Linear interpolation, count merging, generalized linear
+    interpolation
+  * Evaluation: Perplexity
+  * File formats: ARPA, binary, gzip, bz2
