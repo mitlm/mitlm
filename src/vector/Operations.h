@@ -130,11 +130,11 @@ struct OpPow {
 };
 
 struct OpIsNan {
-    template <typename T> static T Eval(T v) { return isnan(v); }
+	template <typename T> static T Eval(T v) { return std::isnan(v); }
 };
 
 struct OpIsInf {
-    template <typename T> static T Eval(T v) { return isinf(v); }
+    template <typename T> static T Eval(T v) { return std::isinf(v); }
 };
 
 struct OpIsFinite {
