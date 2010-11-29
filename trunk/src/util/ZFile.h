@@ -35,10 +35,15 @@
 #ifndef ZFILE_H
 #define ZFILE_H
 
+#include <fcntl.h>
 #include <cstdio>
 #include <string>
 #include <cstring>
 #include <stdexcept>
+
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -59,12 +64,19 @@ protected:
     { return popen(command.c_str(), mode); }
 
 public:
-    ZFile(const char *filename, const char *mode="rb") {
+    ZFile(const char *filename, const char *mode="r") {
         if (mode == NULL || (mode[0] != 'r' && mode[0] != 'w'))
             throw std::runtime_error("Invalid mode");
 
         _filename = filename;
-        _mode = mode;
+	if(mode[0] == 'r')
+	{
+            _mode = O_BINARY ? "rb" : "r";
+	}
+	else if(mode[0] == 'w')
+	{
+            _mode = O_BINARY ? "wb" : "w";
+	}
         ReOpen();
     }
     ~ZFile() { if (_file) fclose(_file); }

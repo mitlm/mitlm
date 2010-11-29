@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
     ParamVector params(lm.defParams());
     if (opts["params"]) {
         Logger::Log(1, "Loading parameters from %s...\n", opts["params"]);
-        ZFile f(opts["params"], "rb");
+        ZFile f(opts["params"], "r");
         VerifyHeader(f, "Param");
         ReadVector(f, params);
         if (params.length() != lm.defParams().length()) {
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
     // Save results.
     if (opts["write-params"]) {
         Logger::Log(1, "Saving parameters to %s...\n", opts["write-params"]);
-        ZFile f(opts["write-params"], "wb");
+        ZFile f(opts["write-params"], "w");
         WriteHeader(f, "Param");
         WriteVector(f, params);
     }
