@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
         eval.LoadLattices(latticesZFile);
         string outFile(opts["compile-lattices"]);
         outFile += ".bin";
-        ZFile outZFile(outFile.c_str(), "wb");
+        ZFile outZFile(outFile.c_str(), "w");
         eval.SaveLattices(outZFile);
     }
 
