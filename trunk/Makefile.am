@@ -6,7 +6,7 @@ EXTRA_DIST = autogen.sh
 
 
 INCLUDES = \
--Isrc
+-I$(top_srcdir)/src
 
 # Enable building files in subdirectories.
 AUTOMAKE_OPTIONS = subdir-objects
