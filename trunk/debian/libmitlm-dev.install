@@ -1,3 +1,0 @@
-debian/install/usr/lib/*.a	usr/lib/
-debian/install/usr/lib/*.la	usr/lib/
-debian/install/usr/include/*	usr/include/
