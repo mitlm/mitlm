@@ -2,17 +2,7 @@
 
 SUBDIRS =
 
-EXTRA_DIST = autogen.sh \
-	debian/changelog \
-	debian/control \
-	debian/docs \
-	debian/libmitlm-dev.install \
-	debian/mitlm.install \
-	debian/compat \
-	debian/copyright \
-	debian/info \
-	debian/libmitlm.install  \
-	debian/rules
+EXTRA_DIST = autogen.sh
 
 
 INCLUDES = \
