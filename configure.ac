@@ -40,6 +40,30 @@ dnl Checks for library functions.
 AC_FUNC_MEMCMP
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
+
+
+AC_DEFUN([AX_CHECK_BUILTIN], [
+    AC_CACHE_CHECK([wheter we have $1], [ac_cv_have_$1],
+[AC_LINK_IFELSE([AC_LANG_PROGRAM([$2], [$3])],
+[ac_cv_have_$1=yes], [ac_cv_have_$1=no])])
+    if test $ac_cv_have_$1 = yes; then
+AC_DEFINE(AS_TR_CPP([HAVE_$1]), [1], [wheter we have $1])
+    fi
+])
+
+AX_CHECK_BUILTIN([__builtin_clzl], [[unsigned long x = 1;]],
+    [[int main(void) { return __builtin_clzll(x) == (sizeof(int)*8 - 1) ? 0 : 1; }
+]])
+
+AX_CHECK_BUILTIN([X86_ASM], [[
+#define bool int
+#define HAVE_X86_ASM 1
+#include "src/util/BitOps.h"
+unsigned long x = 2;
+]],
+    [[int main(void) { return find_last_bit_set(2)-2 ; }
+]])
+
 dnl Checks for system services.
 
 dnl Output.
