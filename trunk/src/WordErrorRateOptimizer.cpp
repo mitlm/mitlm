@@ -230,7 +230,7 @@ WordErrorRateOptimizer::OptimizeMargin(ParamVector &params,
 
     Logger::Log(1, "Iterations   = %i\n", numIter);
     Logger::Log(1, "Elapsed Time = %f\n",
-                float(endTime - startTime) / CLOCKS_PER_SEC);
+                (double)(endTime - startTime) / CLOCKS_PER_SEC);
     Logger::Log(1, "AvgMargin    = %f\n", minMargin);
     Logger::Log(1, "Func Evals   = %lu\n", _numCalls);
     Logger::Log(1, "OptParams    = [ ");
@@ -265,7 +265,7 @@ WordErrorRateOptimizer::OptimizeWER(ParamVector &params,
 
     Logger::Log(1, "Iterations   = %i\n", numIter);
     Logger::Log(1, "Elapsed Time = %f\n",
-                float(endTime - startTime) / CLOCKS_PER_SEC);
+                (double)(endTime - startTime) / CLOCKS_PER_SEC);
     Logger::Log(1, "WER          = %f%%\n", minWER);
     Logger::Log(1, "Func Evals   = %lu\n", _numCalls);
     Logger::Log(1, "OptParams    = [ ");
