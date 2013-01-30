@@ -76,17 +76,17 @@ int main(int argc, char* argv[]) {
     // Parse command line options.
     CommandOptions opts(headerDesc, footerDesc);
     opts.AddOption("h,help", "Print this message.");
-    opts.AddOption("verbose", "Set verbosity level.", "1");
-    opts.AddOption("o,order", "Set the n-gram order of the estimated LM.", "3");
-    opts.AddOption("v,vocab", "Fix the vocab to only words from the specified file.");
-    opts.AddOption("l,lm", "Load specified LM.");
-    opts.AddOption("cl,compile-lattices", "[SLS] Compiles lattices into a binary format.");
-    opts.AddOption("ep,eval-perp", "Compute test set perplexity.");
-    opts.AddOption("ew,eval-wer", "Compute test set lattice word error rate.");
-    opts.AddOption("em,eval-margin", "Compute test set lattice margin.");
-    opts.AddOption("wb,write-binary", "Write LM/counts files in binary format.");
-    opts.AddOption("wv,write-vocab", "Write LM vocab to file.");
-    opts.AddOption("wl,write-lm", "Write n-gram LM to file.");
+    opts.AddOption("verbose", "Set verbosity level.", "1", "int");
+    opts.AddOption("o,order", "Set the n-gram order of the estimated LM.", "3", "int");
+    opts.AddOption("v,vocab", "Fix the vocab to only words from the specified file.", NULL, "file");
+    opts.AddOption("l,lm", "Load specified LM.", NULL, "file");
+    opts.AddOption("cl,compile-lattices", "[SLS] Compile lattices into a binary format.", NULL, "file");
+    opts.AddOption("wb,write-binary", "Write LM/counts files in binary format.", "false", "boolean");
+    opts.AddOption("wv,write-vocab", "Write LM vocab to file.", NULL, "file");
+    opts.AddOption("wl,write-lm", "Write ARPA backoff LM to file.", NULL, "file");
+    opts.AddOption("ep,eval-perp", "Compute test set perplexity.", NULL, "files");
+    opts.AddOption("ew,eval-wer", "Compute test set lattice word error rate.", NULL, "files");
+    opts.AddOption("em,eval-margin", "Compute test set lattice margin.", NULL, "files");
     if (!opts.ParseArguments(argc, (const char **)argv) ||
         opts["help"] != NULL) {
         std::cout << std::endl;

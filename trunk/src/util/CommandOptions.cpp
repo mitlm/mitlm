@@ -46,15 +46,16 @@ CommandOptions::CommandOptions(const char *header, const char *footer) {
 }
 
 void
-CommandOptions::AddOption(const char *name, 
-                          const char *desc, 
-                          const char *defval) {
+CommandOptions::AddOption(const char *name,
+                          const char *desc,
+                          const char *defval,
+                          const char *type) {
     vector<string> names;
     trim_split(names, name, ',');
     for (size_t i = 0; i < names.size(); ++i)
         _nameIndexMap[names[i]] = _options.size();
     
-    _options.push_back(CmdOption(name, desc, defval));
+    _options.push_back(CmdOption(name, desc, defval, type));
 }
 
 bool
@@ -101,14 +102,15 @@ CommandOptions::PrintHelp() const {
         cout << " -" << names[0];
         for (size_t j = 1; j < names.size(); j++)
             cout << ", -" << names[j];
-        if (_options[i].defval == NULL) 
-            cout << ":\n";
-        else
-            cout << " (" << _options[i].defval << "):\n";
-        cout << "    " << _options[i].desc << "\n";
+        if (_options[i].type != NULL)
+            cout << " <" << _options[i].type << ">";
+	cout <<  endl;
+        cout << "    " << _options[i].desc << endl;
+        if (_options[i].defval != NULL)
+            cout << "      Default: " << _options[i].defval << endl;
     }
     if (_footer.length() > 0 )
-        cout << "\n" << _footer;
+        cout << endl << _footer;
 }
     
 const char *
