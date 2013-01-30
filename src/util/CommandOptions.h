@@ -50,9 +50,10 @@ namespace __gnu_cxx {
 class CommandOptions {
 protected:
     struct CmdOption {
-        CmdOption(const char *name_, const char *desc_, const char *defval_)
-            : name(name_), desc(desc_), defval(defval_) { }
+        CmdOption(const char *name_, const char *desc_, const char *defval_, const char *type_)
+            : name(name_), desc(desc_), defval(defval_), type(type_) { }
         const char *name;
+        const char *type;
         const char *desc;
         const char *defval;
     };
@@ -67,7 +68,7 @@ protected:
 
 public:
     CommandOptions(const char *header="", const char *footer="");
-    void AddOption(const char *name, const char *desc, const char *defval=NULL);
+    void AddOption(const char *name, const char *desc, const char *defval=NULL, const char *type=NULL);
     bool ParseArguments(int argc, const char **argv);
     void PrintHelp() const;
     

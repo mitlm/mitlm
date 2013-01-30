@@ -79,33 +79,31 @@ int main(int argc, char* argv[]) {
     // Parse command line options.
     CommandOptions opts(headerDesc, footerDesc);
     opts.AddOption("h,help", "Print this message.");
-    opts.AddOption("verbose", "Set verbosity level.", "1");
-    opts.AddOption("o,order", "Set the n-gram order of the estimated LM.", "3");
-    opts.AddOption("v,vocab", "Fix the vocab to only words from the specified file.");
-    opts.AddOption("u,unk", "Replace all out of vocab words with <unk>.");
-    opts.AddOption("l,lm", "Interpolate specified LM files.");
-    opts.AddOption("t,text", "Interpolate models trained from text files.");
-    opts.AddOption("c,counts", "Interpolate models trained from counts files.");
-    opts.AddOption("s,smoothing", "Specify smoothing algorithms.", "ModKN");
-    opts.AddOption("wf,weight-features", "Specify n-gram weighting features.");
-    opts.AddOption("i,interpolation", "Specify interpolation mode.  "
-                   "(LI, CM, GLI)", "LI");
-    opts.AddOption("if,interpolation-features", "Specify interpolation features.");
-    opts.AddOption("tpo,tie-param-order", "Tie parameters across n-gram order.", "true");
-    opts.AddOption("tpl,tie-param-lm", "Tie parameters across LM components.", "false");
-    opts.AddOption("p,params", "Set initial model params.");
-    opts.AddOption("oa,opt-alg", "Specify optimization algorithm.  "
-                   "(Powell, LBFGS, LBFGSB)", "LBFGS");
-    opts.AddOption("op,opt-perp", "Tune params to minimize dev set perplexity.");
-    opts.AddOption("ow,opt-wer", "Tune params to minimize lattice word error rate.");
-    opts.AddOption("om,opt-margin", "Tune params to minimize lattice margin.");
-    opts.AddOption("wb,write-binary", "Write LM/counts files in binary format.");
-    opts.AddOption("wp,write-params", "Write tuned model params to file.");
-    opts.AddOption("wv,write-vocab", "Write LM vocab to file.");
-    opts.AddOption("wl,write-lm", "Write n-gram LM to file.");
-    opts.AddOption("ep,eval-perp", "Compute test set perplexity.");
-    opts.AddOption("ew,eval-wer", "Compute test set lattice word error rate.");
-    opts.AddOption("em,eval-margin", "Compute test set lattice margin.");
+    opts.AddOption("verbose", "Set verbosity level.", "1", "int");
+    opts.AddOption("o,order", "Set the n-gram order of the estimated LM.", "3", "int");
+    opts.AddOption("v,vocab", "Fix the vocab to only words from the specified file.", NULL, "file");
+    opts.AddOption("u,unk", "Replace all out of vocab words with <unk>.", "false", "boolean");
+    opts.AddOption("l,lm", "Interpolate specified LM files.", NULL, "file");
+    opts.AddOption("t,text", "Interpolate models trained from text files.", NULL, "files");
+    opts.AddOption("c,counts", "Interpolate models trained from counts files.", NULL, "files");
+    opts.AddOption("s,smoothing", "Specify smoothing algorithms.", "ModKN", "ML, FixKN, FixModKN, FixKN#, KN, ModKN, KN#");
+    opts.AddOption("wf,weight-features", "Specify n-gram weighting features.", NULL, "features-template");
+    opts.AddOption("i,interpolation", "Specify interpolation mode.", "LI", "LI, CM, GLI");
+    opts.AddOption("if,interpolation-features", "Specify interpolation features.", NULL, "features-template");
+    opts.AddOption("tpo,tie-param-order", "Tie parameters across n-gram order.", "true", "boolean");
+    opts.AddOption("tpl,tie-param-lm", "Tie parameters across LM components.", "false", "boolean");
+    opts.AddOption("p,params", "Set initial model params.", NULL, "file");
+    opts.AddOption("oa,opt-alg", "Specify optimization algorithm.", "LBFGS", "Powell, LBFGS, LBFGSB");
+    opts.AddOption("op,opt-perp", "Tune params to minimize dev set perplexity.", NULL, "file");
+    opts.AddOption("ow,opt-wer", "Tune params to minimize lattice word error rate.", NULL, "file");
+    opts.AddOption("om,opt-margin", "Tune params to minimize lattice margin.", NULL, "file");
+    opts.AddOption("wb,write-binary", "Write LM/counts files in binary format.", "false", "boolean");
+    opts.AddOption("wp,write-params", "Write tuned model params to file.", NULL, "file");
+    opts.AddOption("wv,write-vocab", "Write LM vocab to file.", NULL, "file");
+    opts.AddOption("wl,write-lm", "Write ARPA backoff LM to file.", NULL, "file");
+    opts.AddOption("ep,eval-perp", "Compute test set perplexity.", NULL, "files");
+    opts.AddOption("ew,eval-wer", "Compute test set lattice word error rate.", NULL, "files");
+    opts.AddOption("em,eval-margin", "Compute test set lattice margin.", NULL, "files");
     if (!opts.ParseArguments(argc, (const char **)argv) ||
         opts["help"] != NULL) {
         std::cout << std::endl;
