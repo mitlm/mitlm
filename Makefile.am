@@ -92,16 +92,16 @@ evaluate_ngram_SOURCES = \
 	src/evaluate-ngram.cpp
 
 evaluate_ngram_LDADD = libmitlm.la $(FLIBS)
-evaluate_ngram_CFLAGS = 
+evaluate_ngram_CFLAGS =
 
 estimate_ngram_SOURCES = \
 	src/estimate-ngram.cpp
 
 estimate_ngram_LDADD = libmitlm.la $(FLIBS)
-estimate_ngram_CFLAGS = 
+estimate_ngram_CFLAGS =
 
 interpolate_ngram_SOURCES = \
 	src/interpolate-ngram.cpp
 
 interpolate_ngram_LDADD = libmitlm.la $(FLIBS)
-interpolate_ngram_CFLAGS = 
+interpolate_ngram_CFLAGS =
