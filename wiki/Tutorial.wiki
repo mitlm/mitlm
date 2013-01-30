@@ -95,7 +95,7 @@ estimate-ngram -vocab CS.vocab -t Lectures.txt -wl Lectures.CS.lm
 Sometimes, we would like to explicitly model the probability of out-of-vocabulary words by introducing a special `<unk>` word into the vocabulary. Out-of-vocabulary words in the corpus are effectively replaced with this special `<unk>` token before _n_-grams counts are cumulated. With this option, we can estimate the transition probabilities of _n_-grams involving out-of-vocabulary words.
 
 {{{
-estimate-ngram -v CS.vocab -unk -t Lectures.txt -wl Lectures.CS.unk.lm
+estimate-ngram -v CS.vocab -unk true -t Lectures.txt -wl Lectures.CS.unk.lm
 }}}
 
 ===Smoothing===
