@@ -40,9 +40,62 @@
 #include <string>
 #include <cstring>
 #include <stdexcept>
+#include <sstream>
 
 #ifndef O_BINARY
 #define O_BINARY 0
+#endif
+
+
+static std::string cmd_exe_escape ( const std::string& s )
+{
+	std::ostringstream buffer;
+	for (std::string::const_iterator it = s.begin(); it != s.end(); it++)
+	{
+		if ( (*it == '"')
+		     || (*it == ' ')
+		     || (*it == '\t')
+		     || (*it == '\n')
+		     || (*it == '\v')
+		     || (*it == '(')
+		     || (*it == ')')
+		     || (*it == '%')
+		     || (*it == '!')
+		     || (*it == '^')
+		     || (*it == '<')
+		     || (*it == '>')
+		     || (*it == '&')
+		     || (*it == '|')
+			)
+		{
+			buffer << '^';
+		}
+		buffer << *it;
+	}
+	return buffer.str();
+}
+
+static std::string shell_escape(const std::string &s)
+{
+	std::ostringstream buffer;
+	buffer << "'";
+	for (std::string::const_iterator it = s.begin(); it != s.end(); it++)
+	{
+		if (*it == '\'')
+			buffer << "'\\''";
+		else
+			buffer << *it;
+	}
+	buffer << "'";
+	return buffer.str();
+}
+
+#if ( defined(WIN32) || defined(_WIN32) ) && !defined(__CYGWIN__)
+#  define popen_escape(s) cmd_exe_escape(s)
+#  define EXEC_TOKEN
+#else
+#  define popen_escape(s) shell_escape(s)
+#  define EXEC_TOKEN "exec "
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,16 +138,16 @@ public:
         const char *mode = _mode.c_str();
         if (endsWith(_filename.c_str(), ".gz")) {
             _file = (_mode[0] == 'r') ?
-                processOpen(std::string("exec gunzip -c ") + _filename, mode) :
-                processOpen(std::string("exec gzip -c > ") + _filename, mode);
+                processOpen(std::string(EXEC_TOKEN "gzip -dc ") + popen_escape(_filename), mode) :
+                processOpen(std::string(EXEC_TOKEN "gzip -c > ") + popen_escape(_filename), mode);
         } else if (endsWith(_filename.c_str(), ".bz2")) {
             _file = (_mode[0] == 'r') ?
-                processOpen(std::string("exec bunzip2 -c ") + _filename, mode) :
-                processOpen(std::string("exec bzip2 > ") + _filename, mode);
+                processOpen(std::string(EXEC_TOKEN "bzip2 -dc ") + popen_escape(_filename), mode) :
+                processOpen(std::string(EXEC_TOKEN "bzip2 -c > ") + popen_escape(_filename), mode);
         } else if (endsWith(_filename.c_str(), ".zip")) {
             _file = (_mode[0] == 'r') ?
-                processOpen(std::string("exec unzip -c ") + _filename, mode) :
-                processOpen(std::string("exec zip -q > ") + _filename, mode);
+                processOpen(std::string(EXEC_TOKEN "unzip -c ") + popen_escape(_filename), mode) :
+                processOpen(std::string(EXEC_TOKEN "zip -q > ") + popen_escape(_filename), mode);
         } else { // Assume uncompressed
             _file = fopen(_filename.c_str(), mode);
         }
