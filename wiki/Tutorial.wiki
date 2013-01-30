@@ -233,7 +233,7 @@ We specify each individual feature LM<sub>_l_</sub>Feat<sub>_f_</sub> as a strin
 While text file formats are useful as cross-platform representations, they are less efficient than binary representations. Instead of writing language models in ARPA backoff _n_-gram text format, we can also output the language model in more compact binary format for faster loading/saving.
 
 {{{
-estimate-ngram -t Lectures.txt -write-binary -write-lm Lectures.blm
+estimate-ngram -t Lectures.txt -write-binary true -write-lm Lectures.blm
 }}}
 
 Binary files can be used as input in place of text file equivalent everywhere.
