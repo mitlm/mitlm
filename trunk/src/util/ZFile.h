@@ -46,6 +46,46 @@
 #define O_BINARY 0
 #endif
 
+static std::string win_argv_escape ( const std::string& s )
+{
+	std::ostringstream buffer;
+	buffer << '"';
+	for (std::string::const_iterator it = s.begin () ; it != s.end(); ++it)
+	{
+		// count backslashes
+		unsigned n = 0;
+		while (it != s.end () && *it == '\\')
+		{
+			it++;
+			n++;
+		}
+		if (it == s.end ())
+		{
+			// at the end of the string we must escape all backslashes,
+			// because we are going to append a '"'
+			n *= 2;
+			for ( int i = 0; i < n; i++ )
+			{
+				buffer << '\\';
+			}
+			break;
+		}
+		else if (*it == '"')
+		{
+			// with '\'* + '"' we should escape all '\'
+			n *= 2;
+			// and '"'
+			n++;
+		}
+		for ( int i = 0; i < n; i++ )
+		{
+			buffer << '\\';
+		}
+		buffer << *it;
+	}
+	buffer << '"';
+	return buffer.str();
+}
 
 static std::string cmd_exe_escape ( const std::string& s )
 {
