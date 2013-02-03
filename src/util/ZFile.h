@@ -46,6 +46,8 @@
 #define O_BINARY 0
 #endif
 
+namespace mitlm {
+
 static std::string win_argv_escape ( const std::string& s )
 {
 	std::ostringstream buffer;
@@ -197,5 +199,7 @@ public:
 
     operator FILE *() const { return _file; }
 };
+
+}
 
 #endif // ZFILE_H

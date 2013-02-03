@@ -37,6 +37,8 @@
 
 #include <cmath>
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 // Boolean Operations
 
@@ -130,7 +132,7 @@ struct OpPow {
 };
 
 struct OpIsNan {
-	template <typename T> static T Eval(T v) { return std::isnan(v); }
+    template <typename T> static T Eval(T v) { return std::isnan(v); }
 };
 
 struct OpIsInf {
@@ -155,5 +157,7 @@ struct OpFloat {
 struct OpInt {
     template <typename T> static int Eval(T v) { return static_cast<int>(v); }
 };
+
+}
 
 #endif // OPERATIONS_H

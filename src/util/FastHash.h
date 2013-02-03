@@ -50,6 +50,8 @@
                            +(uint32_t)(((const uint8_t *)(d))[0]))
 #endif
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 // Adopted from http://www.azillionmonkeys.com/qed/hash.html.
 // @Copyright 2004-2007 by Paul Hsieh
@@ -131,6 +133,8 @@ inline size_t StringHash(const char *s, size_t len) {
     for (; s != end; s++)
         i += (i << 3) + *s;
     return i * 1103515245;
+}
+
 }
 
 #endif // FASTHASH_H

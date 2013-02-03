@@ -39,6 +39,8 @@
 #include "LBFGS.h"
 #include "LBFGSB.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum Optimization {
@@ -56,6 +58,8 @@ inline Optimization ToOptimization(const char *optimization) {
     if (strcmp(optimization, "LBFGSB") == 0)
         return LBFGSBOptimization;
     return UnknownOptimization;
+}
+
 }
 
 #endif // OPTIMIZATION_H

@@ -38,6 +38,8 @@
 #include "util/Logger.h"
 #include "util/FastIO.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // data == NULL
@@ -161,7 +163,7 @@ DenseVector<T> &
 DenseVector<T>::operator=(const Vector<RHS> &rhs)
 {
 	reset(rhs.impl().length());
-	Copy(rhs.impl().begin(), begin(), end());
+	mitlm::Copy(rhs.impl().begin(), begin(), end());
     return *this;
 }
 
@@ -462,4 +464,6 @@ ReadVector(FILE *in, DenseVector<T> &x) {
     if (fread(x.data(), sizeof(T), x.length(), in) != x.length())
         throw std::runtime_error("Read failed.");
     ReadAlignPad(in, x.length() * sizeof(T));
+}
+
 }

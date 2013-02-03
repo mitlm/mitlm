@@ -46,6 +46,8 @@ using std::string;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace mitlm {
+
 const float INF = std::numeric_limits<float>::infinity();
 
 inline float logAdd(float logX, float logY) {
@@ -54,7 +56,7 @@ inline float logAdd(float logX, float logY) {
    float negDiff = logY - logX;
    if (negDiff < -20)
        return logX;
-   return logX + log(1.0f + exp(negDiff));
+   return logX + std::log(1.0f + std::exp(negDiff));
 }
 
 class Lattice {
@@ -150,5 +152,7 @@ private:
     bool  _IsOracleBestPath(const ArcScoreVector &bestArcs) const;
 
 };
+
+}
 
 #endif // LATTICE_H

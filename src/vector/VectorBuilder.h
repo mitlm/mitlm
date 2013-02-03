@@ -40,6 +40,8 @@
 #include "Vector.h"
 #include "DenseVector.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
@@ -89,5 +91,7 @@ struct TypeInfo<VectorBuilder<T> > {
     typedef VectorBuilder<T> Impl;
     typedef T                ElementType;
 };
+
+}
 
 #endif // VECTORBUILDER_H

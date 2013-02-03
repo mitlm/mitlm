@@ -43,6 +43,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace mitlm {
+
 class PerplexityOptimizer {
 protected:
     NgramLMBase &       _lm;
@@ -72,9 +74,11 @@ public:
     void   LoadCorpus(ZFile &corpusFile);
     double ComputeEntropy(const ParamVector &params);
     double ComputePerplexity(const ParamVector &params)
-    { return exp(ComputeEntropy(params)); }
+    { return std::exp(ComputeEntropy(params)); }
     double Optimize(ParamVector &params,
                     Optimization technique=PowellOptimization);
 };
+
+}
 
 #endif // PERPLEXITYOPTIMIZER_H

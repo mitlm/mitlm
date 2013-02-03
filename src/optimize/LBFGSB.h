@@ -37,6 +37,8 @@
 
 #include "../Types.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" {
@@ -90,6 +92,8 @@ MinimizeLBFGSB(Function &func, DoubleVector &x, int &numIter, double step=1e-8,
             break;
     }
     return f;
+}
+
 }
 
 #endif // LBFGSB_H

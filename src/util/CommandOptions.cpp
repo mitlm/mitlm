@@ -40,6 +40,8 @@
 
 using namespace std;
 
+namespace mitlm {
+
 CommandOptions::CommandOptions(const char *header, const char *footer) {
     _header = header;
     _footer = footer;
@@ -139,3 +141,4 @@ trim_split(vector<string> &result, const char *str, char delimiter) {
     return result;
 }
 
+}

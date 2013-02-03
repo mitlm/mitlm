@@ -38,6 +38,8 @@
 #include <cstdio>
 #include <ctime>
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class Logger {
@@ -54,5 +56,7 @@ public:
     static void        Error(int level, const char *fmt, ...);
     static void        PrintStackTrace(FILE *out, const char *file, int line);
 };
+
+}
 
 #endif // LOGGER_H

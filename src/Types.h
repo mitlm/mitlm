@@ -57,23 +57,22 @@ typedef double Param;
 typedef uint   NodeIndex;
 
 // Vector aliases.
-typedef DenseVector<const char *> StrVector;
-typedef DenseVector<byte>         BitVector;
-typedef DenseVector<byte>         ByteVector;
-typedef DenseVector<short>        ShortVector;
-typedef DenseVector<int>          IntVector;
-typedef DenseVector<uint>         UIntVector;
-typedef DenseVector<size_t>       SizeVector;
-typedef DenseVector<float>        FloatVector;
-typedef DenseVector<double>       DoubleVector;
-typedef DenseVector<VocabIndex>   VocabVector;
-typedef DenseVector<Count>        CountVector;
-typedef DenseVector<NgramIndex>   IndexVector;
-typedef DenseVector<Prob>         ProbVector;
-typedef DenseVector<Param>        ParamVector;
-typedef DenseVector<uint>         NodeVector;
+typedef mitlm::DenseVector<const char *> StrVector;
+typedef mitlm::DenseVector<byte>         BitVector;
+typedef mitlm::DenseVector<byte>         ByteVector;
+typedef mitlm::DenseVector<short>        ShortVector;
+typedef mitlm::DenseVector<int>          IntVector;
+typedef mitlm::DenseVector<uint>         UIntVector;
+typedef mitlm::DenseVector<size_t>       SizeVector;
+typedef mitlm::DenseVector<float>        FloatVector;
+typedef mitlm::DenseVector<double>       DoubleVector;
+typedef mitlm::DenseVector<VocabIndex>   VocabVector;
+typedef mitlm::DenseVector<Count>        CountVector;
+typedef mitlm::DenseVector<NgramIndex>   IndexVector;
+typedef mitlm::DenseVector<Prob>         ProbVector;
+typedef mitlm::DenseVector<Param>        ParamVector;
+typedef mitlm::DenseVector<uint>         NodeVector;
 
 typedef std::vector<DoubleVector> FeatureVectors;
-
 
 #endif // TYPES_H

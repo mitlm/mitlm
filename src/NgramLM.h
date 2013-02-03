@@ -47,6 +47,7 @@ using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace mitlm {
 class NgramLMBase {
     friend class PerplexityOptimizer;
 
@@ -128,5 +129,6 @@ public:
     const CountVector    &counts(size_t o) const   { return _countVectors[o]; }
     const FeatureVectors &features(size_t o) const { return _featureList[o]; }
 };
+}
 
 #endif // NGRAMLM_H

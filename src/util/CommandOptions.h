@@ -47,6 +47,8 @@ namespace __gnu_cxx {
   };
 }
 
+namespace mitlm {
+
 class CommandOptions {
 protected:
     struct CmdOption {
@@ -93,4 +95,6 @@ inline bool AsBoolean(const char *str) {
     if (str == NULL) return false;
     if (str[0] == 't' || str[0] == 'T' || str[0] == '1') return true;
     return false;
+}
+
 }

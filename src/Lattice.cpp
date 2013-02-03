@@ -43,6 +43,8 @@
 using std::vector;
 using std::tr1::unordered_map;
 
+namespace mitlm {
+
 #define MAXLINE 1024
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,11 +198,11 @@ Lattice::UpdateWeights() {
     _arcWeights = _arcBaseWeights;
     for (size_t i = 0; i < _arcProbs.length(); ++i) {
         const ArcNgramIndex &e(_arcProbs[i]);
-        _arcWeights[e.arcIndex] -= log(_lm.probs(e.order)[e.ngramIndex]);
+        _arcWeights[e.arcIndex] -= std::log(_lm.probs(e.order)[e.ngramIndex]);
     }
     for (size_t i = 0; i < _arcBows.length(); ++i) {
         const ArcNgramIndex &e(_arcBows[i]);
-        _arcWeights[e.arcIndex] -= log(_lm.bows(e.order)[e.ngramIndex]);
+        _arcWeights[e.arcIndex] -= std::log(_lm.bows(e.order)[e.ngramIndex]);
     }
 }
 
@@ -344,7 +346,7 @@ Lattice::ComputePosteriorProbs(const FloatVector &forwardScores,
 
     arcProbs.reset(_arcEnds.length());
     for (uint i = 0; i < _arcEnds.length(); ++i) {
-        arcProbs[i] = exp(forwardScores[_arcStarts[i]] - _arcWeights[i]
+        arcProbs[i] = std::exp(forwardScores[_arcStarts[i]] - _arcWeights[i]
                           + backwardScores[_arcEnds[i]] - totScore);
     }
 }
@@ -406,7 +408,7 @@ Lattice::EstimateArcPosition(const FloatVector &forwardScores,
     for (uint i = 0; i < nodePositions.length(); ++i) {
         float avgForwardSteps  = forwardSteps[i] - forwardScores[i];
         float avgBackwardSteps = backwardSteps[i] - backwardScores[i];
-        nodePositions[i] = exp(avgForwardSteps -
+        nodePositions[i] = std::exp(avgForwardSteps -
             logAdd(avgForwardSteps, avgBackwardSteps));
     }
 }
@@ -843,4 +845,6 @@ Lattice::_IsOracleBestPath(const ArcScoreVector &bestArcs) const {
         bestArc = bestArcs[_arcEnds[bestArc]].arc;
     }
     return true;
+}
+
 }

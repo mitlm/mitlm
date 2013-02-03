@@ -35,6 +35,8 @@
 #include "util/Logger.h"
 #include "WordErrorRateOptimizer.h"
 
+namespace mitlm {
+
 #define MAXLINE 4096
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,4 +275,6 @@ WordErrorRateOptimizer::OptimizeWER(ParamVector &params,
         Logger::Log(1, "%f ", params[i]);
     Logger::Log(1, "]\n");
     return minWER;
+}
+
 }

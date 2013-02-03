@@ -37,6 +37,8 @@
 
 #include <ext/hash_map>
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class _RefCounter
@@ -63,5 +65,7 @@ private:
 };
 
 extern _RefCounter RefCounter;
+
+}
 
 #endif // REFCOUNTER_H

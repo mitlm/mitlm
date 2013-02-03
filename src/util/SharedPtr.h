@@ -37,6 +37,8 @@
 
 #include "RefCounter.h"
 
+namespace mitlm {
+
 template <typename T>
 class SharedPtr {
 protected:
@@ -69,5 +71,7 @@ public:
     operator const T *() const  { return _p; }
     operator bool() const       { return _p == NULL; }
 };
+
+}
 
 #endif // SHAREDPTR_H

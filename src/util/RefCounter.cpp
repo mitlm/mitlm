@@ -35,6 +35,8 @@
 #include "Logger.h"
 #include "RefCounter.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 _RefCounter RefCounter;
@@ -49,3 +51,4 @@ _RefCounter::~_RefCounter() {
     }
 }
 
+}

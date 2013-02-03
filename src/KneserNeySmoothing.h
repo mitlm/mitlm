@@ -42,6 +42,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+namespace mitlm {
+
 class KneserNeySmoothing : public Smoothing {
 protected:
     NgramLM     *_pLM;
@@ -70,5 +72,7 @@ protected:
     void _EstimateWeightedMasked(const NgramLMMask *pMask,
                                  ProbVector &probs, ProbVector &bows);
 };
+
+}
 
 #endif // KNESERNEYSMOOTHING_H

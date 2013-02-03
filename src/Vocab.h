@@ -40,6 +40,8 @@
 #include "util/ZFile.h"
 #include "Types.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct OffsetLen {
@@ -95,5 +97,7 @@ protected:
     VocabIndex *_FindIndex(const char *word, size_t len);
     void        _Reindex(size_t indexSize);
 };
+
+}
 
 #endif // VOCAB_H

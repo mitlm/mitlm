@@ -38,6 +38,8 @@
 #include "Types.h"
 #include "Mask.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Forward declaration.
@@ -65,5 +67,6 @@ public:
     static Smoothing *Create(const char *smoothing);
 };
 
+}
 
 #endif // SMOOTHING_H

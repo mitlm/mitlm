@@ -35,6 +35,8 @@
 #include "MaxLikelihoodSmoothing.h"
 #include "KneserNeySmoothing.h"
 
+namespace mitlm {
+
 Smoothing *
 Smoothing::Create(const char *smoothing) {
     if (strcmp(smoothing, "FixKN") == 0) {
@@ -57,4 +59,6 @@ Smoothing::Create(const char *smoothing) {
         return new MaxLikelihoodSmoothing();
     } else
         return NULL;
+}
+
 }
