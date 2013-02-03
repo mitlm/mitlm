@@ -44,6 +44,8 @@
 #include <vector>
 #include "Logger.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Use date as version ID.
@@ -241,6 +243,8 @@ inline void VerifyHeader(FILE *inFile, const char *header) {
     if (fread(buf, len, 1, inFile) != 1 || strncmp(buf, header, len) != 0)
         throw std::runtime_error("Invalid file format.");
     ReadAlignPad(inFile, len);
+}
+
 }
 
 #endif // FASTIO_H

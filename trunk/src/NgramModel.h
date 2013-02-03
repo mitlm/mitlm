@@ -43,6 +43,8 @@
 
 using std::vector;
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 // NgramModel represents a full n-gram model, consisting of a NgramVector for
 // each order of the model.  The model consists of a vocab mapping words to
@@ -125,5 +127,7 @@ protected:
     void       _LoadTopicProbs2(vector<DoubleVector> &topicProbVectors,
                                 ZFile &hmmldaFile, size_t maxSize) const;
 };
+
+}
 
 #endif // NGRAMMODEL_H

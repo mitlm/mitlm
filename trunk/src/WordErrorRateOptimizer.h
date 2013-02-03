@@ -44,6 +44,8 @@
 
 using std::vector;
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class WordErrorRateOptimizer {
@@ -90,5 +92,7 @@ public:
     double OptimizeWER(ParamVector &params,
                        Optimization technique=PowellOptimization);
 };
+
+}
 
 #endif // WORDERRORRATEOPTIMIZER_H

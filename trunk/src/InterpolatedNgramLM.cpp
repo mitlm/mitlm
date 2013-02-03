@@ -37,6 +37,8 @@
 #include "NgramLM.h"
 #include "InterpolatedNgramLM.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void
@@ -279,7 +281,7 @@ InterpolatedNgramLM::_EstimateProbs(const ParamVector &params) {
             // weights = exp(weights);
             // totWeights += weights;
             for (size_t i = 0; i < weights.length(); ++i) {
-                weights[i] = exp(weights[i]);
+                weights[i] = std::exp(weights[i]);
                 totWeights[i] += weights[i];
             }
 
@@ -369,7 +371,7 @@ InterpolatedNgramLM::_EstimateProbsMasked(const ParamVector &params,
             //totWeights.mask(pMask->WeightMaskVectors[o - 1]) += weights;
             for (size_t i = 0; i < weights.length(); ++i) {
                 if (pMask->WeightMaskVectors[o-1][i]) {
-                    weights[i] = exp(weights[i]);
+                    weights[i] = std::exp(weights[i]);
                     totWeights[i] += weights[i];
                 }
             }
@@ -419,4 +421,6 @@ InterpolatedNgramLM::_EstimateBowsMasked(InterpolatedNgramLMMask *pMask) {
             if (pMask->BowMaskVectors[o-1][i])
                 bows[i] = (1 - numerator[i]) / (1 - denominator[i]);
     }
+}
+
 }

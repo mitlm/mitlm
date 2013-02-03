@@ -38,6 +38,8 @@
 #include <vector>
 #include "../Types.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 // Implementation of Powell's Method modified from Numerical Recipes in C.
 
@@ -283,6 +285,8 @@ Bracket(Function1D &func, double &xa, double &xb, double &xc,
         xa = xb;  xb = xc;  xc = w;
         fa = fb;  fb = fc;  fc = fw;
     }
+}
+
 }
 
 #endif // POWELL_H

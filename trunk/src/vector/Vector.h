@@ -38,6 +38,8 @@
 #include "Traits.h"
 #include "Scalar.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename A>
@@ -67,5 +69,7 @@ struct TypeInfo<Vector<I> > {
     typedef typename TypeInfo<I>::Impl        Impl;
     typedef typename TypeInfo<I>::ElementType ElementType;
 };
+
+}
 
 #endif // VECTOR_H

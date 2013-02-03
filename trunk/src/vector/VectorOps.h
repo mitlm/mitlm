@@ -40,6 +40,8 @@
 #include "VectorClosures.h"
 #include <limits>
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 // Boolean Operations
 
@@ -351,6 +353,8 @@ void MaskAssign(const Vector<M> &mask, const Vector<I> &input,
     typename M::ConstIterator pMEnd = mask.impl().end();
     for (size_t i = 0; pM != pMEnd; ++pM, ++i)
         if (*pM) output.impl()[i] = input.impl()[i];
+}
+
 }
 
 #endif // VECTOROPS_H

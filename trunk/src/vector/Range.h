@@ -37,6 +37,8 @@
 
 #include <cassert>
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class Range {
@@ -56,5 +58,7 @@ public:
 private:
     size_t _beginIndex, _endIndex;
 };
+
+}
 
 #endif // RANGE_H

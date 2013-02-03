@@ -38,6 +38,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace mitlm {
+
 void
 PerplexityOptimizer::LoadCorpus(ZFile &corpusFile) {
     //const CountVector &counts(_lm.counts(1));
@@ -76,7 +78,7 @@ PerplexityOptimizer::ComputeEntropy(const ParamVector &params) {
                 if (probs[i] == 0)
                     _numZeroProbs++;
                 else
-                    _totLogProb += log(probs[i]) * counts[i];
+                    _totLogProb += std::log(probs[i]) * counts[i];
             }
         }
     }
@@ -91,16 +93,16 @@ PerplexityOptimizer::ComputeEntropy(const ParamVector &params) {
                 assert(bows[i] != 0);
                 if (bows[i] == 0)
                     Logger::Warn(1, "Invalid BOW %lu %lu %i\n", o,i,counts[i]);
-                _totLogProb += log(bows[i]) * counts[i];
+                _totLogProb += std::log(bows[i]) * counts[i];
             }
         }
     }
 
     double entropy = -_totLogProb / (_numWords - _numZeroProbs);
     if (Logger::GetVerbosity() > 2)
-        std::cout << exp(entropy) << "\t" << params << std::endl;
+        std::cout << std::exp(entropy) << "\t" << params << std::endl;
     else
-        Logger::Log(2, "%f\n", exp(entropy));
+        Logger::Log(2, "%f\n", std::exp(entropy));
     return std::isnan(entropy) ? 7 : entropy;
 }
 
@@ -129,7 +131,7 @@ PerplexityOptimizer::Optimize(ParamVector &params, Optimization technique) {
     Logger::Log(1, "Iterations    = %i\n", numIter);
     Logger::Log(1, "Elapsed Time  = %f\n",
                 (double)(endTime - startTime) / CLOCKS_PER_SEC);
-    Logger::Log(1, "Perplexity    = %f\n", exp(minEntropy));
+    Logger::Log(1, "Perplexity    = %f\n", std::exp(minEntropy));
     Logger::Log(1, "Num OOVs      = %lu\n", _numOOV);
     Logger::Log(1, "Num ZeroProbs = %lu\n", _numZeroProbs);
     Logger::Log(1, "Func Evals    = %lu\n", _numCalls);
@@ -138,4 +140,6 @@ PerplexityOptimizer::Optimize(ParamVector &params, Optimization technique) {
         Logger::Log(1, "%f ", params[i]);
     Logger::Log(1, "]\n");
     return minEntropy;
+}
+
 }

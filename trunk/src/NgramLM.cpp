@@ -46,6 +46,7 @@ using std::vector;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace mitlm {
 
 NgramLMBase::NgramLMBase(size_t order)
     : _pModel(new NgramModel(order)), _order(order),
@@ -372,3 +373,4 @@ NgramLM::SetModel(const SharedPtr<NgramModel> &m,
     SetSmoothingAlgs(_smoothings);
 }
 
+}

@@ -38,6 +38,8 @@
 #include "Types.h"
 #include "NgramVector.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct NgramIndexCompare {
@@ -231,4 +233,6 @@ NgramVector::_Reindex(size_t indexSize) {
             pos = (pos + ++skip) & _hashMask;
         _indices[pos] = i;
     }
+}
+
 }

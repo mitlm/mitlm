@@ -44,6 +44,7 @@
 
 using std::vector;
 
+namespace mitlm {
 ////////////////////////////////////////////////////////////////////////////////
 
 enum Interpolation {
@@ -91,5 +92,7 @@ private:
                               InterpolatedNgramLMMask *pMask);
     void _EstimateBowsMasked(InterpolatedNgramLMMask *pMask);
 };
+
+}
 
 #endif // INTERPOLATEDNGRAMLM_H

@@ -41,6 +41,8 @@
 
 using std::vector;
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct Mask {
@@ -70,5 +72,6 @@ struct InterpolatedNgramLMMask : public Mask {
     vector<SharedPtr<Mask> >  LMMasks;
 };
 
+}
 
 #endif // FILTER_H

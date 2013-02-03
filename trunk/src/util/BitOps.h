@@ -35,6 +35,8 @@
 #ifndef BITOPS_H
 #define BITOPS_H
 
+namespace mitlm {
+
 ///////////////////////////////////////////////////////////////////////////////
 
 // Find the last (most-significant) bit set.
@@ -92,5 +94,7 @@ static __inline__ bool isPowerOf2(unsigned long x)
 // Returns the smallest power of 2 larger than x.
 static __inline__ unsigned long nextPowerOf2(unsigned long x)
 { return 1UL << find_last_bit_set(x); }
+
+}
 
 #endif // BITOPS_H

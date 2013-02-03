@@ -74,7 +74,7 @@ const char *footerDesc =
 
 int main(int argc, char* argv[]) {
     // Parse command line options.
-    CommandOptions opts(headerDesc, footerDesc);
+    mitlm::CommandOptions opts(headerDesc, footerDesc);
     opts.AddOption("h,help", "Print this message.");
     opts.AddOption("verbose", "Set verbosity level.", "1", "int");
     opts.AddOption("o,order", "Set the n-gram order of the estimated LM.", "3", "int");
@@ -96,92 +96,92 @@ int main(int argc, char* argv[]) {
 
     // Process basic command line arguments.
     size_t order = atoi(opts["order"]);
-    bool writeBinary = AsBoolean(opts["write-binary"]);
-    Logger::SetVerbosity(atoi(opts["verbose"]));
+    bool writeBinary = mitlm::AsBoolean(opts["write-binary"]);
+    mitlm::Logger::SetVerbosity(atoi(opts["verbose"]));
     if (!opts["lm"]) {
-        Logger::Error(0, "Language model must be specified using -lm.");
+        mitlm::Logger::Error(0, "Language model must be specified using -lm.");
         exit(1);
     }
 
     // Load language model.
-    ArpaNgramLM lm(order);
+    mitlm::ArpaNgramLM lm(order);
     if (opts["vocab"]) {
-        Logger::Log(1, "Loading vocab %s...\n", opts["vocab"]);
-        ZFile vocabZFile(opts["vocab"]);
+        mitlm::Logger::Log(1, "Loading vocab %s...\n", opts["vocab"]);
+	mitlm::ZFile vocabZFile(opts["vocab"]);
         lm.LoadVocab(vocabZFile);
     }
-    Logger::Log(1, "Loading LM %s...\n", opts["lm"]);
-    ZFile lmZFile(opts["lm"], "r");
+    mitlm::Logger::Log(1, "Loading LM %s...\n", opts["lm"]);
+    mitlm::ZFile lmZFile(opts["lm"], "r");
     lm.LoadLM(lmZFile);
 
     // Compile lattices.
     if (opts["compile-lattices"]) {
-        Logger::Log(0, "Compiling lattices %s:\n", opts["compile-lattices"]);
-        ZFile latticesZFile(opts["compile-lattices"]);
-        WordErrorRateOptimizer eval(lm, order);
+        mitlm::Logger::Log(0, "Compiling lattices %s:\n", opts["compile-lattices"]);
+        mitlm::ZFile latticesZFile(opts["compile-lattices"]);
+	mitlm::WordErrorRateOptimizer eval(lm, order);
         eval.LoadLattices(latticesZFile);
         string outFile(opts["compile-lattices"]);
         outFile += ".bin";
-        ZFile outZFile(outFile.c_str(), "w");
+        mitlm::ZFile outZFile(outFile.c_str(), "w");
         eval.SaveLattices(outZFile);
     }
 
     // Evaluate LM.
     ParamVector params(lm.defParams());
     if (opts["eval-perp"]) {
-        Logger::Log(0, "Perplexity Evaluations:\n");
+        mitlm::Logger::Log(0, "Perplexity Evaluations:\n");
         vector<string> evalFiles;
-        trim_split(evalFiles, opts["eval-perp"], ',');
+        mitlm::trim_split(evalFiles, opts["eval-perp"], ',');
         for (size_t i = 0; i < evalFiles.size(); i++) {
-            Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
-            ZFile evalZFile(evalFiles[i].c_str());
-            PerplexityOptimizer eval(lm, order);
+            mitlm::Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
+            mitlm::ZFile evalZFile(evalFiles[i].c_str());
+	    mitlm::PerplexityOptimizer eval(lm, order);
             eval.LoadCorpus(evalZFile);
 
-            Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
+            mitlm::Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                         eval.ComputePerplexity(params));
         }
     }
     if (opts["eval-margin"]) {
-        Logger::Log(0, "Margin Evaluations:\n");
+        mitlm::Logger::Log(0, "Margin Evaluations:\n");
         vector<string> evalFiles;
-        trim_split(evalFiles, opts["eval-margin"], ',');
+        mitlm::trim_split(evalFiles, opts["eval-margin"], ',');
         for (size_t i = 0; i < evalFiles.size(); i++) {
-            Logger::Log(1, "Loading eval lattices %s...\n", 
+            mitlm::Logger::Log(1, "Loading eval lattices %s...\n",
                         evalFiles[i].c_str());
-            ZFile evalZFile(evalFiles[i].c_str());
-            WordErrorRateOptimizer eval(lm, order);
+            mitlm::ZFile evalZFile(evalFiles[i].c_str());
+	    mitlm::WordErrorRateOptimizer eval(lm, order);
             eval.LoadLattices(evalZFile);
 
-            Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
+            mitlm::Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                         eval.ComputeMargin(params));
         }
     }
     if (opts["eval-wer"]) {
-        Logger::Log(0, "WER Evaluations:\n");
+        mitlm::Logger::Log(0, "WER Evaluations:\n");
         vector<string> evalFiles;
-        trim_split(evalFiles, opts["eval-wer"], ',');
+        mitlm::trim_split(evalFiles, opts["eval-wer"], ',');
         for (size_t i = 0; i < evalFiles.size(); i++) {
-            Logger::Log(1, "Loading eval lattices %s...\n", 
+            mitlm::Logger::Log(1, "Loading eval lattices %s...\n",
                         evalFiles[i].c_str());
-            ZFile evalZFile(evalFiles[i].c_str());
-            WordErrorRateOptimizer eval(lm, order);
+            mitlm::ZFile evalZFile(evalFiles[i].c_str());
+	    mitlm::WordErrorRateOptimizer eval(lm, order);
             eval.LoadLattices(evalZFile);
 
-            Logger::Log(0, "\t%s\t%.2f%%\n", evalFiles[i].c_str(),
+            mitlm::Logger::Log(0, "\t%s\t%.2f%%\n", evalFiles[i].c_str(),
                         eval.ComputeWER(params));
         }
     }
 
     // Save results.
     if (opts["write-vocab"]) {
-        Logger::Log(1, "Saving vocabulary to %s...\n", opts["write-vocab"]);
-        ZFile vocabZFile(opts["write-vocab"], "w");
+        mitlm::Logger::Log(1, "Saving vocabulary to %s...\n", opts["write-vocab"]);
+        mitlm::ZFile vocabZFile(opts["write-vocab"], "w");
         lm.SaveVocab(vocabZFile);
     }
     if (opts["write-lm"]) {
-        Logger::Log(1, "Saving LM to %s...\n", opts["write-lm"]);
-        ZFile lmZFile(opts["write-lm"], "w");
+        mitlm::Logger::Log(1, "Saving LM to %s...\n", opts["write-lm"]);
+        mitlm::ZFile lmZFile(opts["write-lm"], "w");
         lm.SaveLM(lmZFile, writeBinary);
     }
 

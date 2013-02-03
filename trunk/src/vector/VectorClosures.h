@@ -40,6 +40,8 @@
 #include "Vector.h"
 #include "Traits.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename V, typename I>
@@ -274,5 +276,6 @@ private:
     typename Ref<typename M::Impl>::Type _m;
 };
 
+}
 
 #endif // VECTORCLOSURES_H

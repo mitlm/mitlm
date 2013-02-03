@@ -43,6 +43,8 @@
 
 using std::vector;
 
+namespace mitlm {
+
 #define MAXLINE 4096
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,7 +301,7 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
             char *p = &line[0];
 
             // Read log probability.
-            Prob prob = (Prob)pow(10.0, strtod(p, &p)); p++;
+            Prob prob = (Prob)std::pow(10.0, strtod(p, &p)); p++;
 
             // Read i words.
             NgramIndex index  = 0;
@@ -321,9 +323,9 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
             // Set probability and backoff weight.
             if (index == Vocab::EndOfSentence && o == 1) {
                 if (strcmp(token, "<s>") == 0) {
-                    assert(prob <= pow(10, -99));
+                    assert(prob <= std::pow(10, -99));
                     bows[index] = (p >= &line[lineLen]) ?
-                        (Prob)1 : (Prob)pow(10.0, strtod(p, &p));
+                        (Prob)1 : (Prob)std::pow(10.0, strtod(p, &p));
                 } else {
                     probs[index] = prob;
                     assert(p >= &line[lineLen]);
@@ -333,7 +335,7 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
                 if (hasBow) {
                     // Read optional backoff weight.
                     bows[index] = (p >= &line[lineLen]) ?
-                        (Prob)1 : (Prob)pow(10.0, strtod(p, &p));
+                        (Prob)1 : (Prob)std::pow(10.0, strtod(p, &p));
                 }
             }
         }
@@ -621,10 +623,10 @@ NgramModel::LoadComputedFeatures(vector<DoubleVector> &featureVectors,
     while (func != NULL) {
         if (strcmp(func, "log") == 0)
             for (size_t o = 0; o < featureVectors.size(); ++o)
-                featureVectors[o] = log(featureVectors[o] + 1e-99);
+                featureVectors[o] = mitlm::log(featureVectors[o] + 1e-99);
         else if (strcmp(func, "log1p") == 0)
             for (size_t o = 0; o < featureVectors.size(); ++o)
-                featureVectors[o] = log(featureVectors[o] + 1);
+                featureVectors[o] = mitlm::log(featureVectors[o] + 1);
         else if (strcmp(func, "pow2") == 0)
             for (size_t o = 0; o < featureVectors.size(); ++o)
                 featureVectors[o] *= featureVectors[o];
@@ -639,7 +641,7 @@ NgramModel::LoadComputedFeatures(vector<DoubleVector> &featureVectors,
                 featureVectors[o] = 0;
                 BinWeight(_vectors[o + 1].hists(), featureVectors[o + 1],
                           featureVectors[o]);
-                //featureVectors[o] = log(featureVectors[o] + 1e-99);
+                //featureVectors[o] = std::log(featureVectors[o] + 1e-99);
             }
             featureVectors.resize(maxOrder);
         } else if (strcmp(func, "norm") == 0)
@@ -953,7 +955,7 @@ NgramModel::_LoadEntropy(vector<DoubleVector> &entropyVectors,
                     int c = countVectors[o][i];
                     if (c > 0) {
                         totCountVectors[o][i] += c;
-                        entropyVectors[o][i] += c * log(c);
+                        entropyVectors[o][i] += c * std::log(c);
                         countVectors[o][i] = 0;
                     }
                 }
@@ -999,12 +1001,12 @@ NgramModel::_LoadEntropy(vector<DoubleVector> &entropyVectors,
     }
 
     // Finalize entropy computation.
-    double invLogNumDocs = 1.0 / log((double)numDocs);
+    double invLogNumDocs = 1.0 / std::log((double)numDocs);
     for (size_t o = 1; o < maxSize; o++)
         entropyVectors[o] = CondExpr(
             totCountVectors[o] == 0, 0.0,
             ((entropyVectors[o] / -totCountVectors[o])
-             + log(asDouble(totCountVectors[o]))) * invLogNumDocs);
+             + mitlm::log(asDouble(totCountVectors[o]))) * invLogNumDocs);
 }
 
 void 
@@ -1127,4 +1129,6 @@ NgramModel::_LoadTopicProbs2(vector<DoubleVector> &topicProbVectors,
                 topicProbVectors[o][i] /= countVectors[o][i];
         }
     }    
+}
+
 }

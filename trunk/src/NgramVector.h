@@ -37,6 +37,8 @@
 
 #include "Types.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 // NgramVector represents the n-gram structure within a particular order of the
 // n-gram trie.  For each n-gram, it stores the index of the history n-gram in
@@ -80,5 +82,7 @@ protected:
     NgramIndex *_FindIndex(NgramIndex hist, VocabIndex word);
     void        _Reindex(size_t indexSize);
 };
+
+}
 
 #endif // NGRAMVECTOR_H

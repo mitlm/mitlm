@@ -37,6 +37,8 @@
 
 #include "Traits.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
@@ -76,5 +78,6 @@ struct Ref<Scalar<T> > {
     typedef Scalar<T> Type;
 };
 
+}
 
 #endif // SCALAR_H

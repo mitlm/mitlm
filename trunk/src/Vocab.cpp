@@ -39,6 +39,8 @@
 #include "util/FastIO.h"
 #include "Vocab.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct VocabIndexCompare
@@ -256,4 +258,6 @@ Vocab::_Reindex(size_t indexSize) {
             pos = (pos + ++skip) & _hashMask;
         _indices[pos] = i;
     }
+}
+
 }

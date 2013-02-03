@@ -77,7 +77,7 @@ const char *footerDesc =
 
 int main(int argc, char* argv[]) {
     // Parse command line options.
-    CommandOptions opts(headerDesc, footerDesc);
+    mitlm::CommandOptions opts(headerDesc, footerDesc);
     opts.AddOption("h,help", "Print this message.");
     opts.AddOption("verbose", "Set verbosity level.", "1", "int");
     opts.AddOption("o,order", "Set the n-gram order of the estimated LM.", "3", "int");
@@ -113,15 +113,15 @@ int main(int argc, char* argv[]) {
 
     // Process basic command line arguments.
     size_t order = atoi(opts["order"]);
-    bool writeBinary = AsBoolean(opts["write-binary"]);
-    Logger::SetVerbosity(atoi(opts["verbose"]));
+    bool writeBinary = mitlm::AsBoolean(opts["write-binary"]);
+    mitlm::Logger::SetVerbosity(atoi(opts["verbose"]));
 
     // Read language models.
-    vector<SharedPtr<NgramLMBase> > lms;
+    vector<mitlm::SharedPtr<mitlm::NgramLMBase> > lms;
     vector<string> corpusFiles;
     if (opts["text"] || opts["counts"]) {
         if (opts["text"] && opts["counts"]) {
-            Logger::Error(1, "Cannot specify both -text and -counts.\n");
+            mitlm::Logger::Error(1, "Cannot specify both -text and -counts.\n");
             exit(1);
         }
 
@@ -129,91 +129,91 @@ int main(int argc, char* argv[]) {
         vector<string> features;
         bool           fromText = opts["text"];
         if (fromText)
-            trim_split(corpusFiles, opts["text"], ',');
+            mitlm::trim_split(corpusFiles, opts["text"], ',');
         else
-            trim_split(corpusFiles, opts["counts"], ',');
-        trim_split(smoothings, opts["smoothing"], ';');
-        trim_split(features, opts["weight-features"], ';');
+            mitlm::trim_split(corpusFiles, opts["counts"], ',');
+        mitlm::trim_split(smoothings, opts["smoothing"], ';');
+        mitlm::trim_split(features, opts["weight-features"], ';');
 
         if ((smoothings.size() != 1 && smoothings.size() != corpusFiles.size()) ||
             (features.size() > 1 && features.size() != corpusFiles.size())) {
-            Logger::Error(1, "Inconsistent number of LM components.\n");
+            mitlm::Logger::Error(1, "Inconsistent number of LM components.\n");
             exit(1);
         }
 
         for (size_t i = 0; i < corpusFiles.size(); i++) {
-            NgramLM *pLM = new NgramLM(order);
-            pLM->Initialize(opts["vocab"], AsBoolean(opts["unk"]), 
+            mitlm::NgramLM *pLM = new mitlm::NgramLM(order);
+            pLM->Initialize(opts["vocab"], mitlm::AsBoolean(opts["unk"]),
                             fromText ? corpusFiles[i].c_str() : NULL, 
                             fromText ? NULL : corpusFiles[i].c_str(), 
-                            GetItem(smoothings, i), GetItem(features, i));
-            lms.push_back((SharedPtr<NgramLMBase>)pLM);
+                            mitlm::GetItem(smoothings, i), mitlm::GetItem(features, i));
+            lms.push_back((mitlm::SharedPtr<mitlm::NgramLMBase>)pLM);
         }
     }
 
     // Read component language model input files.
     if (opts["lm"]) {
         vector<string> lmFiles;
-        trim_split(lmFiles, opts["lm"], ',');
+        mitlm::trim_split(lmFiles, opts["lm"], ',');
         for (size_t l = 0; l < lmFiles.size(); l++) {
-            Logger::Log(1, "Loading component LM %s...\n", lmFiles[l].c_str());
-            ArpaNgramLM *pLM = new ArpaNgramLM(order);
+            mitlm::Logger::Log(1, "Loading component LM %s...\n", lmFiles[l].c_str());
+            mitlm::ArpaNgramLM *pLM = new mitlm::ArpaNgramLM(order);
             if (opts["vocab"]) {
-                ZFile vocabZFile(opts["vocab"]);
+                mitlm::ZFile vocabZFile(opts["vocab"]);
                 pLM->LoadVocab(vocabZFile);
-                if (AsBoolean(opts["unk"])) {
-                    Logger::Error(1, "-unk with -lm is not implemented yet.\n");
+                if (mitlm::AsBoolean(opts["unk"])) {
+                    mitlm::Logger::Error(1, "-unk with -lm is not implemented yet.\n");
                     exit(1);
                 }
             }
-            ZFile lmZFile(lmFiles[l].c_str(), "r");
+            mitlm::ZFile lmZFile(lmFiles[l].c_str(), "r");
             pLM->LoadLM(lmZFile);
-            lms.push_back((SharedPtr<NgramLMBase>)pLM);
+            lms.push_back((mitlm::SharedPtr<mitlm::NgramLMBase>)pLM);
             corpusFiles.push_back(lmFiles[l]);
         }
     }
 
     // Interpolate language models.
-    Logger::Log(1, "Interpolating component LMs...\n");
-    if (AsBoolean(opts["tie-param-order"]))
-        Logger::Log(1, "Tying parameters across n-gram order...\n");
-    if (AsBoolean(opts["tie-param-lm"]))
-        Logger::Log(1, "Tying parameters across LM components...\n");
-    InterpolatedNgramLM ilm(order, AsBoolean(opts["tie-param-order"]), 
-                            AsBoolean(opts["tie-param-lm"]));
+    mitlm::Logger::Log(1, "Interpolating component LMs...\n");
+    if (mitlm::AsBoolean(opts["tie-param-order"]))
+        mitlm::Logger::Log(1, "Tying parameters across n-gram order...\n");
+    if (mitlm::AsBoolean(opts["tie-param-lm"]))
+        mitlm::Logger::Log(1, "Tying parameters across LM components...\n");
+    mitlm::InterpolatedNgramLM ilm(order, mitlm::AsBoolean(opts["tie-param-order"]),
+                            mitlm::AsBoolean(opts["tie-param-lm"]));
     ilm.LoadLMs(lms);
     
     // Process features.
     vector<vector<string> > lmFeatures;
     if (opts["interpolation-features"]) {
         vector<string> features;
-        trim_split(features, opts["interpolation-features"], ';');
+        mitlm::trim_split(features, opts["interpolation-features"], ';');
         if (features.size() != 1 && features.size() != lms.size()) {
-            Logger::Error(1, "# components specified in -interpolation-features"
+            mitlm::Logger::Error(1, "# components specified in -interpolation-features"
                           " does not match number of LMs.\n");
             exit(1);
         }
         lmFeatures.resize(features.size());
         for (size_t l = 0; l < features.size(); ++l)
-            trim_split(lmFeatures[l], features[l].c_str(), ',');
+            mitlm::trim_split(lmFeatures[l], features[l].c_str(), ',');
     }
 
     // Process interpolation.
     const char *interpolation = opts["interpolation"];
-    Logger::Log(1, "Interpolation Method = %s\n", interpolation);
+    mitlm::Logger::Log(1, "Interpolation Method = %s\n", interpolation);
     if (strcmp(interpolation, "LI") == 0) {
         // Verify no features are specified.
         if (lmFeatures.size() > 0) {
-            Logger::Error(1, "Linear interpolation uses no features.\n");
+            mitlm::Logger::Error(1, "Linear interpolation uses no features.\n");
             exit(1);
         }
     } else {
-        Interpolation mode;
+        mitlm::Interpolation mode;
         if (strcmp(interpolation, "CM") == 0) {
             if (lmFeatures.size() > 0) {
                 for (size_t l = 0; l < lmFeatures.size(); ++l) {
                     if (lmFeatures[l].size() > 1) {
-                        Logger::Error(1, "Too many features specified.\n");
+                        mitlm::Logger::Error(1, "Too many features specified.\n");
                         exit(1);
                     }
                 }
@@ -222,11 +222,11 @@ int main(int argc, char* argv[]) {
                 lmFeatures.resize(1);
                 lmFeatures[0].push_back("log:sumhist:%s.effcounts");
             }
-            mode = CountMerging;
+            mode = mitlm::CountMerging;
         } else if (strcmp(interpolation, "GLI") == 0) {
-            mode = GeneralizedLinearInterpolation;
+            mode = mitlm::GeneralizedLinearInterpolation;
         } else {
-            Logger::Error(1, "Unsupported interpolation mode %s.\n", 
+            mitlm::Logger::Error(1, "Unsupported interpolation mode %s.\n",
                           interpolation);
             exit(1);
         }
@@ -239,8 +239,8 @@ int main(int argc, char* argv[]) {
             for (size_t f = 0; f < features.size(); ++f) {
                 char feature[1024];
                 sprintf(feature, features[f].c_str(), 
-                        GetBasename(corpusFiles[l]).c_str());
-                Logger::Log(1, "Loading feature for %s from %s...\n",
+                        mitlm::GetBasename(corpusFiles[l]).c_str());
+                mitlm::Logger::Log(1, "Loading feature for %s from %s...\n",
                             corpusFiles[l].c_str(), feature);
                 ilm.model().LoadComputedFeatures(
                     featureList[l][f], feature, order);
@@ -252,135 +252,135 @@ int main(int argc, char* argv[]) {
     // Estimate LM.
     ParamVector params(ilm.defParams());
     if (opts["params"]) {
-        Logger::Log(1, "Loading parameters from %s...\n", opts["params"]);
-        ZFile f(opts["params"], "r");
+        mitlm::Logger::Log(1, "Loading parameters from %s...\n", opts["params"]);
+        mitlm::ZFile f(opts["params"], "r");
         VerifyHeader(f, "Param");
         ReadVector(f, params);
         if (params.length() != ilm.defParams().length()) {
-            Logger::Error(1, "Number of parameters mismatched.\n");
+            mitlm::Logger::Error(1, "Number of parameters mismatched.\n");
             exit(1);
         }
     }
 
-    Optimization optAlg = ToOptimization(opts["opt-alg"]);
-    if (optAlg == UnknownOptimization) {
-        Logger::Error(1, "Unknown optimization algorithms '%s'.\n",
+    mitlm::Optimization optAlg = mitlm::ToOptimization(opts["opt-alg"]);
+    if (optAlg == mitlm::UnknownOptimization) {
+        mitlm::Logger::Error(1, "Unknown optimization algorithms '%s'.\n",
                       opts["opt-alg"]);
         exit(1);
     }
         
     if (opts["opt-perp"]) {
         if (params.length() == 0) {
-            Logger::Warn(1, "No parameters to optimize.\n");
+            mitlm::Logger::Warn(1, "No parameters to optimize.\n");
         } else {
-            Logger::Log(1, "Loading development set %s...\n", opts["opt-perp"]);
-            ZFile devZFile(opts["opt-perp"]);
-            PerplexityOptimizer dev(ilm, order);
+            mitlm::Logger::Log(1, "Loading development set %s...\n", opts["opt-perp"]);
+            mitlm::ZFile devZFile(opts["opt-perp"]);
+            mitlm::PerplexityOptimizer dev(ilm, order);
             dev.LoadCorpus(devZFile);
 
-            Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
+            mitlm::Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optEntropy = dev.Optimize(params, optAlg);
-            Logger::Log(2, " Best perplexity = %f\n", exp(optEntropy));
+            mitlm::Logger::Log(2, " Best perplexity = %f\n", exp(optEntropy));
         }
     }
     if (opts["opt-margin"]) {
         if (params.length() == 0) {
-            Logger::Warn(1, "No parameters to optimize.\n");
+            mitlm::Logger::Warn(1, "No parameters to optimize.\n");
         } else {
-            Logger::Log(1, "Loading development lattices %s...\n", 
+            mitlm::Logger::Log(1, "Loading development lattices %s...\n",
                         opts["opt-margin"]);
-            ZFile devZFile(opts["opt-margin"]);
-            WordErrorRateOptimizer dev(ilm, order);
+            mitlm::ZFile devZFile(opts["opt-margin"]);
+            mitlm::WordErrorRateOptimizer dev(ilm, order);
             dev.LoadLattices(devZFile);
 
-            Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
+            mitlm::Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optMargin = dev.OptimizeMargin(params, optAlg);
-            Logger::Log(2, " Best margin = %f\n", optMargin);
+            mitlm::Logger::Log(2, " Best margin = %f\n", optMargin);
         }
     }
     if (opts["opt-wer"]) {
         if (params.length() == 0) {
-            Logger::Warn(1, "No parameters to optimize.\n");
+            mitlm::Logger::Warn(1, "No parameters to optimize.\n");
         } else {
-            Logger::Log(1, "Loading development lattices %s...\n", 
+            mitlm::Logger::Log(1, "Loading development lattices %s...\n",
                         opts["opt-wer"]);
-            ZFile devZFile(opts["opt-wer"]);
-            WordErrorRateOptimizer dev(ilm, order);
+            mitlm::ZFile devZFile(opts["opt-wer"]);
+            mitlm::WordErrorRateOptimizer dev(ilm, order);
             dev.LoadLattices(devZFile);
 
-            Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
+            mitlm::Logger::Log(1, "Optimizing %lu parameters...\n", params.length());
             double optWER = dev.OptimizeWER(params, optAlg);
-            Logger::Log(2, " Best WER = %f%%\n", optWER);
+            mitlm::Logger::Log(2, " Best WER = %f%%\n", optWER);
         }
     }
 
     // Estimate full model.
     if (opts["write-lm"] || opts["eval-perp"] || 
         opts["eval-margin"] || opts["eval-wer"]) {
-        Logger::Log(1, "Estimating full n-gram model...\n");
+        mitlm::Logger::Log(1, "Estimating full n-gram model...\n");
         ilm.Estimate(params);
     }
 
     // Save results.
     if (opts["write-params"]) {
-        Logger::Log(1, "Saving parameters to %s...\n", opts["write-params"]);
-        ZFile f(opts["write-params"], "w");
+        mitlm::Logger::Log(1, "Saving parameters to %s...\n", opts["write-params"]);
+        mitlm::ZFile f(opts["write-params"], "w");
         WriteHeader(f, "Param");
         WriteVector(f, params);
     }
     if (opts["write-vocab"]) {
-        Logger::Log(1, "Saving vocabulary to %s...\n", opts["write-vocab"]);
-        ZFile vocabZFile(opts["write-vocab"], "w");
+        mitlm::Logger::Log(1, "Saving vocabulary to %s...\n", opts["write-vocab"]);
+        mitlm::ZFile vocabZFile(opts["write-vocab"], "w");
         ilm.SaveVocab(vocabZFile);
     }
     if (opts["write-lm"]) {
-        Logger::Log(1, "Saving LM to %s...\n", opts["write-lm"]);
-        ZFile lmZFile(opts["write-lm"], "w");
+        mitlm::Logger::Log(1, "Saving LM to %s...\n", opts["write-lm"]);
+        mitlm::ZFile lmZFile(opts["write-lm"], "w");
         ilm.SaveLM(lmZFile, writeBinary);
     }
 
     // Evaluate LM.
     if (opts["eval-perp"]) {
-        Logger::Log(0, "Perplexity Evaluations:\n");
+        mitlm::Logger::Log(0, "Perplexity Evaluations:\n");
         vector<string> evalFiles;
-        trim_split(evalFiles, opts["eval-perp"], ',');
+        mitlm::trim_split(evalFiles, opts["eval-perp"], ',');
         for (size_t i = 0; i < evalFiles.size(); i++) {
-            Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
-            ZFile evalZFile(evalFiles[i].c_str());
-            PerplexityOptimizer eval(ilm, order);
+            mitlm::Logger::Log(1, "Loading eval set %s...\n", evalFiles[i].c_str());
+            mitlm::ZFile evalZFile(evalFiles[i].c_str());
+            mitlm::PerplexityOptimizer eval(ilm, order);
             eval.LoadCorpus(evalZFile);
 
-            Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
+            mitlm::Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                         eval.ComputePerplexity(params));
         }
     }
     if (opts["eval-margin"]) {
-        Logger::Log(0, "Margin Evaluations:\n");
+        mitlm::Logger::Log(0, "Margin Evaluations:\n");
         vector<string> evalFiles;
-        trim_split(evalFiles, opts["eval-margin"], ',');
+        mitlm::trim_split(evalFiles, opts["eval-margin"], ',');
         for (size_t i = 0; i < evalFiles.size(); i++) {
-            Logger::Log(1, "Loading eval lattices %s...\n", 
+            mitlm::Logger::Log(1, "Loading eval lattices %s...\n",
                         evalFiles[i].c_str());
-            ZFile evalZFile(evalFiles[i].c_str());
-            WordErrorRateOptimizer eval(ilm, order);
+            mitlm::ZFile evalZFile(evalFiles[i].c_str());
+            mitlm::WordErrorRateOptimizer eval(ilm, order);
             eval.LoadLattices(evalZFile);
 
-            Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
+            mitlm::Logger::Log(0, "\t%s\t%.3f\n", evalFiles[i].c_str(),
                         eval.ComputeMargin(params));
         }
     }
     if (opts["eval-wer"]) {
-        Logger::Log(0, "WER Evaluations:\n");
+        mitlm::Logger::Log(0, "WER Evaluations:\n");
         vector<string> evalFiles;
-        trim_split(evalFiles, opts["eval-wer"], ',');
+        mitlm::trim_split(evalFiles, opts["eval-wer"], ',');
         for (size_t i = 0; i < evalFiles.size(); i++) {
-            Logger::Log(1, "Loading eval lattices %s...\n", 
+            mitlm::Logger::Log(1, "Loading eval lattices %s...\n",
                         evalFiles[i].c_str());
-            ZFile evalZFile(evalFiles[i].c_str());
-            WordErrorRateOptimizer eval(ilm, order);
+            mitlm::ZFile evalZFile(evalFiles[i].c_str());
+            mitlm::WordErrorRateOptimizer eval(ilm, order);
             eval.LoadLattices(evalZFile);
 
-            Logger::Log(0, "\t%s\t%.2f%%\n", evalFiles[i].c_str(),
+            mitlm::Logger::Log(0, "\t%s\t%.2f%%\n", evalFiles[i].c_str(),
                         eval.ComputeWER(params));
         }
     }

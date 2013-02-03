@@ -37,6 +37,8 @@
 
 #include "../Types.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" {
@@ -77,6 +79,8 @@ MinimizeLBFGS(Function &func, DoubleVector &x, int &numIter, double step=1e-8,
         if (++numIter > maxIter) break;
     }
     return f;
+}
+
 }
 
 #endif // LBFGS_H

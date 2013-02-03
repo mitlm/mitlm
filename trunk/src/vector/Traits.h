@@ -35,6 +35,7 @@
 #ifndef TRAITS_H
 #define TRAITS_H
 
+namespace mitlm {
 template <typename A> struct Ref { typedef const A &Type; };
 template <> struct Ref<void>     { typedef void Type; };
 template <> struct Ref<short>    { typedef short Type; };
@@ -65,5 +66,7 @@ template <> struct Promotion<float,  double>  { typedef double Type; };
 template <> struct Promotion<double, float>   { typedef double Type; };
 template <> struct Promotion<long,   float>   { typedef double Type; };
 template <> struct Promotion<float,  long>    { typedef double Type; };
+
+}
 
 #endif // TRAITS_H

@@ -41,6 +41,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+namespace mitlm {
+
 class MaxLikelihoodSmoothing : public Smoothing {
     NgramLM *_pLM;
     size_t   _order;
@@ -55,5 +57,7 @@ public:
                           ProbVector &probs,
                           ProbVector &bows);
 };
+
+}
 
 #endif // MAXLIKELIHOODSMOOTHING_H

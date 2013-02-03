@@ -36,6 +36,8 @@
 #include <cstdio>
 #include "Logger.h"
 
+namespace mitlm {
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef NDEBUG
@@ -82,4 +84,6 @@ void Logger::Error(int level, const char *fmt, ...) {
         fprintf(stderr, "\e[m");
         va_end(args);
     }
+}
+
 }
