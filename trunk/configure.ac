@@ -7,9 +7,9 @@ AC_REVISION([$Revision$])
 dnl The base directory (srcdir) must contain configure.ac.
 AC_CONFIG_SRCDIR(configure.ac)
 dnl Use ./ to store scripts and files used by configure.
-AC_CONFIG_AUX_DIR(.)
+AC_CONFIG_AUX_DIR([build-aux])
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
 AM_MAINTAINER_MODE
 

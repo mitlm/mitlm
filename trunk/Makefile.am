@@ -5,7 +5,7 @@ SUBDIRS =
 EXTRA_DIST = autogen.sh
 
 
-INCLUDES = \
+AM_CPPFLAGS = \
 -I$(top_srcdir)/src
 
 # Enable building files in subdirectories.
