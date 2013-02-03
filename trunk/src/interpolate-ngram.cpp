@@ -173,6 +173,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    if(lms.size() < 1) {
+            mitlm::Logger::Error(1, "No language model loaded.\n");
+            exit(1);
+    }
+
     // Interpolate language models.
     mitlm::Logger::Log(1, "Interpolating component LMs...\n");
     if (mitlm::AsBoolean(opts["tie-param-order"]))
