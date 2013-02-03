@@ -134,9 +134,11 @@ static std::string shell_escape(const std::string &s)
 
 #if ( defined(WIN32) || defined(_WIN32) ) && !defined(__CYGWIN__)
 #  define popen_escape(s) cmd_exe_escape(s)
+#  define popen_escape2(s) cmd_exe_escape(win_argv_escape(s))
 #  define EXEC_TOKEN
 #else
 #  define popen_escape(s) shell_escape(s)
+#  define popen_escape2(s) shell_escape(s)
 #  define EXEC_TOKEN "exec "
 #endif
 
@@ -180,15 +182,15 @@ public:
         const char *mode = _mode.c_str();
         if (endsWith(_filename.c_str(), ".gz")) {
             _file = (_mode[0] == 'r') ?
-                processOpen(std::string(EXEC_TOKEN "gzip -dc ") + popen_escape(_filename), mode) :
+                processOpen(std::string(EXEC_TOKEN "gzip -dc ") + popen_escape2(_filename), mode) :
                 processOpen(std::string(EXEC_TOKEN "gzip -c > ") + popen_escape(_filename), mode);
         } else if (endsWith(_filename.c_str(), ".bz2")) {
             _file = (_mode[0] == 'r') ?
-                processOpen(std::string(EXEC_TOKEN "bzip2 -dc ") + popen_escape(_filename), mode) :
+                processOpen(std::string(EXEC_TOKEN "bzip2 -dc ") + popen_escape2(_filename), mode) :
                 processOpen(std::string(EXEC_TOKEN "bzip2 -c > ") + popen_escape(_filename), mode);
         } else if (endsWith(_filename.c_str(), ".zip")) {
             _file = (_mode[0] == 'r') ?
-                processOpen(std::string(EXEC_TOKEN "unzip -c ") + popen_escape(_filename), mode) :
+                processOpen(std::string(EXEC_TOKEN "unzip -c ") + popen_escape2(_filename), mode) :
                 processOpen(std::string(EXEC_TOKEN "zip -q > ") + popen_escape(_filename), mode);
         } else { // Assume uncompressed
             _file = fopen(_filename.c_str(), mode);
