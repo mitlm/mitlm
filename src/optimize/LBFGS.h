@@ -42,7 +42,7 @@ namespace mitlm {
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" {
-    void lbfgs_(int *n, int *m, double *x, double *f, double *g,
+    void mitlm_lbfgs_(int *n, int *m, double *x, double *f, double *g,
                 int *diagco, double *diag, int *iprint,
                 double *eps, double *xtol, double *w, int *iflag);
 }
@@ -72,7 +72,7 @@ MinimizeLBFGS(Function &func, DoubleVector &x, int &numIter, double step=1e-8,
             g[i] = (func(x) - f) / step;
             x[i] -= step;
         }
-        lbfgs_(&n, &m, x.data(), &f, g.data(), &diagco, diag.data(), iprint,
+        mitlm_lbfgs_(&n, &m, x.data(), &f, g.data(), &diagco, diag.data(), iprint,
                &eps, &xtol, w.data(), &iflag);
         if (iflag <= 0)
             break;
