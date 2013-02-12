@@ -237,7 +237,7 @@ int main(int argc, char* argv[]) {
         }
 
         // Load features.
-        vector<vector<FeatureVectors> > featureList(lms.size());
+        vector<vector<mitlm::FeatureVectors> > featureList(lms.size());
         for (size_t l = 0; l < lms.size(); ++l) {
             vector<string> &features = lmFeatures[lmFeatures.size()==1 ? 0 : l];
             featureList[l].resize(features.size());
@@ -255,7 +255,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Estimate LM.
-    ParamVector params(ilm.defParams());
+    mitlm::ParamVector params(ilm.defParams());
     if (opts["params"]) {
         mitlm::Logger::Log(1, "Loading parameters from %s...\n", opts["params"]);
         mitlm::ZFile f(opts["params"], "r");
