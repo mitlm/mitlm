@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
                   opts["smoothing"], opts["weight-features"]);
 
     // Estimate LM.
-    ParamVector params(lm.defParams());
+    mitlm::ParamVector params(lm.defParams());
     if (opts["params"]) {
         mitlm::Logger::Log(1, "Loading parameters from %s...\n", opts["params"]);
         mitlm::ZFile f(opts["params"], "r");
@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
                     opts["write-left-counts"]);
         mitlm::ZFile countZFile(opts["write-left-counts"], "w");
 
-        vector<CountVector> countVectors(order + 1);
+        vector<mitlm::CountVector> countVectors(order + 1);
         for (size_t o = 0; o < order; ++o) {
             countVectors[o].reset(lm.sizes(o), 0);
             BinCount(lm.backoffs(o+1), countVectors[o]);
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
                     opts["write-right-counts"]);
         mitlm::ZFile countZFile(opts["write-right-counts"], "w");
 
-        vector<CountVector> countVectors(order + 1);
+        vector<mitlm::CountVector> countVectors(order + 1);
         for (size_t o = 0; o < order; ++o) {
             countVectors[o].reset(lm.sizes(o), 0);
             BinCount(lm.hists(o+1), countVectors[o]);

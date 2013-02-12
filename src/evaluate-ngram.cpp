@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Evaluate LM.
-    ParamVector params(lm.defParams());
+    mitlm::ParamVector params(lm.defParams());
     if (opts["eval-perp"]) {
         mitlm::Logger::Log(0, "Perplexity Evaluations:\n");
         vector<string> evalFiles;

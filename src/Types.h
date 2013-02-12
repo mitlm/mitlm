@@ -42,6 +42,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+namespace mitlm {
 // Type aliases.
 typedef unsigned char  byte;
 typedef unsigned short ushort;
@@ -74,5 +75,6 @@ typedef mitlm::DenseVector<Param>        ParamVector;
 typedef mitlm::DenseVector<uint>         NodeVector;
 
 typedef std::vector<DoubleVector> FeatureVectors;
+}
 
 #endif // TYPES_H
