@@ -35,7 +35,7 @@
 #ifndef REFCOUNTER_H
 #define REFCOUNTER_H
 
-#include <ext/hash_map>
+#include <tr1/unordered_map>
 
 namespace mitlm {
 
@@ -61,7 +61,7 @@ public:
     }
 
 private:
-    __gnu_cxx::hash_map<unsigned long, int> _map;
+    std::tr1::unordered_map<unsigned long, int> _map;
 };
 
 extern _RefCounter RefCounter;
