@@ -44,7 +44,7 @@ _RefCounter RefCounter;
 _RefCounter::~_RefCounter() {
     if (!_map.empty()) {
         Logger::Error(1, "-- RefCounter----------\n");
-        __gnu_cxx::hash_map<unsigned long, int>::const_iterator it;
+	std::tr1::unordered_map<unsigned long, int>::const_iterator it;
         for (it = _map.begin(); it != _map.end(); ++it)
             Logger::Error(1, "map[%p] = %i\n", (void *)it->first, it->second);
         Logger::Error(1, "-----------------------\n\n");

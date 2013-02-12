@@ -32,20 +32,13 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.   //
 ////////////////////////////////////////////////////////////////////////////
 
+#include <cstdlib>
 #include <vector>
-#include <ext/hash_map>
+#include <string>
+#include <tr1/unordered_map>
 
 using std::string;
 using std::vector;
-using __gnu_cxx::hash_map;
-
-namespace __gnu_cxx {
-  template<> struct hash<std::string> {
-    size_t operator()(const std::string &x) const { 
-        return hash<const char*>()(x.c_str());
-    }
-  };
-}
 
 namespace mitlm {
 
@@ -60,13 +53,13 @@ protected:
         const char *defval;
     };
 
-    typedef hash_map<string, int>::const_iterator hash_map_iter;
+    typedef std::tr1::unordered_map<string, int>::const_iterator hash_map_iter;
 
     string                _header;
     string                _footer;
     vector<CmdOption>     _options;
     vector<const char *>  _values;
-    hash_map<string, int> _nameIndexMap;
+    std::tr1::unordered_map<string, int> _nameIndexMap;
 
 public:
     CommandOptions(const char *header="", const char *footer="");
