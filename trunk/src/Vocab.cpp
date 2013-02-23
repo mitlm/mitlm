@@ -165,7 +165,12 @@ Vocab::Sort(VocabVector &sortMap) {
 // Loads vocabulary from file where each word appears on a non-# line.
 void
 Vocab::LoadVocab(ZFile &vocabFile) {
-    if (ReadUInt64(vocabFile) == MITLMv1) {
+    uint64_t v = !MITLMv1;
+    try {
+        v = ReadUInt64(vocabFile);
+    } catch(std::runtime_error e) {
+    }
+    if (v == MITLMv1) {
         Deserialize(vocabFile);
     } else {
         vocabFile.ReOpen();
