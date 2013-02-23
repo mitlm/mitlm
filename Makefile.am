@@ -79,6 +79,7 @@ libmitlm_la_SOURCES = \
 	src/InterpolatedNgramLM.cpp \
 	src/optimize/lbfgs.f \
 	src/optimize/lbfgsb.f \
+	src/optimize/fortran_wrapper.c \
 	src/WordErrorRateOptimizer.cpp
 
 libmitlm_la_LIBADD = $(FLIBS)

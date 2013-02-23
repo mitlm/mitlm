@@ -5,8 +5,7 @@ C     ****************
 C     LBFGS SUBROUTINE
 C     ****************
 C
-      SUBROUTINE MITLM_LBFGS(N,M,X,F,G,DIAGCO,DIAG,IPRINT,
-     +                 EPS,XTOL,W,IFLAG)
+      SUBROUTINE LBFGS(N,M,X,F,G,DIAGCO,DIAG,IPRINT,EPS,XTOL,W,IFLAG)
 C
       INTEGER N,M,IPRINT(2),IFLAG
       DOUBLE PRECISION X(N),G(N),DIAG(N),W(N*(2*M+1)+2*M)
