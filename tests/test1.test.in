@@ -4,7 +4,7 @@ set -e;
 
 PATH=.:"$PATH"
 
-INPUT_DIR=tests/data/
+INPUT_DIR="@abs_top_srcdir@/"tests/data/
 REFERENCE_DIR="$INPUT_DIR"test1_ref/
 OUTPUT_DIR=tests/test1_output/
 

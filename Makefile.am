@@ -108,8 +108,6 @@ interpolate_ngram_LDADD = libmitlm.la $(FLIBS)
 interpolate_ngram_CFLAGS =
 TESTS = tests/test1.test
 
-EXTRA_DIST += $(TESTS)
-
 EXTRA_DIST +=				\
 	tests/data/small.txt		\
 	tests/data/small.vocab		\

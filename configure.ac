@@ -71,5 +71,6 @@ dnl Output.
 AC_CONFIG_FILES([
 Makefile
 ])
+AC_CONFIG_FILES([tests/test1.test], [chmod +x tests/test1.test])
 
 AC_OUTPUT([])
