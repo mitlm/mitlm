@@ -1,5 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2008, Massachusetts Institute of Technology              //
+// Copyright (c) 2010-2013, Giulio Paci <giuliopaci@gmail.com>            //
 // All rights reserved.                                                   //
 //                                                                        //
 // Redistribution and use in source and binary forms, with or without     //
