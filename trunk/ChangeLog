@@ -3,15 +3,11 @@ Changes in mitlm 0.4.1
 
  [giuliopaci@gmail.com]
 
- - Switch from basic Makefile to autotools.
-   - Enable out-of-tree compilation.
-   - Fix compilation with fort77 compiler.
-   - Enable shared library compilation.
- - Add mitlm namespace.
- - Replace hash_map with unordered_map.
  - Fix segmentation fault in interpolate-ngram when no argument is provided.
- - Fix filename escping in popen call.
+ - Fix opening of very short vocabularies.
+ - Fix filename escaping in popen call.
  - Fix issue 12 about binary mode in popen.
+ - Add mitlm namespace.
  - Improve command line help.
  - Improve BitOps.h.
    - __fls has been renamed to find_last_bit_set
@@ -19,6 +15,12 @@ Changes in mitlm 0.4.1
      by default.
    - the generic implementation of find_last_bit_set supports 64bit.
    - __builtin_clzl can be used to implement find_last_bit_set.
+ - Replace hash_map with unordered_map.
+ - Switch from basic Makefile to autotools.
+   - Enable out-of-tree compilation.
+   - Fix compilation with fort77 compiler.
+   - Enable shared library compilation.
+   - Add test suite.
  - Fix compilation with gcc 4.7.1.
  - Fix compilation with MinGW.
 
