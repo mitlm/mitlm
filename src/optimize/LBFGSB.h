@@ -42,7 +42,10 @@ namespace mitlm {
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" {
-    void mitlm_setulb_(int *n, int *m, double *x, double *l, double *u, int *nbd,
+          
+#define mitlm_setulb_f77 F77_FUNC (mitlm_setulb, MITLM_SETULB)
+
+    void mitlm_setulb_f77(int *n, int *m, double *x, double *l, double *u, int *nbd,
                  double *f, double *g, double *factr, double *pgtol,
                  double *wa, int *iwa, char *task, int *iprint,
                  char *csave, int *lsave, int *isave, double *dsave);
@@ -74,7 +77,7 @@ MinimizeLBFGSB(Function &func, DoubleVector &x, int &numIter, double step=1e-8,
     memset(task, ' ', 60);
     strncpy(task, "START", 5);
     while (true) {
-        mitlm_setulb_(&n, &m, x.data(), l.data(), u.data(), nbd.data(),
+        mitlm_setulb_f77(&n, &m, x.data(), l.data(), u.data(), nbd.data(),
                 &f, g.data(), &factr, &pgtol, wa.data(), iwa.data(), &task[0],
                 &iprint, &csave[0], lsave.data(), isave.data(), dsave.data());
         if (strncmp(task, "FG", 2) == 0) {
