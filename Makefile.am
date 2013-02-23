@@ -106,3 +106,21 @@ interpolate_ngram_SOURCES = \
 
 interpolate_ngram_LDADD = libmitlm.la $(FLIBS)
 interpolate_ngram_CFLAGS =
+TESTS = tests/test1.test
+
+EXTRA_DIST += $(TESTS)
+
+EXTRA_DIST +=				\
+	tests/data/small.txt		\
+	tests/data/small.vocab		\
+	tests/data/test1_ref		\
+	tests/data/test1_ref/wlc.a.hyp	\
+	tests/data/test1_ref/wlc.b.hyp	\
+	tests/data/test1_ref/wc.a.hyp	\
+	tests/data/test1_ref/wc.b.hyp	\
+	tests/data/test1_ref/wrc.a.hyp	\
+	tests/data/test1_ref/wrc.b.hyp	\
+	tests/data/test1_ref/wec.a.hyp	\
+	tests/data/test1_ref/wec.b.hyp	\
+	tests/data/test1_ref/wl.a.hyp	\
+	tests/data/test1_ref/wl.b.hyp
