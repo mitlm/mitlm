@@ -106,3 +106,8 @@ interpolate_ngram_SOURCES = \
 
 interpolate_ngram_LDADD = libmitlm.la $(FLIBS)
 interpolate_ngram_CFLAGS =
+
+TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) \
+	$(top_srcdir)/build-aux/tap-driver.sh
+TESTS = tests/test1.test
+EXTRA_DIST += $(TESTS)

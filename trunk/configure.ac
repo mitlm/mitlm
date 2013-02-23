@@ -8,6 +8,7 @@ dnl The base directory (srcdir) must contain configure.ac.
 AC_CONFIG_SRCDIR(configure.ac)
 dnl Use ./ to store scripts and files used by configure.
 AC_CONFIG_AUX_DIR([build-aux])
+AC_REQUIRE_AUX_FILE([tap-driver.sh])
 
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
@@ -17,6 +18,7 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_F77
+AC_PROG_AWK
 
 AC_F77_LIBRARY_LDFLAGS
 AC_F77_DUMMY_MAIN
