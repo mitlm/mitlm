@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e;
+
+PATH=.:"$PATH"
+
+INPUT_DIR=tests/data/
+REFERENCE_DIR="$INPUT_DIR"test1_ref/
+OUTPUT_DIR=tests/test1_output/
+
+rm -fr "$OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR"
+
+estimate-ngram -t "$INPUT_DIR"small.txt \
+    -wc "$OUTPUT_DIR"wc.a.hyp -wec "$OUTPUT_DIR"wec.a.hyp -wlc "$OUTPUT_DIR"wlc.a.hyp -wrc "$OUTPUT_DIR"wrc.a.hyp -wl "$OUTPUT_DIR"wl.a.hyp \
+    > /dev/null
+
+estimate-ngram -t "$INPUT_DIR"small.txt -v "$INPUT_DIR"small.vocab \
+    -wc "$OUTPUT_DIR"wc.b.hyp -wec "$OUTPUT_DIR"wec.b.hyp -wlc "$OUTPUT_DIR"wlc.b.hyp -wrc "$OUTPUT_DIR"wrc.b.hyp -wl "$OUTPUT_DIR"wl.b.hyp \
+    > /dev/null
+
+for i in `ls "$REFERENCE_DIR"`
+do
+    LANG=C diff "$OUTPUT_DIR""$i" "$REFERENCE_DIR""$i"
+done
+
+rm -fr "$OUTPUT_DIR"
+
+exit 0;
