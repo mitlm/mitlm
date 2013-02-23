@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 dnl AC_INIT(package, version, bug-report-address)
-AC_INIT([MIT Language Modeling Toolkit], 0.4, [giuliopaci@gmail.com], mitlm)
+AC_INIT([MIT Language Modeling Toolkit], 0.4.1, [giuliopaci@gmail.com], mitlm)
 dnl This file (configure.ac) revision.
 AC_REVISION([$Revision$])
 dnl The base directory (srcdir) must contain configure.ac.
