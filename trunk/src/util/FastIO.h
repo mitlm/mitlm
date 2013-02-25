@@ -62,52 +62,6 @@ void Copy(InputIterator input, OutputIterator begin, const OutputIterator end) {
     }
 }
 
-inline void ReverseString(char *begin, char *end) {
-    while(end > begin)
-        std::swap(*begin++, *--end);
-}
-
-inline char *CopyString(char *dest, const char *src) {
-    while (*src != 0)
-        *dest++ = *src++;
-    return dest;
-}
-
-inline char *CopyUInt(char *dest, unsigned int value) {
-    char *p = dest;
-    do {
-        *p++ = '0' + (value % 10);
-    } while (value /= 10);
-    ReverseString(dest, p);
-    return p;
-}
-
-inline char *CopyLProb(char *dest, double prob) {
-    if (prob == 0) {
-        *dest++ = '-';
-        *dest++ = '9';
-        *dest++ = '9';
-        return dest;
-    } else {
-        double lprob = log10(prob);
-        if (0 && lprob > -10.0) {
-            int lprobInt = (int)(-lprob * 1000000);
-            *dest++ = '-';
-            char *p = dest;
-            for (int i = 0; i < 6; i++) {
-                *p++ = '0' + (lprobInt % 10);
-                lprobInt /= 10;
-            }
-            *p++ = '.';
-            *p++ = '0' + (lprobInt % 10);
-            ReverseString(dest, p);
-            return p;
-        } else {
-            return dest + sprintf(dest, "%.6f", lprob);
-        }
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 inline bool getline(FILE *file, char *buf, size_t bufSize) {
