@@ -48,6 +48,14 @@ namespace mitlm {
 
 #define MAXLINE 4096
 
+static inline int fprint_LProb(FILE *file, double prob) {
+    if (prob == 0) {
+        return fputs("-99", file);
+    } else {
+	return fprintf(file, "%.6f", std::log10(prob));
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NgramModel::NgramModel(size_t order) {
@@ -228,8 +236,6 @@ NgramModel::SaveCounts(const vector<CountVector> &countVectors,
 
     // Write counts.
     StrVector   ngramWords(size());
-    std::string lineBuffer;
-    lineBuffer.resize(size() * 32);
     if (includeZeroOrder && countVectors[0].length() == 1)
         fprintf(countsFile, "\t%i\n", countVectors[0][0]);
     for (size_t o = 1; o < countVectors.size(); ++o) {
@@ -237,19 +243,12 @@ NgramModel::SaveCounts(const vector<CountVector> &countVectors,
         for (NgramIndex i = 0; i < (NgramIndex)countVectors[o].length(); ++i) {
             // Allocate spaces for words, spaces, UInt, \n\0.
             size_t len = GetNgramWords(o, i, ngramWords) + o + 12;
-            if (lineBuffer.size() < len)
-                lineBuffer.resize(len);
-            char *ptr = &lineBuffer[0];
-            ptr = CopyString(ptr, ngramWords[0]);
+	    fputs(ngramWords[0], countsFile);
             for (size_t j = 1; j < o; j++) {
-                *ptr++ = ' ';
-                ptr = CopyString(ptr, ngramWords[j]);
+		fputc(' ', countsFile);
+		fputs(ngramWords[j], countsFile);
             }
-            *ptr++ = '\t';
-            ptr = CopyUInt(ptr, counts[i]);
-            *ptr++ = '\n';
-            *ptr = '\0';
-            fputs(&lineBuffer[0], countsFile);
+            fprintf( countsFile, "\t%u\n", counts[i]);
         }
     }
 }
@@ -380,8 +379,6 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
 
     // Write lower order n-grams with probabilities and backoff weights.
     StrVector   ngramWords(size() - 1);
-    std::string lineBuffer;
-    lineBuffer.resize(size() * 32); // 32 chars/word.
     for (size_t o = 1; o < size() - 1; o++) {
         fprintf(lmFile, "\n\\%lu-grams:\n", (unsigned long)o);
         const ProbVector &probs = probVectors[o];
@@ -393,37 +390,26 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
         NgramIndex iStart = 0;
         if (o == 1) {
             iStart = 1;
-            char *ptr = &lineBuffer[0];
-            ptr = CopyLProb(ptr, probs[Vocab::EndOfSentence]);
-            *ptr++ = '\t';
-            ptr = CopyString(ptr, "</s>\n-99\t<s>\t");
-            ptr = CopyLProb(ptr, bows[Vocab::EndOfSentence]);
-            *ptr++ = '\n';
-            *ptr = '\0';
-            assert((size_t)(ptr - lineBuffer.data()) < lineBuffer.size());
-            fputs(&lineBuffer[0], lmFile);
+	    fprint_LProb(lmFile, probs[Vocab::EndOfSentence]);
+	    fputs("\t</s>\n-99\t<s>\t", lmFile);
+	    fprint_LProb(lmFile, bows[Vocab::EndOfSentence]);
+	    fputc('\n', lmFile);
         }
         for (NgramIndex i = iStart; i < (NgramIndex)_vectors[o].size(); ++i) {
             // Allocate spaces for Prob, words, spaces, Prob, \n\0.
             size_t len = GetNgramWords(o, i, ngramWords) + 22;
-            if (lineBuffer.size() < len)
-                lineBuffer.resize(len);
-            char *ptr = &lineBuffer[0];
-            ptr = CopyLProb(ptr, probs[i]);
-            *ptr++ = '\t';
-            ptr = CopyString(ptr, ngramWords[0]);
+	    fprint_LProb(lmFile, probs[i]);
+	    fputc('\t', lmFile);
+	    fputs(ngramWords[0], lmFile);
             for (size_t j = 1; j < o; ++j) {
-                *ptr++ = ' ';
-                ptr = CopyString(ptr, ngramWords[j]);
+		fputc(' ', lmFile);
+		fputs(ngramWords[j], lmFile);
             }
             if (bows[i] != 1) {
-                *ptr++ = '\t';
-                ptr = CopyLProb(ptr, bows[i]);
+		fputc('\t', lmFile);
+		fprint_LProb(lmFile, bows[i]);
             }
-            *ptr++ = '\n';
-            *ptr = '\0';
-            assert((size_t)(ptr - lineBuffer.data()) < lineBuffer.size());
-            fputs(&lineBuffer[0], lmFile);
+	    fputc('\n', lmFile);
         }
     }
 
@@ -435,30 +421,20 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
         NgramIndex iStart = 0;
         if (o == 1) {
             iStart = 1;
-            char *ptr = &lineBuffer[0];
-            ptr = CopyLProb(ptr, probs[Vocab::EndOfSentence]);
-            *ptr++ = '\t';
-            ptr = CopyString(ptr, "</s>\n-99\t<s>\n");
-            *ptr = '\0';
-            assert((size_t)(ptr - lineBuffer.data()) < lineBuffer.size());
-            fputs(&lineBuffer[0], lmFile);
+	    fprint_LProb(lmFile, probs[Vocab::EndOfSentence]);
+	    fputs("\t</s>\n-99\t<s>\n", lmFile);
         }
         for (NgramIndex i = iStart; i < (NgramIndex)_vectors[o].size(); ++i) {
             // Allocate spaces for Prob, words, spaces, \n\0.
             size_t len = GetNgramWords(o, i, ngramWords) + 12;
-            if (lineBuffer.size() < len)
-                lineBuffer.resize(len);
-            char *ptr = &lineBuffer[0];
-            ptr = CopyLProb(ptr, probs[i]);
-            *ptr++ = '\t';
-            ptr = CopyString(ptr, ngramWords[0]);
+	    fprint_LProb(lmFile, probs[i]);
+	    fputc('\t', lmFile);
+	    fputs(ngramWords[0], lmFile);
             for (size_t j = 1; j < o; ++j) {
-                *ptr++ = ' ';
-                ptr = CopyString(ptr, ngramWords[j]);
+		fputc(' ', lmFile);
+		fputs(ngramWords[j], lmFile);
             }
-            *ptr++ = '\n';
-            *ptr = '\0';
-            fputs(&lineBuffer[0], lmFile);
+	    fputc('\n', lmFile);
         }
     }
 
@@ -680,8 +656,6 @@ NgramModel::SaveFeatures(vector<DoubleVector> &featureVectors,
 
     // Write counts.
     StrVector   ngramWords(size());
-    std::string lineBuffer;
-    lineBuffer.resize(size() * 32);
     if (featureVectors[0].length() == 1)
         fprintf(featureFile, "\t%f\n", featureVectors[0][0]);
     for (size_t o = 1; o < featureVectors.size(); ++o) {
@@ -690,18 +664,12 @@ NgramModel::SaveFeatures(vector<DoubleVector> &featureVectors,
         for (NgramIndex i = 0; i < (NgramIndex)features.length(); ++i){
             // Allocate spaces for words, spaces, double, \n\0.
             size_t len = GetNgramWords(o, i, ngramWords) + o + 20;
-            if (lineBuffer.size() < len)
-                lineBuffer.resize(len);
-            char *ptr = &lineBuffer[0];
-            ptr = CopyString(ptr, ngramWords[0]);
+	    fputs(ngramWords[0], featureFile);
             for (size_t j = 1; j < o; j++) {
-                *ptr++ = ' ';
-                ptr = CopyString(ptr, ngramWords[j]);
+		fputc(' ', featureFile);
+		fputs(ngramWords[j], featureFile);
             }
-            *ptr++ = '\t';
-            sprintf(ptr, "%f\n", features[i]);
-
-            fputs(&lineBuffer[0], featureFile);
+            fprintf(featureFile, "\t%f\n", features[i]);
         }
     }
 }
