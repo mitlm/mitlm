@@ -64,11 +64,11 @@ void Logger::Warn(int level, const char *fmt, ...) {
     if (_verbosity >= level) {
         va_list args;
         va_start(args, fmt);
-        fprintf(stderr, "\e[0;33m");
+        fprintf(stderr, "\033[0;33m");
         if (_timestamp) 
             printf("%.3f\t", (double)(clock() - _startTime) / CLOCKS_PER_SEC);
         vfprintf(stderr, fmt, args);
-        fprintf(stderr, "\e[m");
+        fprintf(stderr, "\033[m");
         va_end(args);
     }
 }
@@ -77,11 +77,11 @@ void Logger::Error(int level, const char *fmt, ...) {
     if (_verbosity >= level) {
         va_list args;
         va_start(args, fmt);
-        fprintf(stderr, "\e[1;31m");
+        fprintf(stderr, "\033[1;31m");
         if (_timestamp) 
             printf("%.3f\t", (double)(clock() - _startTime) / CLOCKS_PER_SEC);
         vfprintf(stderr, fmt, args);
-        fprintf(stderr, "\e[m");
+        fprintf(stderr, "\033[m");
         va_end(args);
     }
 }
