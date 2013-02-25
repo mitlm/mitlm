@@ -116,7 +116,7 @@ Lattice::LoadLattice(ZFile &latticeFile) {
     while (getline(latticeFile, line, MAXLINE)) {
         if (line[0] == 'T') {
             weight = 0;
-            if (sscanf(line, "T %i %i %s %s %f",
+            if (sscanf(line, "T %u %u %s %s %f",
                        &startNode, &endNode, wordStr, wordStr, &weight) < 4)
                 throw std::runtime_error("Invalid lattice FST transition.");
             if (startNode >= endNode)
@@ -126,7 +126,7 @@ Lattice::LoadLattice(ZFile &latticeFile) {
                 throw std::runtime_error("FST contains OOV word.");
         } else if (line[0] == 'F') {
             weight = 0;
-            if (sscanf(line, "F %i %f", &startNode, &weight) < 1)
+            if (sscanf(line, "F %u %f", &startNode, &weight) < 1)
                 throw std::runtime_error("Invalid lattice FST final state.");
             // Add </s> from final states to unique _finalNode.
             endNode = std::numeric_limits<NodeIndex>::max();
