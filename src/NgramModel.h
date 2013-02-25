@@ -105,7 +105,7 @@ public:
     for (size_t i = 0; i < ngramMap.length(); ++i)
         sortedData[ngramMap[i]] = data[i];
     data.swap(sortedData);
-    };
+    }
 
     size_t             size() const             { return _vectors.size(); }
     size_t             sizes(size_t o) const    { return _vectors[o].size(); }

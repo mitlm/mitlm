@@ -241,8 +241,7 @@ NgramModel::SaveCounts(const vector<CountVector> &countVectors,
     for (size_t o = 1; o < countVectors.size(); ++o) {
         const CountVector &counts = countVectors[o];
         for (NgramIndex i = 0; i < (NgramIndex)countVectors[o].length(); ++i) {
-            // Allocate spaces for words, spaces, UInt, \n\0.
-            size_t len = GetNgramWords(o, i, ngramWords) + o + 12;
+            GetNgramWords(o, i, ngramWords);
 	    fputs(ngramWords[0], countsFile);
             for (size_t j = 1; j < o; j++) {
 		fputc(' ', countsFile);
@@ -396,8 +395,7 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
 	    fputc('\n', lmFile);
         }
         for (NgramIndex i = iStart; i < (NgramIndex)_vectors[o].size(); ++i) {
-            // Allocate spaces for Prob, words, spaces, Prob, \n\0.
-            size_t len = GetNgramWords(o, i, ngramWords) + 22;
+            GetNgramWords(o, i, ngramWords);
 	    fprint_LProb(lmFile, probs[i]);
 	    fputc('\t', lmFile);
 	    fputs(ngramWords[0], lmFile);
@@ -425,8 +423,7 @@ NgramModel::SaveLM(const vector<ProbVector> &probVectors,
 	    fputs("\t</s>\n-99\t<s>\n", lmFile);
         }
         for (NgramIndex i = iStart; i < (NgramIndex)_vectors[o].size(); ++i) {
-            // Allocate spaces for Prob, words, spaces, \n\0.
-            size_t len = GetNgramWords(o, i, ngramWords) + 12;
+            GetNgramWords(o, i, ngramWords);
 	    fprint_LProb(lmFile, probs[i]);
 	    fputc('\t', lmFile);
 	    fputs(ngramWords[0], lmFile);
@@ -662,8 +659,7 @@ NgramModel::SaveFeatures(vector<DoubleVector> &featureVectors,
         const DoubleVector &features = featureVectors[o];
         assert(features.length() == sizes(o));
         for (NgramIndex i = 0; i < (NgramIndex)features.length(); ++i){
-            // Allocate spaces for words, spaces, double, \n\0.
-            size_t len = GetNgramWords(o, i, ngramWords) + o + 20;
+            GetNgramWords(o, i, ngramWords);
 	    fputs(ngramWords[0], featureFile);
             for (size_t j = 1; j < o; j++) {
 		fputc(' ', featureFile);
