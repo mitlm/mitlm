@@ -50,6 +50,8 @@
 
 namespace mitlm {
 
+#if ( defined(WIN32) || defined(_WIN32) ) && !defined(__CYGWIN__)
+
 static std::string win_argv_escape ( const std::string& s )
 {
 	std::ostringstream buffer;
@@ -68,7 +70,7 @@ static std::string win_argv_escape ( const std::string& s )
 			// at the end of the string we must escape all backslashes,
 			// because we are going to append a '"'
 			n *= 2;
-			for ( int i = 0; i < n; i++ )
+			for ( unsigned i = 0; i < n; i++ )
 			{
 				buffer << '\\';
 			}
@@ -81,7 +83,7 @@ static std::string win_argv_escape ( const std::string& s )
 			// and '"'
 			n++;
 		}
-		for ( int i = 0; i < n; i++ )
+		for ( unsigned i = 0; i < n; i++ )
 		{
 			buffer << '\\';
 		}
@@ -119,6 +121,11 @@ static std::string cmd_exe_escape ( const std::string& s )
 	return buffer.str();
 }
 
+#  define popen_escape(s) cmd_exe_escape(s)
+#  define popen_escape2(s) cmd_exe_escape(win_argv_escape(s))
+#  define EXEC_TOKEN
+#else
+
 static std::string shell_escape(const std::string &s)
 {
 	std::ostringstream buffer;
@@ -134,11 +141,6 @@ static std::string shell_escape(const std::string &s)
 	return buffer.str();
 }
 
-#if ( defined(WIN32) || defined(_WIN32) ) && !defined(__CYGWIN__)
-#  define popen_escape(s) cmd_exe_escape(s)
-#  define popen_escape2(s) cmd_exe_escape(win_argv_escape(s))
-#  define EXEC_TOKEN
-#else
 #  define popen_escape(s) shell_escape(s)
 #  define popen_escape2(s) shell_escape(s)
 #  define EXEC_TOKEN "exec "
