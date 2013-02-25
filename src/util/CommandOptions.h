@@ -49,9 +49,9 @@ protected:
         CmdOption(const char *name_, const char *desc_, const char *defval_, const char *type_)
             : name(name_), desc(desc_), defval(defval_), type(type_) { }
         const char *name;
-        const char *type;
         const char *desc;
         const char *defval;
+        const char *type;
     };
 
     typedef std::tr1::unordered_map<string, int>::const_iterator hash_map_iter;
