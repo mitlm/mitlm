@@ -34,6 +34,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+#include <cstdio>
 #include "util/CommandOptions.h"
 #include "util/ZFile.h"
 #include "util/Logger.h"
@@ -65,9 +66,9 @@ const char *headerDesc =
 "Filename argument can be an ASCII file, a compressed file (ending in .Z or .gz),\n"
 "or '-' to indicate stdin/stdout.\n";
 
-const char *footerDesc =
+const char *footerDesc_tmpl =
 "---------------------------------------------------------------\n"
-"| MIT Language Modeling Toolkit (v0.4)                        |\n"
+"| %-59s |\n"
 "| Copyright (C) 2009 Bo-June (Paul) Hsu                       |\n"
 "| MIT Computer Science and Artificial Intelligence Laboratory |\n"
 "---------------------------------------------------------------\n";
@@ -76,7 +77,10 @@ const char *footerDesc =
 
 int main(int argc, char* argv[]) {
     // Parse command line options.
+    char *footerDesc = new char[strlen(footerDesc_tmpl)+strlen(PACKAGE_STRING)+1+59];
+    sprintf(footerDesc, footerDesc_tmpl, PACKAGE_STRING);
     mitlm::CommandOptions opts(headerDesc, footerDesc);
+    delete [] footerDesc;
     opts.AddOption("h,help", "Print this message.");
     opts.AddOption("verbose", "Set verbosity level.", "1", "int");
     opts.AddOption("o,order", "Set the n-gram order of the estimated LM.", "3", "int");
