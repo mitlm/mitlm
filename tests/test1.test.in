@@ -21,7 +21,7 @@ estimate-ngram -t "$INPUT_DIR"small.txt -v "$INPUT_DIR"small.vocab \
 
 for i in `ls "$REFERENCE_DIR"`
 do
-    LANG=C diff "$OUTPUT_DIR""$i" "$REFERENCE_DIR""$i"
+    LC_ALL=C diff "$OUTPUT_DIR""$i" "$REFERENCE_DIR""$i"
 done
 
 rm -fr "$OUTPUT_DIR"
