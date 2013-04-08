@@ -111,7 +111,6 @@ TESTS = tests/test1.test
 EXTRA_DIST +=				\
 	tests/data/small.txt		\
 	tests/data/small.vocab		\
-	tests/data/test1_ref		\
 	tests/data/test1_ref/wlc.a.hyp	\
 	tests/data/test1_ref/wlc.b.hyp	\
 	tests/data/test1_ref/wc.a.hyp	\
