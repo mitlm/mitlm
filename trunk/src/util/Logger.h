@@ -46,8 +46,12 @@ class Logger {
     static int     _verbosity;
     static bool    _timestamp;
     static clock_t _startTime;
+    static FILE*   _err_file;
+    static FILE*   _out_file;
 
 public:
+    static inline void SetErrorFile(FILE* file=stderr) { _err_file = file; }
+    static inline void SetOutputFile(FILE* file=stdout) { _out_file = file; }
     static inline void SetVerbosity(int verbosity=1) { _verbosity = verbosity; }
     static inline void ShowTimestamp(bool timestamp) { _timestamp = timestamp; }
     static inline int  GetVerbosity() { return _verbosity; }
