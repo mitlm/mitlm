@@ -623,7 +623,7 @@ NgramModel::LoadComputedFeatures(vector<DoubleVector> &featureVectors,
                     featureVectors[o] *= (1 / max(featureVectors[o]));
         else {
             Logger::Error(1, "Unknown feature function: %s\n", func);
-            exit(1);
+            throw std::runtime_error("Unknown feature function");
         }
 
         if (colonIndex == std::string::npos) {
