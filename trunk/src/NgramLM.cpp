@@ -208,7 +208,7 @@ NgramLM::Initialize(const char *vocab, bool useUnknown,
     trim_split(smoothings, smoothingDesc, ',');
     if (smoothings.size() != 1 && smoothings.size() != order()) {
         Logger::Error(1, "Inconsistent number of smoothing algorithms.\n");
-        exit(1);
+	throw std::runtime_error("Inconsistent number of smoothing algorithms.");
     }
     vector<SharedPtr<Smoothing> > smoothingAlgs(order() + 1);
     for (size_t o = 1; o <= order(); o++) {
@@ -218,7 +218,7 @@ NgramLM::Initialize(const char *vocab, bool useUnknown,
         smoothingAlgs[o] = Smoothing::Create(smoothing);
         if (smoothingAlgs[o].get() == NULL) {
             Logger::Error(1, "Unknown smoothing %s.\n", smoothing);
-            exit(1);
+	    throw std::runtime_error("Unknown smoothing algorithm.");
         }
     }
     Logger::Log(1, "Set smoothing algorithms...\n");
