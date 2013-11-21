@@ -300,7 +300,7 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
             char *p = &line[0];
 
             // Read log probability.
-            Prob prob = (Prob)std::pow(10.0, strtod(p, &p)); p++;
+            Prob prob = (Prob)std::pow(10.0, (double)strtod(p, &p)); p++;
 
             // Read i words.
             NgramIndex index  = 0;
@@ -322,9 +322,9 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
             // Set probability and backoff weight.
             if (index == Vocab::EndOfSentence && o == 1) {
                 if (strcmp(token, "<s>") == 0) {
-                    assert(prob <= std::pow(10, -99));
+                    assert(prob <= std::pow(10.0, -99.0));
                     bows[index] = (p >= &line[lineLen]) ?
-                        (Prob)1 : (Prob)std::pow(10.0, strtod(p, &p));
+			    (Prob)1 : (Prob)std::pow(10.0, (double)strtod(p, &p));
                 } else {
                     probs[index] = prob;
                     assert(p >= &line[lineLen]);
@@ -334,7 +334,7 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
                 if (hasBow) {
                     // Read optional backoff weight.
                     bows[index] = (p >= &line[lineLen]) ?
-                        (Prob)1 : (Prob)std::pow(10.0, strtod(p, &p));
+                        (Prob)1 : (Prob)std::pow(10.0, (double)strtod(p, &p));
                 }
             }
         }
