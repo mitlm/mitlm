@@ -86,7 +86,13 @@ void KneserNeySmoothing::Initialize(NgramLM *pLM, size_t order) {
     CountVector n(_discOrder + 2, 0);
     // BinCount(_effCounts[_effCounts < n.length()], n);
     BinClippedCount(_effCounts, n);
-    double Y = (double)n[1] / (n[1] + 2*n[2]);
+    double Y;
+    if (n[1] == 0 && n[2] == 0)
+      Y = 1.0;
+    else
+      Y = (double)n[1] / (n[1] + 2*n[2]);
+    Logger::Log(1, "Y %e\n", Y);
+    assert(!std::isnan(Y));
     //Range r(1, _discParams.length());
     //_discParams = CondExpr(n == 0, r, r - (r+1) * Y * n[r+1] / n[r]);
     //_discParams = min(r, max(0, _discParams));
@@ -207,7 +213,9 @@ KneserNeySmoothing::_Estimate(ProbVector &probs, ProbVector &bows) {
     bows.set(0);
     BinWeight(hists, discounts, bows);
     bows = CondExpr(_invHistCounts == 0, 1, bows * _invHistCounts);
-
+    assert(!anyTrue(isnan(_invHistCounts)));
+    assert(!anyTrue(isnan(bows)));
+    
     // Compute interpolated probabilities.
     if (_order == 1 && !_pLM->vocab().IsFixedVocab())
         probs = CondExpr(!_effCounts, 0,
@@ -217,6 +225,7 @@ KneserNeySmoothing::_Estimate(ProbVector &probs, ProbVector &bows) {
         probs = CondExpr(!_effCounts, 0,
                          (_effCounts - discounts) * _invHistCounts[hists])
                 + boProbs[backoffs] * bows[hists];
+    assert(!anyTrue(isnan(probs)));
 }
 
 void
