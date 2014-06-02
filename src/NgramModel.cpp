@@ -290,7 +290,7 @@ NgramModel::LoadLM(vector<ProbVector> &probVectors,
 
         getline(lmFile, line, MAXLINE);
         unsigned int i;
-        if (sscanf(line, "\\%u-ngrams:", &i) != 1 || i != o) {
+        if (sscanf(line, "\\%u-grams:", &i) != 1 || i != o) {
             throw std::invalid_argument("Unexpected file format.");
         }
         while (true) {
