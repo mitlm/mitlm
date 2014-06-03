@@ -36,7 +36,15 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
+
+
+#ifdef HAVE_TR1_UNORDERED_MAP
 #include <tr1/unordered_map>
+using std::tr1::unordered_map;
+#else
+#include <unordered_map>
+using std::unordered_map;
+#endif
 
 using std::string;
 using std::vector;
@@ -54,13 +62,13 @@ protected:
         const char *type;
     };
 
-    typedef std::tr1::unordered_map<string, int>::const_iterator hash_map_iter;
+    typedef unordered_map<string, int>::const_iterator hash_map_iter;
 
     string                _header;
     string                _footer;
     vector<CmdOption>     _options;
     vector<const char *>  _values;
-    std::tr1::unordered_map<string, int> _nameIndexMap;
+    unordered_map<string, int> _nameIndexMap;
 
 public:
     CommandOptions(const char *header="", const char *footer="");
