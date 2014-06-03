@@ -36,12 +36,19 @@
 #include <queue>
 #include <limits>
 #include <algorithm>
+
+#ifdef HAVE_TR1_UNORDERED_MAP
 #include <tr1/unordered_map>
+using std::tr1::unordered_map;
+#else
+#include <unordered_map>
+using std::unordered_map;
+#endif
+
 #include "util/FastIO.h"
 #include "Lattice.h"
 
 using std::vector;
-using std::tr1::unordered_map;
 
 namespace mitlm {
 

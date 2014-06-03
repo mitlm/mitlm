@@ -36,7 +36,13 @@
 #ifndef REFCOUNTER_H
 #define REFCOUNTER_H
 
+#ifdef HAVE_TR1_UNORDERED_MAP
 #include <tr1/unordered_map>
+using std::tr1::unordered_map;
+#else
+#include <unordered_map>
+using std::unordered_map;
+#endif
 
 namespace mitlm {
 
@@ -62,7 +68,7 @@ public:
     }
 
 private:
-    std::tr1::unordered_map<unsigned long, int> _map;
+    unordered_map<unsigned long, int> _map;
 };
 
 extern _RefCounter RefCounter;
