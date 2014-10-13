@@ -49,17 +49,17 @@ namespace mitlm {
 #endif
 clock_t Logger::_startTime = clock();
 FILE*   Logger::_err_file = stderr;
-FILE*   Logger::_out_file = stdout;
 
 void Logger::Log(int level, const char *fmt, ...) {
     if (_verbosity >= level) {
-	if ( _out_file != NULL ) {
+	if ( _err_file != NULL ) {
             va_list args;
             va_start(args, fmt);
             if (_timestamp) 
-	        fprintf(_out_file, "%.3f\t", (double)(clock() - _startTime) / CLOCKS_PER_SEC);
-            vfprintf(_out_file, fmt, args);
+	        fprintf(_err_file, "%.3f\t", (double)(clock() - _startTime) / CLOCKS_PER_SEC);
+            vfprintf(_err_file, fmt, args);
             va_end(args);
+            fflush(_err_file);
 	}
     }
 }
@@ -70,15 +70,12 @@ void Logger::Warn(int level, const char *fmt, ...) {
 	if ( _err_file != NULL ) {
             va_start(args, fmt);
             fprintf(_err_file, "\033[0;33m");
-	}
-	if ( _out_file != NULL ) {
             if (_timestamp) 
-                fprintf(_out_file, "%.3f\t", (double)(clock() - _startTime) / CLOCKS_PER_SEC);
-	}
-	if ( _err_file != NULL ) {
+                fprintf(_err_file, "%.3f\t", (double)(clock() - _startTime) / CLOCKS_PER_SEC);
             vfprintf(_err_file, fmt, args);
             fprintf(_err_file, "\033[m");
             va_end(args);
+            fflush(_err_file);
 	}
     }
 }
@@ -89,15 +86,12 @@ void Logger::Error(int level, const char *fmt, ...) {
 	if ( _err_file != NULL ) {
             va_start(args, fmt);
             fprintf(_err_file, "\033[1;31m");
-	}
-	if ( _out_file != NULL ) {
             if (_timestamp) 
-                fprintf(_out_file, "%.3f\t", (double)(clock() - _startTime) / CLOCKS_PER_SEC);
-	}
-	if ( _err_file != NULL ) {
+                fprintf(_err_file, "%.3f\t", (double)(clock() - _startTime) / CLOCKS_PER_SEC);
             vfprintf(_err_file, fmt, args);
             fprintf(_err_file, "\033[m");
             va_end(args);
+            fflush(_err_file);
 	}
     }
 }
