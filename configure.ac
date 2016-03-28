@@ -39,11 +39,6 @@ dnl Checks for compiler characteristics.
 AC_C_INLINE
 AM_PROG_CC_C_O
 
-dnl Checks for library functions.
-AC_FUNC_MEMCMP
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
-
 
 AC_DEFUN([AX_CHECK_BUILTIN], [
     AC_CACHE_CHECK([wheter we have $1], [ac_cv_have_$1],
