@@ -32,7 +32,8 @@ mitlmutilinc_HEADERS= \
 	src/util/Logger.h \
 	src/util/SharedPtr.h \
 	src/util/BitOps.h \
-	src/util/FastHash.h
+	src/util/FastHash.h \
+	src/util/constants.h
 
 mitlmvectorinc_HEADERS= \
 	src/vector/Range.h \
