@@ -38,6 +38,7 @@
 #include <iterator>
 #include <stdexcept>
 #include "util/FastIO.h"
+#include "util/constants.h"
 #include "Vocab.h"
 
 namespace mitlm {
@@ -175,10 +176,10 @@ Vocab::LoadVocab(ZFile &vocabFile) {
         Deserialize(vocabFile);
     } else {
         vocabFile.ReOpen();
-        char   line[4096];
+        char   line[mitlm::kMaxLineLength];
         size_t len = 0;
         while (!feof(vocabFile)) {
-            getline(vocabFile, line, 4096, &len);
+            getline(vocabFile, line, mitlm::kMaxLineLength, &len);
             if (len > 0 && line[0] != '#')
                 Add(line, len);
         }
