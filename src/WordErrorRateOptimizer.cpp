@@ -33,11 +33,10 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "util/Logger.h"
+#include "util/constants.h"
 #include "WordErrorRateOptimizer.h"
 
 namespace mitlm {
-
-#define MAXLINE 4096
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -56,8 +55,8 @@ WordErrorRateOptimizer::LoadLattices(ZFile &latticesFile) {
         }
     } else {
         latticesFile.ReOpen();
-        char line[MAXLINE];
-        while (getline(latticesFile, line, MAXLINE)) {
+        char line[mitlm::kMaxLineLength];
+        while (getline(latticesFile, line, mitlm::kMaxLineLength)) {
             // tag file trans
             if (line[0] == '#') continue;
             char *file = line;
