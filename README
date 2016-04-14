@@ -36,6 +36,39 @@ issue about it at:
 
   https://code.google.com/p/mitlm/issues/list
 
+===================================
+Installation from source repository
+===================================
+
+MITLM uses autoconf to detect environment features and configure
+building. If you want to install from the source repository,
+instead of downloading a packaged version, you will need the
+following additional tools (these are not needed if you
+install from a packaged version):
+          autoconf (>=2.69)
+          automake/aclocal
+          libtool
+          autoconf-archive
+
+If you install from source repository, in order to create the
+configure script, you will need to run (this is not needed if you
+install from a packaged version):
+          ./autogen.sh
+
+Finally you can build and install MITLM using the standard procedure:
+          ./configure
+          make
+          make install
+
+=================================
+Installation from packaged source
+=================================
+
+You can build and install MITLM using the standard procedure:
+          ./configure
+          make
+          make install
+
 ===============
 Acknowledgments
 ===============
