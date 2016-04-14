@@ -1,3 +1,44 @@
+Changes in mitlm 0.4.2
+----------------------
+
+ [giuliopaci@gmail.com]
+
+ - Add constants.h and kMaxLineLength.
+ - Throw exception instead of calling exit.
+ - Change help footer to use PACKAGE_STRING.
+ - Avoid explicit print buffering and use of custom *printf like functions.
+ - Allow to redirect and to disable log output.
+ - Remove obsolete functions from NgramModel.cpp.
+ - Fix ARPA file loading in estimate-lm.
+ - Fix compilation and/or compilation warnings.
+   - Add missing headers.
+   - Change %i into %u when reading/writing unsigned integers.
+   - Replace non-standard '\e' character with '\033'.
+   - Fix initialisation order.
+   - Made the call of std:pow unambiguous.
+   - Fix others compilation warnings.
+ - Improve documentation
+   - Add main contact information to AUTHORS.
+   - Add basic build information to README.
+   - Update copyright information.
+ - Improve autotools files
+   - Add AM_PROG_AR.
+   - Add C++ 11 checks.
+   - Drop obsolete checks.
+   - Add check for tr1/unordered_map and enable use of unordered_map
+     header when tr1/unordered_map is not available.
+   - Use LC_ALL instead of LANG in the test suite.
+   - Set mitlm-dev@googlegroups.com in configure.ac.
+
+ [joshua2@ualberta.ca]
+
+ - Fix a NaN bug in Kneser-Ney smoothing.
+
+ [easantos@ualberta.ca]
+
+ - Send all logs to stderr by default.
+ - Fix parameters handling in Kneser-Ney smoothing.
+
 Changes in mitlm 0.4.1
 ----------------------
 
