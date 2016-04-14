@@ -84,7 +84,7 @@ libmitlm_la_SOURCES = \
 	src/WordErrorRateOptimizer.cpp
 
 libmitlm_la_LIBADD = $(FLIBS)
-libmitlm_la_LDFLAGS = -export-symbols-regex mitlm
+libmitlm_la_LDFLAGS = -export-symbols-regex mitlm -version-info 1:0:0
 
 # Programs:
 
