@@ -2999,7 +2999,7 @@ c     u is a double precision array of dimension n.
 c       On entry u is the upper bound of x.
 c       On exit u is unchanged.
 c
-c     nbd is a integer array of dimension n.
+c     nbd is an integer array of dimension n.
 c       On entry nbd represents the type of bounds imposed on the
 c         variables, and must be specified as follows:
 c         nbd(i)=0 if x(i) is unbounded,
@@ -3634,7 +3634,7 @@ c       dp is a double precision variable.
 c         On entry dp is the derivative of the function at stp.
 c         On exit dp is unchanged.
 c
-c       brackt is an logical variable.
+c       brackt is a logical variable.
 c         On entry brackt specifies if a minimizer has been bracketed.
 c            Initially brackt must be set to .false.
 c         On exit brackt specifies if a minimizer has been bracketed.
