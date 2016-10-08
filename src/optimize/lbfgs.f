@@ -203,7 +203,7 @@ C        to a small value. A typical small value is 0.1.  Restriction:
 C        GTOL should be greater than 1.D-04.
 C 
 C    STPMIN and STPMAX are non-negative DOUBLE PRECISION variables which
-C        specify lower and uper bounds for the step in the line search.
+C        specify lower and upper bounds for the step in the line search.
 C        Their default values are 1.D-20 and 1.D+20, respectively. These
 C        values need not be modified unless the exponents are too large
 C        for the machine being used, or unless the problem is extremely
@@ -599,7 +599,7 @@ C         IS AT MOST XTOL.
 C
 C       STPMIN AND STPMAX ARE NONNEGATIVE INPUT VARIABLES WHICH
 C         SPECIFY LOWER AND UPPER BOUNDS FOR THE STEP. (In this reverse
-C         communication implementatin they are defined in a COMMON
+C         communication implementation they are defined in a COMMON
 C         statement).
 C
 C       MAXFEV IS A POSITIVE INTEGER INPUT VARIABLE. TERMINATION
