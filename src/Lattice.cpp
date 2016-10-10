@@ -37,13 +37,15 @@
 #include <limits>
 #include <algorithm>
 
-#ifdef HAVE_TR1_UNORDERED_MAP
-#include <tr1/unordered_map>
-using std::tr1::unordered_map;
-#else
+
+#if defined HAVE_UNORDERED_MAP
 #include <unordered_map>
 using std::unordered_map;
+#elif defined HAVE_TR1_UNORDERED_MAP
+#include <tr1/unordered_map>
+using std::tr1::unordered_map;
 #endif
+
 
 #include "util/FastIO.h"
 #include "util/constants.h"
