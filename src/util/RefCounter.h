@@ -36,12 +36,12 @@
 #ifndef REFCOUNTER_H
 #define REFCOUNTER_H
 
-#ifdef HAVE_TR1_UNORDERED_MAP
-#include <tr1/unordered_map>
-using std::tr1::unordered_map;
-#else
+#if defined HAVE_UNORDERED_MAP
 #include <unordered_map>
 using std::unordered_map;
+#elif defined HAVE_TR1_UNORDERED_MAP
+#include <tr1/unordered_map>
+using std::tr1::unordered_map;
 #endif
 
 namespace mitlm {
