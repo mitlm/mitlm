@@ -1,0 +1,95 @@
+language: c
+sudo: required
+dist: trusty
+group: edge
+
+branches:
+  only:
+    - master
+
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode8
+      compiler: gcc
+      env:
+        - CROSSCOMPILE=native
+        - CXX_COMPILER=g++
+        - CC_COMPILER=gcc
+    - os: osx
+      osx_image: xcode8
+      compiler: clang
+      env:
+        - CROSSCOMPILE=native
+        - CXX_COMPILER=clang++
+        - CC_COMPILER=clang
+    - os: linux
+      compiler: gcc
+      env:
+        - CROSSCOMPILE=native
+      addons:
+        apt:
+          sources:
+            - sourceline: ppa:avsm/ppa
+              key_url: http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0xDD3D0AF807E3ADD0
+          packages:
+            - gfortran
+            - autoconf-archive
+    - os: linux
+      compiler: clang
+      env:
+        - CROSSCOMPILE=native
+      addons:
+        apt:
+          sources:
+            - sourceline: ppa:avsm/ppa
+              key_url: http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0xDD3D0AF807E3ADD0
+          packages:
+            - gfortran
+            - autoconf-archive
+    - os: linux
+      compiler: gcc
+      env:
+        - CROSSCOMPILE=x86_64-w64-mingw32
+        - WINEDEBUG=-all
+      addons:
+        apt:
+          sources:
+            - sourceline: deb https://dl.winehq.org/wine-builds/ubuntu/ trusty main
+              key_url: https://dl.winehq.org/wine-builds/Release.key
+          packages:
+            - autoconf-archive
+            - gcc-mingw-w64-x86-64
+            - g++-mingw-w64-x86-64
+            - gfortran-mingw-w64-x86-64
+            - winehq-stable
+    - os: linux
+      compiler: gcc
+      env:
+        - CROSSCOMPILE=i686-w64-mingw32
+        - WINEDEBUG=-all
+      addons:
+        apt:
+          sources:
+            - sourceline: deb https://dl.winehq.org/wine-builds/ubuntu/ trusty main
+              key_url: https://dl.winehq.org/wine-builds/Release.key
+          packages:
+            - autoconf-archive
+            - gcc-mingw-w64-i686
+            - g++-mingw-w64-i686
+            - gfortran-mingw-w64-i686
+            - winehq-stable
+
+
+before_install:
+  - if [[ "$CC_COMPILER" != "" ]]; then export CC="$CC_COMPILER" ; fi
+  - if [[ "$CXX_COMPILER" != "" ]]; then export CXX="$CXX_COMPILER" ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update                   ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew upgrade automake         ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install autoconf-archive ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install gcc              ; fi
+  - autoreconf -i
+
+script:
+  - if [[ "$CROSSCOMPILE" == "native" ]]; then mkdir -p build && cd build && ../configure && make && ( make check || ( cat test-suite.log ; exit 1 ) ) ; fi
+  - if [[ "$CROSSCOMPILE" == "x86_64-w64-mingw32" || "$CROSSCOMPILE" == "i686-w64-mingw32" ]]; then mkdir -p build && cd build && CC="$CROSSCOMPILE"-gcc ../configure --host="$CROSSCOMPILE" && make && ( winepath && COMMAND_RUNNER=wine make check || ( cat test-suite.log ; exit 1 ) ) ; fi
