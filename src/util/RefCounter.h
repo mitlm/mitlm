@@ -54,10 +54,10 @@ public:
     ~_RefCounter();
 
     template <typename T> void attach(const T *referenced)
-    { ++_map[reinterpret_cast<unsigned long>(referenced)]; }
+    { ++_map[reinterpret_cast<const void*>(referenced)]; }
 
     template <typename T> bool detach(const T *referenced) {
-        unsigned long addr = reinterpret_cast<unsigned long>(referenced);
+        const void* addr = reinterpret_cast<const void*>(referenced);
         if (_map.find(addr)==_map.end())
             return true;
         if (--_map[addr] == -1) {
@@ -68,7 +68,7 @@ public:
     }
 
 private:
-    unordered_map<unsigned long, int> _map;
+    unordered_map<const void*, int> _map;
 };
 
 extern _RefCounter RefCounter;
