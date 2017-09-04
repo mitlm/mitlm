@@ -29,12 +29,12 @@ built and tested on 32-bit and 64-bit Intel CPUs running Debian Linux
 
 For more information about MITLM, please visit:
 
-  https://code.google.com/p/mitlm/
+  https://github.com/mitlm
 
 If you find any BUG and/or want to provide a patch, please file an
 issue about it at:
 
-  https://code.google.com/p/mitlm/issues/list
+  https://github.com/mitlm/mitlm/issues
 
 ===================================
 Installation from source repository
@@ -46,14 +46,14 @@ instead of downloading a packaged version, you will need the
 following additional tools (these are not needed if you
 install from a packaged version):
           autoconf (>=2.69)
-          automake/aclocal
+          automake/aclocal (>= 1.15.1)
           libtool
           autoconf-archive
 
 If you install from source repository, in order to create the
 configure script, you will need to run (this is not needed if you
 install from a packaged version):
-          ./autogen.sh
+          autoreconf -i
 
 Finally you can build and install MITLM using the standard procedure:
           ./configure
