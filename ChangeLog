@@ -10,6 +10,7 @@ Changes in mitlm 0.4.2
  - Allow to redirect and to disable log output.
  - Remove obsolete functions from NgramModel.cpp.
  - Fix ARPA file loading in estimate-lm.
+ - Change "unsigned long" to "const void*" in RefCounter.cpp/RefCounter.h.
  - Fix compilation and/or compilation warnings.
    - Add missing headers.
    - Change %i into %u when reading/writing unsigned integers.
@@ -38,6 +39,10 @@ Changes in mitlm 0.4.2
 
  - Send all logs to stderr by default.
  - Fix parameters handling in Kneser-Ney smoothing.
+	
+ [jwilk@jwilk.net]
+
+ - Fix some typos in lbfgs.f and lbfgsb.f.
 
 Changes in mitlm 0.4.1
 ----------------------
