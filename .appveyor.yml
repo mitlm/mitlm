@@ -1,0 +1,41 @@
+environment:
+  matrix:
+    - ARCH: x86
+      CPUBIT: 32
+      CYGWIN: C:\Cygwin
+      CYGSH: C:\Cygwin\bin\bash -lc
+      VCVARS: vcvars32.bat
+      GENERATOR: "Visual Studio 14 2015"
+    - ARCH: x86_64
+      CPUBIT: 64
+      CYGWIN: C:\Cygwin64
+      CYGSH: C:\Cygwin64\bin\bash -lc
+      VCVARS: amd64\vcvars64.bat
+      GENERATOR: "Visual Studio 14 2015 Win64"
+
+install:
+  - "\"%VS140COMNTOOLS:~0,-14%VC\\bin\\\"%VCVARS%"
+  - "echo \"%VS140COMNTOOLS:~0,-14%VC\\bin\\\"%VCVARS%"
+  # Install Cygwin packages
+  - "%CYGWIN%\\setup-%ARCH%.exe -qnNdO -R %CYGWIN% -s http://cygwin.mirror.constant.com -l %CYGWIN%/var/cache/setup -P autoconf-archive -P autoconf -P automake -P libtool -P gcc-g++ -P gcc-fortran"
+  - cd "%APPVEYOR_BUILD_FOLDER%"
+
+configuration:
+  - Release
+#  - Debug
+
+image:
+  - Visual Studio 2015
+#  - Visual Studio 2017
+
+before_build:
+  - mkdir tmp-build
+  - cd tmp-build
+  - "%CYGSH% 'cd `cygpath \"%APPVEYOR_BUILD_FOLDER%\"`; autoreconf -is; cd tmp-build ; ../configure --prefix=`pwd`/install"
+
+build_script:
+  - "%CYGSH% 'cd `cygpath \"%APPVEYOR_BUILD_FOLDER%\"`; cd tmp-build; make -j ; make install"
+  - "%CYGSH% 'cd `cygpath \"%APPVEYOR_BUILD_FOLDER%\"`; find tmp-build/install'"
+
+test_script:
+  - "%CYGSH% 'cd `cygpath \"%APPVEYOR_BUILD_FOLDER%\"`; cd tmp-build; make check'"
