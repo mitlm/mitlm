@@ -8,6 +8,7 @@ dnl The base directory (srcdir) must contain configure.ac.
 AC_CONFIG_SRCDIR(configure.ac)
 dnl Use ./ to store scripts and files used by configure.
 AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 
