@@ -29,8 +29,8 @@ AC_PROG_LIBTOOL
 dnl Checks for header files.
 AC_CHECK_HEADERS(string.h math.h)
 AC_HEADER_STDC
-AX_CXX_HEADER_TR1_UNORDERED_MAP
-AX_CXX_COMPILE_STDCXX_11(noext, optional)
+#AX_CXX_HEADER_TR1_UNORDERED_MAP
+#AX_CXX_COMPILE_STDCXX_11(noext, optional)
 
 dnl Checks for types.
 
